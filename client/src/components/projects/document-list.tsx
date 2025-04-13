@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { 
   FileText, 
@@ -37,7 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/hooks/use-auth";
 
 interface DocumentListProps {
   documents: Document[];
@@ -46,7 +45,27 @@ interface DocumentListProps {
 }
 
 export function DocumentList({ documents, projectId, isLoading = false }: DocumentListProps) {
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
+  
+  // Fetch user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    
+    fetchUser();
+  }, []);
   const { toast } = useToast();
   const [expandedDocId, setExpandedDocId] = useState<number | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);

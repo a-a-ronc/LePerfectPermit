@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,27 @@ type StakeholderRow = {
 };
 
 export default function StakeholderPage() {
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
+  
+  // Fetch user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    
+    fetchUser();
+  }, []);
   const [activeTab, setActiveTab] = useState("stakeholders");
   
   // Only permit specialists should be able to view this page
