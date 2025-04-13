@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   LayoutGrid, 
   Folder, 
@@ -12,7 +12,6 @@ import {
 import { Link, useLocation } from "wouter";
 import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -50,15 +49,52 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const { user, logoutMutation } = useAuth();
-  const [location] = useLocation();
+  const [userData, setUserData] = useState<any>(null);
+  const [location, navigate] = useLocation();
   const isMobile = useIsMobile();
-  const [expanded, setExpanded] = React.useState(false);
+  const [expanded, setExpanded] = useState(false);
   
-  if (!user) return null;
+  // Fetch user data directly
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        } else if (response.status === 401) {
+          // If unauthorized, redirect to login
+          navigate('/auth');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        navigate('/auth');
+      }
+    };
+    
+    fetchUser();
+  }, [navigate]);
   
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  if (!userData) return null;
+  
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        // Clear user data and redirect to home
+        setUserData(null);
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
   
   const toggleSidebar = () => {
@@ -104,7 +140,7 @@ export function Sidebar({ className }: SidebarProps) {
         <SidebarLink href="/documents" icon={<FileText />} active={location === "/documents"}>
           Documents
         </SidebarLink>
-        {user.role === "specialist" && (
+        {userData.role === "specialist" && (
           <>
             <SidebarLink href="/reviews" icon={<CheckSquare />} active={location === "/reviews"}>
               Reviews
@@ -129,12 +165,12 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="flex items-center">
           <Avatar>
             <AvatarFallback className="bg-primary/10 text-primary">
-              {user.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+              {userData.fullName ? userData.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : userData.username?.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="ml-3">
-            <p className="text-sm font-medium">{user.fullName}</p>
-            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+            <p className="text-sm font-medium">{userData.fullName || userData.username}</p>
+            <p className="text-xs text-gray-500 capitalize">{userData.role}</p>
           </div>
           <Button 
             variant="ghost" 
