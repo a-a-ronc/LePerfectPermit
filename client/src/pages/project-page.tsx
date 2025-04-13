@@ -25,7 +25,16 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-type ProjectFormValues = z.infer<typeof insertProjectSchema>;
+// Define a more specific type for our form values
+type ProjectFormValues = {
+  name: string;
+  facilityAddress: string;
+  jurisdiction: string;
+  clientName: string;
+  zipCode: string;
+  status: string;
+  deadline: string;
+};
 
 type ProjectRow = {
   id: number;
@@ -108,8 +117,29 @@ export default function ProjectPage() {
   
   const onSubmit = async (data: ProjectFormValues) => {
     try {
-      console.log("Submitting project data:", data);
-      const response = await apiRequest("POST", "/api/projects", data);
+      // Format the data before sending
+      const formattedData = {
+        ...data,
+        zipCode: data.zipCode || null, // Convert empty string to null
+      };
+      
+      console.log("Submitting project data:", formattedData);
+      
+      // Use fetch directly for more control over the response
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(formattedData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create project');
+      }
+      
       const result = await response.json();
       console.log("Project creation result:", result);
       
