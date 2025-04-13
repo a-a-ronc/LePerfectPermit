@@ -22,10 +22,21 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    // If stored password doesn't have the expected format (hash.salt), 
+    // it might be a plain text password from development
+    if (!stored.includes('.')) {
+      return supplied === stored;
+    }
+    
+    const [hashed, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Error comparing passwords:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -47,24 +58,46 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`Login attempt for username: ${username}`);
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        
+        if (!user) {
+          console.log(`User not found: ${username}`);
           return done(null, false);
-        } else {
+        }
+        
+        const passwordMatch = await comparePasswords(password, user.password);
+        console.log(`Password check for ${username}: ${passwordMatch ? 'success' : 'failed'}`);
+        
+        if (passwordMatch) {
           return done(null, user);
+        } else {
+          return done(null, false);
         }
       } catch (error) {
+        console.error('Login error:', error);
         return done(error);
       }
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log(`Serializing user: ${user.id} (${user.username})`);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log(`Deserializing user with ID: ${id}`);
       const user = await storage.getUser(id);
+      if (!user) {
+        console.log(`User ID ${id} not found during deserialization`);
+        return done(null, false);
+      }
+      console.log(`User ${user.username} deserialized successfully`);
       done(null, user);
     } catch (error) {
+      console.error(`Error deserializing user ${id}:`, error);
       done(error);
     }
   });
@@ -90,8 +123,29 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    console.log("Login request received for:", req.body.username);
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error("Authentication error:", err);
+        return next(err);
+      }
+      if (!user) {
+        console.log("Authentication failed for:", req.body.username);
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      console.log("Authentication successful for:", user.username);
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Login error:", loginErr);
+          return next(loginErr);
+        }
+        
+        console.log("User successfully logged in:", user.username);
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -102,8 +156,14 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    console.log("GET /api/user called, isAuthenticated:", req.isAuthenticated());
+    if (req.isAuthenticated()) {
+      console.log("User data:", req.user);
+      res.json(req.user);
+    } else {
+      console.log("User not authenticated, sending 401");
+      res.sendStatus(401);
+    }
   });
 
   // Get users for stakeholder assignment
