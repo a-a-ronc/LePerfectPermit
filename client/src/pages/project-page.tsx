@@ -25,16 +25,19 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Create a custom form schema specifically for the form
+const formProjectSchema = z.object({
+  name: z.string().min(1, "Project name is required"),
+  facilityAddress: z.string().min(1, "Facility address is required"),
+  jurisdiction: z.string().min(1, "Jurisdiction is required"),
+  clientName: z.string().min(1, "Client name is required"),
+  zipCode: z.string().optional(),
+  status: z.string().default("not_started"),
+  deadline: z.string().optional(),
+});
+
 // Define a more specific type for our form values
-type ProjectFormValues = {
-  name: string;
-  facilityAddress: string;
-  jurisdiction: string;
-  clientName: string;
-  zipCode: string;
-  status: string;
-  deadline: string;
-};
+type ProjectFormValues = z.infer<typeof formProjectSchema>;
 
 type ProjectRow = {
   id: number;
@@ -103,7 +106,7 @@ export default function ProjectPage() {
   
   // Form for creating new project
   const form = useForm<ProjectFormValues>({
-    resolver: zodResolver(insertProjectSchema),
+    resolver: zodResolver(formProjectSchema),
     defaultValues: {
       name: "",
       facilityAddress: "",

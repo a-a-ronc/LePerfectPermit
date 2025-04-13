@@ -31,7 +31,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      const validatedData = insertProjectSchema.parse(req.body);
+      console.log("Project creation request body:", req.body);
+      
+      let validatedData;
+      try {
+        validatedData = insertProjectSchema.parse(req.body);
+        console.log("Validated project data:", validatedData);
+      } catch (validationError) {
+        console.error("Validation error:", validationError);
+        return res.status(400).json({ 
+          message: "Invalid project data during validation", 
+          error: validationError 
+        });
+      }
+      
       const project = await storage.createProject({
         ...validatedData,
         createdById: req.user!.id
@@ -47,7 +60,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(project);
     } catch (error) {
-      res.status(400).json({ message: "Invalid project data", error });
+      console.error("Error creating project:", error);
+      res.status(500).json({ message: "Error creating project", error });
     }
   });
 
