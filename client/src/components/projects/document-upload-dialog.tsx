@@ -43,10 +43,11 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUpl
         description: "Your document has been uploaded successfully and is pending review.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Document upload error:', error);
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your document. Please try again.",
+        description: error.message || "There was an error uploading your document. Please try again or reduce the file size.",
         variant: "destructive",
       });
     },
@@ -74,6 +75,7 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUpl
             onFileSelect={handleFileSelect}
             acceptedFileTypes=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
             disabled={isUploading || uploadMutation.isPending}
+            maxSizeMB={40} // Increased file size limit to 40MB
           />
         </div>
       </DialogContent>

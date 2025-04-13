@@ -27,9 +27,9 @@ interface SidebarLinkProps {
 function SidebarLink({ href, icon, children, active }: SidebarLinkProps) {
   return (
     <Link href={href}>
-      <a
+      <div
         className={cn(
-          "flex items-center px-3 py-2 rounded-md font-medium text-sm transition-colors",
+          "flex items-center px-3 py-2 rounded-md font-medium text-sm transition-colors cursor-pointer",
           active 
             ? "bg-primary/10 text-primary" 
             : "text-secondary hover:bg-gray-100"
@@ -39,7 +39,7 @@ function SidebarLink({ href, icon, children, active }: SidebarLinkProps) {
           className: "h-5 w-5 mr-3"
         })}
         {children}
-      </a>
+      </div>
     </Link>
   );
 }
