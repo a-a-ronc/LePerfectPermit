@@ -5,7 +5,11 @@ import { commodities, type Commodity, type InsertCommodity } from "@shared/schem
 import { projectStakeholders, type ProjectStakeholder, type InsertProjectStakeholder } from "@shared/schema";
 import { activityLogs, type ActivityLog, type InsertActivityLog } from "@shared/schema";
 import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
 import session from "express-session";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
+import { pool } from "./db";
 
 // Define the storage interface
 export interface IStorage {
@@ -43,247 +47,280 @@ export interface IStorage {
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private projects: Map<number, Project>;
-  private documents: Map<number, Document>;
-  private commodities: Map<number, Commodity>;
-  private projectStakeholders: Map<number, ProjectStakeholder>;
-  private activityLogs: Map<number, ActivityLog>;
-  
+export class DatabaseStorage implements IStorage {
   sessionStore: session.SessionStore;
-  
-  private userIdCounter: number;
-  private projectIdCounter: number;
-  private documentIdCounter: number;
-  private commodityIdCounter: number;
-  private stakeholderIdCounter: number;
-  private activityLogIdCounter: number;
 
   constructor() {
-    this.users = new Map();
-    this.projects = new Map();
-    this.documents = new Map();
-    this.commodities = new Map();
-    this.projectStakeholders = new Map();
-    this.activityLogs = new Map();
-    
-    this.userIdCounter = 1;
-    this.projectIdCounter = 1;
-    this.documentIdCounter = 1;
-    this.commodityIdCounter = 1;
-    this.stakeholderIdCounter = 1;
-    this.activityLogIdCounter = 1;
-    
-    const MemoryStore = createMemoryStore(session);
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24 hours
-    });
-    
-    // Create initial admin user
-    this.createUser({
-      username: "admin",
-      password: "password123",
-      fullName: "Admin User",
-      email: "admin@intralog.com",
-      role: "specialist"
-    });
-    
-    // Create initial stakeholder
-    this.createUser({
-      username: "stakeholder",
-      password: "password123",
-      fullName: "John Smith",
-      email: "john@example.com",
-      role: "stakeholder"
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
     });
   }
-
+  
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
-
+  
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user;
   }
-
+  
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const createdAt = new Date();
-    
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      createdAt 
-    };
-    
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({ ...insertUser, createdAt: new Date() })
+      .returning();
     return user;
   }
   
   async getUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await db.select().from(users);
   }
   
   // Project methods
   async getProjects(): Promise<Project[]> {
-    return Array.from(this.projects.values());
+    return await db.select().from(projects);
   }
   
   async getProject(id: number): Promise<Project | undefined> {
-    return this.projects.get(id);
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, id));
+    return project;
   }
   
   async createProject(insertProject: InsertProject & { createdById: number }): Promise<Project> {
-    const id = this.projectIdCounter++;
-    const createdAt = new Date();
     const permitNumber = `HPS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     
-    const project: Project = {
-      ...insertProject,
-      id,
-      createdAt,
-      permitNumber
-    };
+    const [project] = await db
+      .insert(projects)
+      .values({ 
+        ...insertProject, 
+        permitNumber,
+        createdAt: new Date() 
+      })
+      .returning();
     
-    this.projects.set(id, project);
+    // Create activity log for project creation
+    await this.createActivityLog({
+      projectId: project.id,
+      userId: insertProject.createdById,
+      activityType: "create_project",
+      description: `Project "${insertProject.name}" created`
+    });
+    
     return project;
   }
   
   async updateProject(id: number, data: Partial<Project>): Promise<Project | undefined> {
-    const project = this.projects.get(id);
+    // Get current project to compare changes for activity log
+    const [currentProject] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, id));
     
-    if (!project) {
+    if (!currentProject) {
       return undefined;
     }
     
-    const updatedProject = {
-      ...project,
-      ...data
-    };
+    // Update the project
+    const [updatedProject] = await db
+      .update(projects)
+      .set(data)
+      .where(eq(projects.id, id))
+      .returning();
     
-    this.projects.set(id, updatedProject);
+    // Create activity log if status changed
+    if (data.status && data.status !== currentProject.status) {
+      await this.createActivityLog({
+        projectId: id,
+        userId: data.updatedById || currentProject.createdById,
+        activityType: "status_update",
+        description: `Project status changed from "${currentProject.status}" to "${data.status}"`
+      });
+    }
+    
     return updatedProject;
   }
   
   // Document methods
   async getDocumentsByProject(projectId: number): Promise<Document[]> {
-    return Array.from(this.documents.values()).filter(
-      (document) => document.projectId === projectId
-    );
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.projectId, projectId));
   }
   
   async getDocument(id: number): Promise<Document | undefined> {
-    return this.documents.get(id);
+    const [document] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, id));
+    return document;
   }
   
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const id = this.documentIdCounter++;
-    const uploadedAt = new Date();
-    
-    // Get the latest version for this category and project
-    const existingDocs = Array.from(this.documents.values()).filter(
-      doc => doc.projectId === insertDocument.projectId && doc.category === insertDocument.category
-    );
+    // Find existing documents with the same category to determine version
+    const existingDocs = await db
+      .select()
+      .from(documents)
+      .where(
+        and(
+          eq(documents.projectId, insertDocument.projectId),
+          eq(documents.category, insertDocument.category)
+        )
+      );
     
     const version = existingDocs.length > 0 
       ? Math.max(...existingDocs.map(doc => doc.version)) + 1 
       : 1;
     
-    const document: Document = {
-      ...insertDocument,
-      id,
-      uploadedAt,
-      version
-    };
+    // Create the document
+    const [document] = await db
+      .insert(documents)
+      .values({
+        ...insertDocument,
+        version,
+        uploadedAt: new Date()
+      })
+      .returning();
     
-    this.documents.set(id, document);
+    // Create activity log for document upload
+    await this.createActivityLog({
+      projectId: insertDocument.projectId,
+      userId: insertDocument.uploadedById,
+      activityType: "document_upload",
+      description: `Document "${insertDocument.fileName}" uploaded`
+    });
+    
     return document;
   }
   
   async updateDocument(id: number, data: Partial<Document>): Promise<Document | undefined> {
-    const document = this.documents.get(id);
+    // Get current document to compare changes for activity log
+    const [currentDocument] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, id));
     
-    if (!document) {
+    if (!currentDocument) {
       return undefined;
     }
     
-    const updatedDocument = {
-      ...document,
-      ...data
-    };
+    // Update the document
+    const [updatedDocument] = await db
+      .update(documents)
+      .set(data)
+      .where(eq(documents.id, id))
+      .returning();
     
-    this.documents.set(id, updatedDocument);
+    // Create activity log for status changes
+    if (data.status && data.status !== currentDocument.status) {
+      await this.createActivityLog({
+        projectId: currentDocument.projectId,
+        userId: data.reviewedById || currentDocument.uploadedById,
+        activityType: "document_status_update",
+        description: `Document "${currentDocument.fileName}" status changed from "${currentDocument.status}" to "${data.status}"`
+      });
+    }
+    
     return updatedDocument;
   }
   
   // Commodity methods
   async getCommoditiesByProject(projectId: number): Promise<Commodity[]> {
-    return Array.from(this.commodities.values()).filter(
-      (commodity) => commodity.projectId === projectId
-    );
+    return await db
+      .select()
+      .from(commodities)
+      .where(eq(commodities.projectId, projectId));
   }
   
   async createCommodity(insertCommodity: InsertCommodity): Promise<Commodity> {
-    const id = this.commodityIdCounter++;
-    const createdAt = new Date();
-    const updatedAt = createdAt;
+    const now = new Date();
     
-    const commodity: Commodity = {
-      ...insertCommodity,
-      id,
-      createdAt,
-      updatedAt
-    };
+    const [commodity] = await db
+      .insert(commodities)
+      .values({
+        ...insertCommodity,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
     
-    this.commodities.set(id, commodity);
+    // Create activity log for commodity update
+    await this.createActivityLog({
+      projectId: insertCommodity.projectId,
+      userId: insertCommodity.createdById,
+      activityType: "commodity_info_update",
+      description: `Commodity information added/updated for the project`
+    });
+    
     return commodity;
   }
   
   // Project stakeholder methods
   async getProjectStakeholders(projectId: number): Promise<ProjectStakeholder[]> {
-    return Array.from(this.projectStakeholders.values()).filter(
-      (stakeholder) => stakeholder.projectId === projectId
-    );
+    return await db
+      .select()
+      .from(projectStakeholders)
+      .where(eq(projectStakeholders.projectId, projectId));
   }
   
   async createProjectStakeholder(insertStakeholder: InsertProjectStakeholder): Promise<ProjectStakeholder> {
-    const id = this.stakeholderIdCounter++;
-    const addedAt = new Date();
+    const [stakeholder] = await db
+      .insert(projectStakeholders)
+      .values({
+        ...insertStakeholder,
+        addedAt: new Date()
+      })
+      .returning();
     
-    const stakeholder: ProjectStakeholder = {
-      ...insertStakeholder,
-      id,
-      addedAt
-    };
+    // Get user information for the activity log
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, insertStakeholder.userId));
     
-    this.projectStakeholders.set(id, stakeholder);
+    // Create activity log for stakeholder assignment
+    await this.createActivityLog({
+      projectId: insertStakeholder.projectId,
+      userId: insertStakeholder.assignedById,
+      activityType: "stakeholder_assigned",
+      description: `${user?.fullName || "Stakeholder"} (${user?.email || "Unknown"}) assigned to the project`
+    });
+    
     return stakeholder;
   }
   
   // Activity log methods
   async getActivityLogsByProject(projectId: number): Promise<ActivityLog[]> {
-    return Array.from(this.activityLogs.values())
-      .filter((log) => log.projectId === projectId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.projectId, projectId))
+      .orderBy(desc(activityLogs.createdAt));
   }
   
   async createActivityLog(insertLog: InsertActivityLog): Promise<ActivityLog> {
-    const id = this.activityLogIdCounter++;
-    const createdAt = new Date();
+    const [log] = await db
+      .insert(activityLogs)
+      .values({
+        ...insertLog,
+        createdAt: new Date()
+      })
+      .returning();
     
-    const log: ActivityLog = {
-      ...insertLog,
-      id,
-      createdAt
-    };
-    
-    this.activityLogs.set(id, log);
     return log;
   }
 }
 
-export const storage = new MemStorage();
+// Updated to use database storage instead of memory storage
+export const storage = new DatabaseStorage();
