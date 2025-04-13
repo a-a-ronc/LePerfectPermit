@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,8 +32,37 @@ type ProjectRow = {
   actions: string;
 };
 
-export default function DashboardPage() {
-  const { user } = useAuth();
+interface DashboardPageProps {
+  onLogout?: () => void;
+}
+
+export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
+  const [, navigate] = useLocation();
+  const [userData, setUserData] = useState<any>(null);
+  
+  // Fetch user data directly
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        } else if (response.status === 401) {
+          // If unauthorized, redirect to login
+          navigate('/auth');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        navigate('/auth');
+      }
+    };
+    
+    fetchUser();
+  }, [navigate]);
   
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["/api/projects"],
@@ -259,7 +287,7 @@ export default function DashboardPage() {
         <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-secondary">Permit Specialist Dashboard</h1>
-            <p className="text-gray-500">Welcome back, {user?.fullName}. Here's an overview of your permit projects.</p>
+            <p className="text-gray-500">Welcome back, {userData?.fullName || userData?.username || 'User'}. Here's an overview of your permit projects.</p>
           </div>
           
           {/* Dashboard Metrics */}
