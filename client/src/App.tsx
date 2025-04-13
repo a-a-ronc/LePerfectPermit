@@ -1,6 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { ReactNode, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 // Pages
@@ -13,32 +12,7 @@ import StakeholderPage from "@/pages/stakeholder-page";
 import NotFound from "@/pages/not-found";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-
-// Protected route component
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, isLoading, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect in the useEffect
-  }
-
-  return <Component />;
-}
+import { queryClient } from "./lib/queryClient";
 
 // Landing Page
 function LandingPage() {
@@ -83,28 +57,55 @@ function LandingPage() {
   );
 }
 
+// We use a simple authentication state in the app itself
 function App() {
+  // Simple auth state for page routing
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [, navigate] = useLocation();
+
+  // Simplified login/logout methods
+  const handleLogin = () => {
+    setLoggedIn(true);
+    navigate("/dashboard");
+  };
+
+  const handleLogout = () => {
+    setLoggedIn(false);
+    // Clear any cached queries
+    queryClient.clear();
+    navigate("/");
+  };
+
   return (
-    <Switch>
-      <Route path="/" component={LandingPage} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/dashboard">
-        <ProtectedRoute component={DashboardPage} />
-      </Route>
-      <Route path="/projects">
-        <ProtectedRoute component={ProjectPage} />
-      </Route>
-      <Route path="/project/:id">
-        <ProtectedRoute component={ProjectDetailsPage} />
-      </Route>
-      <Route path="/documents">
-        <ProtectedRoute component={DocumentsPage} />
-      </Route>
-      <Route path="/stakeholders">
-        <ProtectedRoute component={StakeholderPage} />
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
+    <div className="app">
+      <Switch>
+        <Route path="/">
+          <LandingPage />
+        </Route>
+        <Route path="/auth">
+          <AuthPage onLoginSuccess={handleLogin} />
+        </Route>
+        <Route path="/dashboard">
+          {loggedIn ? <DashboardPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+        </Route>
+        <Route path="/projects">
+          {loggedIn ? <ProjectPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+        </Route>
+        <Route path="/project/:id">
+          {loggedIn ? <ProjectDetailsPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+        </Route>
+        <Route path="/documents">
+          {loggedIn ? <DocumentsPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+        </Route>
+        <Route path="/stakeholders">
+          {loggedIn ? <StakeholderPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+        </Route>
+        <Route>
+          <NotFound />
+        </Route>
+      </Switch>
+    </div>
   );
 }
 
