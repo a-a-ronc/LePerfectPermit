@@ -105,6 +105,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get documents" });
     }
   });
+  
+  // Get all documents of a specific category for a project
+  app.get("/api/projects/:projectId/documents/category/:category", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const category = req.params.category;
+      
+      const projectDocuments = await storage.getDocumentsByProject(projectId);
+      const categoryDocuments = projectDocuments.filter(doc => doc.category === category);
+      
+      res.json(categoryDocuments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get category documents" });
+    }
+  });
 
   app.post("/api/projects/:projectId/documents", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

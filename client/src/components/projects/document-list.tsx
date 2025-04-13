@@ -6,7 +6,8 @@ import {
   ChevronUp, 
   Download, 
   MessageSquare, 
-  Eye
+  Eye,
+  History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +21,7 @@ import {
   getDocumentCategoryDescription
 } from "@/lib/utils/document-utils";
 import { formatDateTime } from "@/lib/utils/date-utils";
+import { DocumentVersionHistory } from "./document-version-history";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +71,7 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
   const { toast } = useToast();
   const [expandedDocId, setExpandedDocId] = useState<number | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [versionHistoryDialogOpen, setVersionHistoryDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [reviewStatus, setReviewStatus] = useState<string>(DocumentStatus.APPROVED);
   const [reviewComment, setReviewComment] = useState("");
@@ -253,6 +256,19 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                         <Eye className="h-4 w-4 mr-1" />
                         Preview
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDocument(doc);
+                          setVersionHistoryDialogOpen(true);
+                        }}
+                      >
+                        <History className="h-4 w-4 mr-1" />
+                        Version History
+                      </Button>
                       {user?.role === "specialist" && doc.status !== DocumentStatus.APPROVED && (
                         <Button 
                           variant="outline" 
@@ -374,6 +390,16 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Version History Dialog */}
+      {selectedDocument && (
+        <DocumentVersionHistory
+          isOpen={versionHistoryDialogOpen}
+          onClose={() => setVersionHistoryDialogOpen(false)}
+          document={selectedDocument}
+          projectId={projectId}
+        />
+      )}
     </div>
   );
 }
