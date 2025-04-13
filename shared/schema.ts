@@ -36,12 +36,14 @@ export const projects = pgTable("projects", {
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
   createdAt: true,
-  permitNumber: true
+  permitNumber: true,
 }).extend({
   // Ensure deadline is treated as a string during form submission
   deadline: z.string().optional().transform(val => 
     val ? new Date(val) : undefined
-  )
+  ),
+  // Make createdById optional for client-side validation (will be added by server)
+  createdById: z.number().optional(),
 });
 
 // Document Schema

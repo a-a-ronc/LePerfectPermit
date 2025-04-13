@@ -25,8 +25,8 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Create a custom form schema specifically for the form
-const formProjectSchema = z.object({
+// Create a custom form schema specifically for the client-side form
+const clientFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   facilityAddress: z.string().min(1, "Facility address is required"),
   jurisdiction: z.string().min(1, "Jurisdiction is required"),
@@ -37,7 +37,7 @@ const formProjectSchema = z.object({
 });
 
 // Define a more specific type for our form values
-type ProjectFormValues = z.infer<typeof formProjectSchema>;
+type ProjectFormValues = z.infer<typeof clientFormSchema>;
 
 type ProjectRow = {
   id: number;
@@ -106,7 +106,7 @@ export default function ProjectPage() {
   
   // Form for creating new project
   const form = useForm<ProjectFormValues>({
-    resolver: zodResolver(formProjectSchema),
+    resolver: zodResolver(clientFormSchema),
     defaultValues: {
       name: "",
       facilityAddress: "",
@@ -120,11 +120,11 @@ export default function ProjectPage() {
   
   const onSubmit = async (data: ProjectFormValues) => {
     try {
-      // Format the data before sending
+      // Format the data before sending - convert string date to Date object
       const formattedData = {
         ...data,
         zipCode: data.zipCode || null, // Convert empty string to null
-        deadline: data.deadline || null, // Convert empty string to null
+        deadline: data.deadline ? new Date(data.deadline) : null, // Convert string date to Date or null
       };
       
       console.log("Submitting project data:", formattedData);
