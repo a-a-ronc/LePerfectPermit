@@ -121,6 +121,7 @@ export default function ProjectPage() {
       const formattedData = {
         ...data,
         zipCode: data.zipCode || null, // Convert empty string to null
+        deadline: data.deadline || null, // Convert empty string to null
       };
       
       console.log("Submitting project data:", formattedData);
@@ -137,6 +138,7 @@ export default function ProjectPage() {
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Server error response:", errorData);
         throw new Error(errorData.message || 'Failed to create project');
       }
       
@@ -379,12 +381,7 @@ export default function ProjectPage() {
                               <Input 
                                 type="date" 
                                 {...field} 
-                                value={field.value instanceof Date 
-                                  ? field.value.toISOString().split('T')[0] 
-                                  : typeof field.value === 'string' 
-                                    ? field.value 
-                                    : ''
-                                }
+                                value={field.value || ''}
                               />
                             </FormControl>
                             <FormMessage />

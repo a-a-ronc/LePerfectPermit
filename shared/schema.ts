@@ -37,6 +37,11 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
   createdAt: true,
   permitNumber: true
+}).extend({
+  // Ensure deadline is treated as a string during form submission
+  deadline: z.string().optional().transform(val => 
+    val ? new Date(val) : undefined
+  )
 });
 
 // Document Schema
