@@ -87,19 +87,19 @@ function App() {
           <AuthPage onLoginSuccess={handleLogin} />
         </Route>
         <Route path="/dashboard">
-          {loggedIn ? <DashboardPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+          {loggedIn ? <DashboardPage /> : <AuthPage onLoginSuccess={handleLogin} />}
         </Route>
         <Route path="/projects">
-          {loggedIn ? <ProjectPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+          {loggedIn ? <ProjectPage /> : <AuthPage onLoginSuccess={handleLogin} />}
         </Route>
         <Route path="/project/:id">
-          {loggedIn ? <ProjectDetailsPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+          {loggedIn ? <ProjectDetailsPage /> : <AuthPage onLoginSuccess={handleLogin} />}
         </Route>
         <Route path="/documents">
-          {loggedIn ? <DocumentsPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+          {loggedIn ? <DocumentsPage /> : <AuthPage onLoginSuccess={handleLogin} />}
         </Route>
         <Route path="/stakeholders">
-          {loggedIn ? <StakeholderPage onLogout={handleLogout} /> : <AuthPage onLoginSuccess={handleLogin} />}
+          {loggedIn ? <StakeholderPage /> : <AuthPage onLoginSuccess={handleLogin} />}
         </Route>
         <Route>
           <NotFound />
