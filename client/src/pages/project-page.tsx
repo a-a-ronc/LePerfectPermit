@@ -102,13 +102,17 @@ export default function ProjectPage() {
       clientName: "",
       zipCode: "",
       status: "not_started",
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
     },
   });
   
   const onSubmit = async (data: ProjectFormValues) => {
     try {
-      await apiRequest("POST", "/api/projects", data);
+      console.log("Submitting project data:", data);
+      const response = await apiRequest("POST", "/api/projects", data);
+      const result = await response.json();
+      console.log("Project creation result:", result);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       setIsCreateDialogOpen(false);
       form.reset();
@@ -117,6 +121,7 @@ export default function ProjectPage() {
         description: "New project has been successfully created.",
       });
     } catch (error) {
+      console.error("Error creating project:", error);
       toast({
         title: "Failed to create project",
         description: "There was an error creating the project. Please try again.",
@@ -298,7 +303,7 @@ export default function ProjectPage() {
                             <FormItem>
                               <FormLabel>Zip Code</FormLabel>
                               <FormControl>
-                                <Input placeholder="E.g., 94103" {...field} />
+                                <Input placeholder="E.g., 94103" {...field} value={field.value || ''} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
