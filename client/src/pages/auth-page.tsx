@@ -44,7 +44,7 @@ export default function AuthPage() {
   
   // Redirect if user is already logged in
   if (user) {
-    navigate("/");
+    navigate("/dashboard");
     return null;
   }
   
@@ -69,14 +69,28 @@ export default function AuthPage() {
   });
   
   const handleLogin = (values: LoginFormValues) => {
-    loginMutation.mutate({
-      username: values.username,
-      password: values.password,
-    });
+    loginMutation.mutate(
+      {
+        username: values.username,
+        password: values.password,
+      },
+      {
+        onSuccess: () => {
+          navigate("/dashboard");
+        }
+      }
+    );
   };
   
   const handleRegister = (values: RegisterFormValues) => {
-    registerMutation.mutate(values);
+    registerMutation.mutate(
+      values,
+      {
+        onSuccess: () => {
+          navigate("/dashboard");
+        }
+      }
+    );
   };
   
   return (

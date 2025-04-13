@@ -1,7 +1,49 @@
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
+
+// Pages
+import AuthPage from "@/pages/auth-page";
+import DashboardPage from "@/pages/dashboard-page";
+import ProjectPage from "@/pages/project-page";
+import ProjectDetailsPage from "@/pages/project-details-page";
+import DocumentsPage from "@/pages/documents-page";
+import StakeholderPage from "@/pages/stakeholder-page";
+import NotFound from "@/pages/not-found";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 
-function App() {
+// Protected route component
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect in the useEffect
+  }
+
+  return <Component />;
+}
+
+// Landing Page
+function LandingPage() {
+  const [, navigate] = useLocation();
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md space-y-8">
@@ -30,7 +72,7 @@ function App() {
               Our permit specialists augmented by AI-powered workflows create a permit acquisition experience that is truly Painless.
             </p>
             <div className="mt-6">
-              <Button className="w-full">
+              <Button className="w-full" onClick={() => navigate("/auth")}>
                 Continue to Application
               </Button>
             </div>
@@ -38,6 +80,31 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Switch>
+      <Route path="/" component={LandingPage} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/dashboard">
+        <ProtectedRoute component={DashboardPage} />
+      </Route>
+      <Route path="/projects">
+        <ProtectedRoute component={ProjectPage} />
+      </Route>
+      <Route path="/project/:id">
+        <ProtectedRoute component={ProjectDetailsPage} />
+      </Route>
+      <Route path="/documents">
+        <ProtectedRoute component={DocumentsPage} />
+      </Route>
+      <Route path="/stakeholders">
+        <ProtectedRoute component={StakeholderPage} />
+      </Route>
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
