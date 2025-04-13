@@ -13,6 +13,7 @@ import NotFound from "@/pages/not-found";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "./lib/queryClient";
+import { ProtectedRoute } from "./lib/protected-route";
 
 // Landing Page
 function LandingPage() {
@@ -86,20 +87,22 @@ function App() {
         <Route path="/auth">
           <AuthPage onLoginSuccess={handleLogin} />
         </Route>
+        
+        {/* Use ProtectedRoute for authenticated routes */}
         <Route path="/dashboard">
-          {loggedIn ? <DashboardPage /> : <AuthPage onLoginSuccess={handleLogin} />}
+          <ProtectedRoute component={() => <DashboardPage onLogout={handleLogout} />} />
         </Route>
         <Route path="/projects">
-          {loggedIn ? <ProjectPage /> : <AuthPage onLoginSuccess={handleLogin} />}
+          <ProtectedRoute component={() => <ProjectPage />} />
         </Route>
         <Route path="/project/:id">
-          {loggedIn ? <ProjectDetailsPage /> : <AuthPage onLoginSuccess={handleLogin} />}
+          <ProtectedRoute component={() => <ProjectDetailsPage />} />
         </Route>
         <Route path="/documents">
-          {loggedIn ? <DocumentsPage /> : <AuthPage onLoginSuccess={handleLogin} />}
+          <ProtectedRoute component={() => <DocumentsPage />} />
         </Route>
         <Route path="/stakeholders">
-          {loggedIn ? <StakeholderPage /> : <AuthPage onLoginSuccess={handleLogin} />}
+          <ProtectedRoute component={() => <StakeholderPage />} />
         </Route>
         <Route>
           <NotFound />
