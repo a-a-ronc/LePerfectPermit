@@ -36,7 +36,12 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUpl
       return await res.json();
     },
     onSuccess: () => {
+      // Invalidate multiple queries to ensure UI updates properly
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list for progress bar
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
+      
       onClose();
       toast({
         title: "Document Uploaded",

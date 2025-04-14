@@ -187,7 +187,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
       id: "actions",
       cell: ({ row }) => (
         <Link href={`/project/${row.original.id}`}>
-          <a className="text-primary hover:text-primary/80">View</a>
+          <div className="text-primary hover:text-primary/80 cursor-pointer">View</div>
         </Link>
       ),
     },
