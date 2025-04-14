@@ -38,7 +38,7 @@ export function Header({ breadcrumb = [] }: HeaderProps) {
               )}
               {item.href ? (
                 <Link href={item.href}>
-                  <a className="text-gray-500 hover:text-gray-700">{item.label}</a>
+                  <div className="text-gray-500 hover:text-gray-700 cursor-pointer">{item.label}</div>
                 </Link>
               ) : (
                 <span className="text-gray-500">{item.label}</span>
@@ -118,7 +118,7 @@ function NotificationsDropdown() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="justify-center py-2 focus:bg-gray-100">
           <Link href="/notifications">
-            <a className="w-full text-center text-primary text-sm">View all notifications</a>
+            <div className="w-full text-center text-primary text-sm cursor-pointer">View all notifications</div>
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
