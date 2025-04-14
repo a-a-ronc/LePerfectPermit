@@ -250,7 +250,7 @@ export default function ProjectPage() {
       id: "actions",
       cell: ({ row }) => (
         <Link href={`/project/${row.original.id}`}>
-          <a className="text-primary hover:text-primary/80">View</a>
+          <div className="text-primary hover:text-primary/80 cursor-pointer">View</div>
         </Link>
       ),
     },
@@ -267,7 +267,7 @@ export default function ProjectPage() {
             <ol className="flex items-center space-x-2">
               <li>
                 <Link href="/">
-                  <a className="text-gray-500 hover:text-gray-700">Dashboard</a>
+                  <div className="text-gray-500 hover:text-gray-700 cursor-pointer">Dashboard</div>
                 </Link>
               </li>
               <li className="flex items-center">
