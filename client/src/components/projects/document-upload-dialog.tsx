@@ -47,6 +47,11 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUpl
         title: "Document Uploaded",
         description: "Your document has been uploaded successfully and is pending review.",
       });
+      
+      // Force page reload to ensure everything is up-to-date
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500); // Delay to allow toast to be visible
     },
     onError: (error: Error) => {
       console.error('Document upload error:', error);

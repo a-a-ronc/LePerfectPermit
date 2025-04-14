@@ -113,11 +113,21 @@ export function CommoditiesForm({
       return await res.json();
     },
     onSuccess: () => {
+      // Invalidate multiple queries to ensure UI updates properly
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/commodities`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
+      
       toast({
         title: "Commodities Information Saved",
         description: "The commodities information has been saved successfully.",
       });
+      
+      // Force page reload to ensure all components show the latest data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500); // Delay to allow the toast to be visible
     },
     onError: () => {
       toast({
