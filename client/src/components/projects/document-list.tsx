@@ -22,6 +22,8 @@ import {
 } from "@/lib/utils/document-utils";
 import { formatDateTime } from "@/lib/utils/date-utils";
 import { DocumentVersionHistory } from "./document-version-history";
+import { DocumentPreviewDialog } from "./document-preview-dialog";
+import { DocumentViewDialog } from "./document-view-dialog";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +74,8 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
   const [expandedDocId, setExpandedDocId] = useState<number | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [versionHistoryDialogOpen, setVersionHistoryDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [reviewStatus, setReviewStatus] = useState<string>(DocumentStatus.APPROVED);
   const [reviewComment, setReviewComment] = useState("");
@@ -259,11 +263,34 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                   
                   <div className="flex flex-wrap items-center justify-between">
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex items-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Create a download link
+                          const link = window.document.createElement('a');
+                          link.href = `data:${doc.fileType};base64,${doc.fileContent}`;
+                          link.download = doc.fileName;
+                          window.document.body.appendChild(link);
+                          link.click();
+                          window.document.body.removeChild(link);
+                        }}
+                      >
                         <Download className="h-4 w-4 mr-1" />
                         Download
                       </Button>
-                      <Button variant="outline" size="sm" className="flex items-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDocument(doc);
+                          setViewDialogOpen(true);
+                        }}
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         Preview
                       </Button>
@@ -287,7 +314,8 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                           className="flex items-center" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleReviewDocument(doc);
+                            setSelectedDocument(doc);
+                            setPreviewDialogOpen(true);
                           }}
                         >
                           <MessageSquare className="h-4 w-4 mr-1" />
@@ -409,6 +437,25 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
           onClose={() => setVersionHistoryDialogOpen(false)}
           document={selectedDocument}
           projectId={projectId}
+        />
+      )}
+      
+      {/* Document Preview Dialog with Checklist (for Review) */}
+      {selectedDocument && (
+        <DocumentPreviewDialog
+          isOpen={previewDialogOpen}
+          onClose={() => setPreviewDialogOpen(false)}
+          document={selectedDocument}
+          projectId={projectId}
+        />
+      )}
+      
+      {/* Document View Dialog (Simple Preview) */}
+      {selectedDocument && (
+        <DocumentViewDialog
+          isOpen={viewDialogOpen}
+          onClose={() => setViewDialogOpen(false)}
+          document={selectedDocument}
         />
       )}
     </div>

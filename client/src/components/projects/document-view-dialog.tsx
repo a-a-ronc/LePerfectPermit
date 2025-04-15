@@ -75,12 +75,12 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                   size="sm"
                   onClick={() => {
                     // Create a download link
-                    const link = document.createElement('a');
+                    const link = window.document.createElement('a');
                     link.href = `data:${document.fileType};base64,${document.fileContent}`;
                     link.download = document.fileName;
-                    document.body.appendChild(link);
+                    window.document.body.appendChild(link);
                     link.click();
-                    document.body.removeChild(link);
+                    window.document.body.removeChild(link);
                   }}
                 >
                   <Download className="h-4 w-4 mr-2" />

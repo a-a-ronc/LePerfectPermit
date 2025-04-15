@@ -20,8 +20,11 @@ import { getChecklistForCategory } from "@/lib/utils/checklist-data";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { formatDocumentCategory } from "@/lib/utils/document-utils";
-import { getDocumentStatusColor, getDocumentStatusLabel } from "@/lib/utils/status-utils";
+import { 
+  formatDocumentCategory,
+  getDocumentStatusColor,
+  getDocumentStatusLabel
+} from "@/lib/utils/document-utils";
 import { Check, FileText, Loader2, Download, X } from "lucide-react";
 
 interface DocumentPreviewDialogProps {
