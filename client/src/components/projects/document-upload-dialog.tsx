@@ -74,9 +74,9 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUpl
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload Document</DialogTitle>
+          <DialogTitle>Upload Documents</DialogTitle>
           <DialogDescription>
-            Select a document to upload for this project. All documents will be reviewed by a permit specialist.
+            Select one or more documents to upload for this project. You can upload multiple files at once in the same category. All documents will be reviewed by a permit specialist.
           </DialogDescription>
         </DialogHeader>
         

@@ -2,9 +2,10 @@ import React, { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, File, Upload } from "lucide-react";
+import { AlertCircle, File, Upload, X, Trash } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DocumentCategory } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
 
 interface FileUploadProps {
   onFileSelect: (file: File, base64: string, category: string) => void;
@@ -12,6 +13,7 @@ interface FileUploadProps {
   category?: string;
   disabled?: boolean;
   maxSizeMB?: number;
+  multiple?: boolean;
 }
 
 export function FileUpload({
@@ -19,12 +21,15 @@ export function FileUpload({
   acceptedFileTypes = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
   category,
   disabled = false,
-  maxSizeMB = 10
+  maxSizeMB = 40,
+  multiple = true
 }: FileUploadProps) {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(category || "");
+  const [currentFileIndex, setCurrentFileIndex] = useState<number>(0);
+  const [uploadedCount, setUploadedCount] = useState<number>(0);
   
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   
@@ -33,35 +38,47 @@ export function FileUpload({
       setError(null);
       
       if (!e.target.files || e.target.files.length === 0) {
-        setFile(null);
         return;
       }
       
-      const selectedFile = e.target.files[0];
+      const newFiles: File[] = [];
+      const fileList = Array.from(e.target.files);
       
-      // Check file size
-      if (selectedFile.size > maxSizeBytes) {
-        setError(`File size exceeds the ${maxSizeMB}MB limit.`);
-        setFile(null);
-        return;
+      // Validate all selected files
+      for (const file of fileList) {
+        // Check file size
+        if (file.size > maxSizeBytes) {
+          setError(`File "${file.name}" exceeds the ${maxSizeMB}MB limit.`);
+          continue;
+        }
+        
+        // Check file type
+        const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+        const acceptedTypes = acceptedFileTypes.split(",").map(type => 
+          type.trim().replace(".", "").toLowerCase()
+        );
+        
+        if (!acceptedTypes.includes(fileExtension)) {
+          setError(`File "${file.name}" has invalid type. Accepted types: ${acceptedFileTypes}`);
+          continue;
+        }
+        
+        newFiles.push(file);
       }
       
-      // Check file type
-      const fileExtension = selectedFile.name.split(".").pop()?.toLowerCase() || "";
-      const acceptedTypes = acceptedFileTypes.split(",").map(type => 
-        type.trim().replace(".", "").toLowerCase()
-      );
-      
-      if (!acceptedTypes.includes(fileExtension)) {
-        setError(`Invalid file type. Accepted types: ${acceptedFileTypes}`);
-        setFile(null);
-        return;
+      if (newFiles.length > 0) {
+        setFiles(prevFiles => [...prevFiles, ...newFiles]);
       }
       
-      setFile(selectedFile);
+      // Reset the input value to allow selecting the same file again
+      e.target.value = '';
     },
     [acceptedFileTypes, maxSizeBytes, maxSizeMB]
   );
+  
+  const handleRemoveFile = useCallback((index: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  }, []);
   
   const handleCategoryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -79,16 +96,36 @@ export function FileUpload({
           // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
           const base64 = reader.result.split(",")[1];
           resolve(base64);
+        } else {
+          reject(new Error("Failed to convert file to base64"));
         }
-        reject(new Error("Failed to convert file to base64"));
       };
       reader.onerror = error => reject(error);
     });
   }, []);
   
+  const uploadCurrentFile = useCallback(async () => {
+    if (currentFileIndex >= files.length) {
+      return false; // No more files to upload
+    }
+    
+    const currentFile = files[currentFileIndex];
+    
+    try {
+      const base64 = await convertToBase64(currentFile);
+      await onFileSelect(currentFile, base64, selectedCategory || category || "");
+      setUploadedCount(prev => prev + 1);
+      setCurrentFileIndex(prev => prev + 1);
+      return true; // Successfully uploaded file
+    } catch (err) {
+      setError(`Error uploading "${currentFile.name}": ${err instanceof Error ? err.message : String(err)}`);
+      return false; // Failed to upload
+    }
+  }, [files, currentFileIndex, convertToBase64, onFileSelect, selectedCategory, category]);
+  
   const handleUpload = useCallback(async () => {
-    if (!file) {
-      setError("Please select a file to upload.");
+    if (files.length === 0) {
+      setError("Please select at least one file to upload.");
       return;
     }
     
@@ -98,30 +135,47 @@ export function FileUpload({
     }
     
     setLoading(true);
+    setError(null);
+    setUploadedCount(0);
+    setCurrentFileIndex(0);
+    
     try {
-      const base64 = await convertToBase64(file);
-      onFileSelect(file, base64, selectedCategory || category || "");
-      // Reset file selection after successful upload if needed
-      // setFile(null);
+      // Process files one by one
+      let hasMore = true;
+      while (hasMore) {
+        hasMore = await uploadCurrentFile();
+      }
+      
+      // Clear files list after successful upload
+      setFiles([]);
+      
     } catch (err) {
-      setError("An error occurred while processing the file.");
+      setError("An error occurred while processing the files.");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [file, selectedCategory, category, onFileSelect, convertToBase64]);
+  }, [files, uploadCurrentFile, selectedCategory, category]);
   
   return (
     <div className="space-y-4">
       <div className="grid w-full gap-1.5">
-        <Label htmlFor="file">Upload Document</Label>
+        <Label htmlFor="file-upload" className="flex justify-between">
+          <span>Upload Documents</span>
+          {files.length > 0 && (
+            <Badge variant="outline" className="ml-2">
+              {files.length} {files.length === 1 ? 'file' : 'files'} selected
+            </Badge>
+          )}
+        </Label>
         <Input
-          id="file"
+          id="file-upload"
           type="file"
           accept={acceptedFileTypes}
           onChange={handleFileChange}
           disabled={disabled || loading}
           className="cursor-pointer"
+          multiple={multiple}
         />
         <p className="text-xs text-muted-foreground">
           Max file size: {maxSizeMB}MB. Accepted file types: {acceptedFileTypes}
@@ -158,23 +212,56 @@ export function FileUpload({
         </Alert>
       )}
       
-      {file && (
-        <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
-          <File className="h-5 w-5 text-muted-foreground" />
-          <span className="text-sm truncate max-w-[250px]">{file.name}</span>
-          <span className="text-xs text-muted-foreground">
-            ({(file.size / (1024 * 1024)).toFixed(2)} MB)
-          </span>
+      {files.length > 0 && (
+        <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md bg-muted/30 p-2">
+          <div className="flex justify-between items-center mb-1 px-1">
+            <span className="text-sm font-medium">Selected files:</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setFiles([])}
+              disabled={loading}
+              className="h-7 px-2 text-xs"
+            >
+              <Trash className="h-3 w-3 mr-1" /> Clear all
+            </Button>
+          </div>
+          {files.map((file, index) => (
+            <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-background">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm truncate">{file.name}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                </span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleRemoveFile(index)} 
+                disabled={loading}
+                className="h-7 w-7 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {loading && uploadedCount > 0 && (
+        <div className="text-sm text-center text-muted-foreground">
+          Uploaded {uploadedCount}/{files.length} files...
         </div>
       )}
       
       <Button
         type="button"
         onClick={handleUpload}
-        disabled={!file || disabled || loading || (!selectedCategory && !category)}
+        disabled={files.length === 0 || disabled || loading || (!selectedCategory && !category)}
         className="w-full"
       >
-        {loading ? "Uploading..." : "Upload"}
+        {loading ? "Uploading..." : `Upload ${files.length > 0 ? `(${files.length} ${files.length === 1 ? 'file' : 'files'})` : ''}`}
         <Upload className="ml-2 h-4 w-4" />
       </Button>
     </div>
