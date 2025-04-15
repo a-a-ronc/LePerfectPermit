@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Document } from "@shared/schema";
 import { formatDocumentCategory } from "@/lib/utils/document-utils";
 import { Download, FileText, Loader2, ExternalLink } from "lucide-react";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 interface DocumentViewDialogProps {
   isOpen: boolean;
@@ -52,13 +53,9 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
             </div>
           ) : (
             <>
-              {/* For PDFs, embed the PDF viewer */}
+              {/* For PDFs, embed the PDF viewer using blob URL for better compatibility */}
               {document.fileType === 'application/pdf' ? (
-                <iframe 
-                  src={`data:${document.fileType};base64,${document.fileContent}#toolbar=1&navpanes=1&scrollbar=1`}
-                  className="w-full h-full border-0"
-                  title={document.fileName}
-                />
+                <PDFViewer document={document} />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <FileText className="h-16 w-16 text-muted-foreground mb-4" />
