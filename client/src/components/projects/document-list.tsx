@@ -104,14 +104,25 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
       return await res.json();
     },
     onSuccess: () => {
+      // Invalidate multiple queries to ensure UI updates properly
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list for progress bar
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
+      
       setReviewDialogOpen(false);
       setSelectedDocument(null);
       setReviewComment("");
+      
       toast({
         title: "Document Reviewed",
         description: `Document has been ${reviewStatus.replace('_', ' ')}.`,
       });
+      
+      // Force page reload to ensure everything is up-to-date
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500); // Delay to allow toast to be visible
     },
     onError: () => {
       toast({

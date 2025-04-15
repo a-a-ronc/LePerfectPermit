@@ -157,13 +157,40 @@ export default function ProjectDetailsPage() {
   // Check if project is ready for submission
   const isReadyForSubmission = progress === 100 && documents.some(doc => doc.category === 'cover_letter');
   
+  // All required document categories that must be approved before generating a cover letter
+  const requiredDocumentCategories = [
+    "site_plan",
+    "facility_plan",
+    "egress_plan",
+    "structural_plans",
+    "commodities",
+    "fire_protection",
+    "special_inspection"
+  ];
+  
   const handleGenerateCoverLetter = () => {
-    const approvedDocumentCount = documents.filter(doc => doc.status === 'approved' && doc.category !== 'cover_letter').length;
+    // Check which categories have approved documents
+    const approvedCategories = new Set();
+    documents.forEach(doc => {
+      if (doc.status === 'approved') {
+        approvedCategories.add(doc.category);
+      }
+    });
     
-    if (approvedDocumentCount < 7) {
+    // Check if any required categories are missing approval
+    const missingCategories = requiredDocumentCategories.filter(
+      category => !approvedCategories.has(category)
+    );
+    
+    if (missingCategories.length > 0) {
+      const formattedMissingCategories = missingCategories
+        .map(cat => cat.replace(/_/g, ' '))
+        .map(cat => cat.charAt(0).toUpperCase() + cat.slice(1))
+        .join(', ');
+      
       toast({
         title: "Cannot Generate Cover Letter",
-        description: "All required documents must be approved before generating a cover letter.",
+        description: `The following documents still need approval: ${formattedMissingCategories}`,
         variant: "destructive",
       });
       return;
@@ -217,7 +244,9 @@ export default function ProjectDetailsPage() {
                         <div className="flex gap-2">
                           <Button 
                             onClick={handleGenerateCoverLetter}
-                            disabled={documents.filter(doc => doc.status === 'approved' && doc.category !== 'cover_letter').length < 7}
+                            disabled={requiredDocumentCategories.some(category => 
+                              !documents.some(doc => doc.category === category && doc.status === 'approved')
+                            )}
                           >
                             Generate AI Cover Letter
                           </Button>
