@@ -4,16 +4,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Document, DocumentStatus } from "@shared/schema";
@@ -24,7 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   formatDocumentCategory,
   getDocumentStatusColor,
-  getDocumentStatusLabel
 } from "@/lib/utils/document-utils";
 import { 
   Check, 
@@ -33,11 +25,23 @@ import {
   Download, 
   X, 
   ExternalLink, 
-  RotateCcw,
-  AlertCircle 
+  AlertCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Clock
 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DocumentPreviewDialogProps {
   isOpen: boolean;
@@ -56,6 +60,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
   );
   const [reviewComment, setReviewComment] = useState<string>(document?.comments || "");
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
   
   // Reset state when document changes
   React.useEffect(() => {
@@ -63,6 +68,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
       setChecklist(getChecklistForCategory(document.category));
       setReviewStatus(document.status || DocumentStatus.PENDING_REVIEW);
       setReviewComment(document.comments || "");
+      setShowRejectDialog(false);
       
       // Simulate document preview loading
       setIsPreviewLoading(true);
@@ -138,8 +144,41 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
     }
   });
   
-  const handleStatusChange = (status: string) => {
-    setReviewStatus(status);
+  const handleApprove = () => {
+    if (!checklistComplete) {
+      toast({
+        title: "Checklist Incomplete",
+        description: "All checklist items must be completed before approving this document.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setReviewStatus(DocumentStatus.APPROVED);
+    reviewMutation.mutate();
+  };
+  
+  const handleReject = () => {
+    setShowRejectDialog(true);
+  };
+  
+  const handleKeepInReview = () => {
+    setReviewStatus(DocumentStatus.PENDING_REVIEW);
+    reviewMutation.mutate();
+  };
+  
+  const submitRejection = () => {
+    if (!reviewComment || reviewComment.trim() === '') {
+      toast({
+        title: "Rejection Reason Required",
+        description: "Please provide a reason for rejecting this document.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setReviewStatus(DocumentStatus.REJECTED);
+    reviewMutation.mutate();
   };
   
   if (!document) return null;
@@ -248,88 +287,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
               <div className="text-xs text-muted-foreground">Review Checklist</div>
             </div>
             
-            <div className="p-3 border-b">
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs mb-1.5 block">Document Status</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: DocumentStatus.APPROVED, label: "Approve" },
-                      { value: DocumentStatus.REJECTED, label: "Reject" },
-                      { value: DocumentStatus.PENDING_REVIEW, label: "Keep in Review" }
-                    ].map(option => {
-                      const isSelected = reviewStatus === option.value;
-                      const statusColors = getDocumentStatusColor(option.value);
-                      
-                      return (
-                        <Button
-                          key={option.value}
-                          type="button"
-                          variant={isSelected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleStatusChange(option.value)}
-                          className={isSelected ? `${statusColors.bg} ${statusColors.text} hover:${statusColors.bg}/90` : ""}
-                        >
-                          {option.label}
-                          {isSelected && <Check className="ml-1 h-3 w-3" />}
-                        </Button>
-                      );
-                    })}
-                    
-                    {/* Only show revert option if the document was previously approved */}
-                    {document.status === DocumentStatus.APPROVED && (
-                      <Button
-                        type="button"
-                        variant={reviewStatus === DocumentStatus.PENDING_REVIEW ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleStatusChange(DocumentStatus.PENDING_REVIEW)}
-                        className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200"
-                      >
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        Revert to Review
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="comments" className="text-xs mb-1.5 block flex items-center justify-between">
-                    <span>Review Comments</span>
-                    {reviewStatus === DocumentStatus.REJECTED && (
-                      <span className="text-red-500 text-xs font-medium ml-1 flex items-center">
-                        <AlertCircle className="h-3 w-3 mr-1" />
-                        Required for rejection
-                      </span>
-                    )}
-                  </Label>
-                  <textarea
-                    id="comments"
-                    className={`w-full min-h-[80px] max-h-[100px] rounded-md border ${
-                      reviewStatus === DocumentStatus.REJECTED 
-                        ? (!reviewComment || reviewComment.trim() === '') 
-                          ? 'border-red-300 focus-visible:ring-red-500' 
-                          : 'border-green-300 focus-visible:ring-green-500'
-                        : 'border-input'
-                    } bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
-                    placeholder={reviewStatus === DocumentStatus.REJECTED 
-                      ? "Please specify why this document is being rejected..." 
-                      : "Add notes about this document..."}
-                    value={reviewComment}
-                    onChange={(e) => setReviewComment(e.target.value)}
-                  />
-                  
-                  {reviewStatus === DocumentStatus.REJECTED && (!reviewComment || reviewComment.trim() === '') && (
-                    <p className="text-xs text-red-500 mt-1">
-                      You must provide a reason for rejecting this document.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-3">
-              <h3 className="font-medium text-sm mb-2">{checklist.title}</h3>
-              
+            <div className="flex-1 overflow-auto p-3">              
               <div className="space-y-2">
                 {checklist.items.map((item) => (
                   <div key={item.id} className="flex items-start gap-2">
@@ -348,47 +306,93 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                 ))}
               </div>
               
-              {!checklistComplete && reviewStatus === DocumentStatus.APPROVED && (
+              {!checklistComplete && (
                 <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
-                  <strong>Note:</strong> Consider completing all checklist items before approving this document.
+                  <strong>Note:</strong> All checklist items must be completed to approve this document.
                 </div>
               )}
             </div>
             
-            <div className="p-3 bg-muted/20 border-t flex justify-between">
+            <div className="p-3 bg-muted/20 border-t flex justify-end gap-2">
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
                 onClick={onClose}
               >
-                <X className="h-4 w-4 mr-1" />
                 Close
               </Button>
               <Button 
-                type="button" 
+                variant="outline"
                 size="sm"
-                onClick={() => {
-                  // If the document is being rejected, ensure there's a reason provided
-                  if (reviewStatus === DocumentStatus.REJECTED && (!reviewComment || reviewComment.trim() === '')) {
-                    toast({
-                      title: "Rejection Reason Required",
-                      description: "Please provide a reason for rejecting this document in the comments field.",
-                      variant: "destructive"
-                    });
-                    return;
-                  }
-                  
-                  reviewMutation.mutate();
-                }}
+                onClick={handleKeepInReview}
                 disabled={reviewMutation.isPending}
+                className="bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
               >
-                {reviewMutation.isPending ? "Saving..." : "Submit Review"}
-                {!reviewMutation.isPending && <Check className="ml-1 h-4 w-4" />}
+                <Clock className="h-4 w-4 mr-1" />
+                Keep in Review
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={handleReject}
+                disabled={reviewMutation.isPending}
+                className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+              >
+                <ThumbsDown className="h-4 w-4 mr-1" />
+                Reject
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={handleApprove}
+                disabled={!checklistComplete || reviewMutation.isPending}
+                className={`${
+                  checklistComplete 
+                    ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100" 
+                    : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <ThumbsUp className="h-4 w-4 mr-1" />
+                Approve
               </Button>
             </div>
           </div>
         </div>
       </DialogContent>
+      
+      {/* Rejection reason dialog */}
+      <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rejection Reason</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please provide a reason for rejecting this document. This will be visible to the document submitter.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <textarea
+              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Please specify why this document is being rejected..."
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+            />
+            {(!reviewComment || reviewComment.trim() === '') && (
+              <p className="text-xs text-red-500 mt-1">
+                You must provide a reason for rejecting this document.
+              </p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={submitRejection}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Reject Document
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
