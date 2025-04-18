@@ -1,7 +1,20 @@
 import { DocumentCategory, DocumentCategoryType, DocumentStatus, DocumentStatusType } from "@shared/schema";
 
 export function formatDocumentCategory(category: DocumentCategoryType | string): string {
-  return category
+  // Map of categories to formatted display names
+  const displayNames: Record<string, string> = {
+    [DocumentCategory.SITE_PLAN]: "Site Plan",
+    [DocumentCategory.FACILITY_PLAN]: "Building/Floor Plan",
+    [DocumentCategory.EGRESS_PLAN]: "Egress Plan",
+    [DocumentCategory.STRUCTURAL_PLANS]: "Racking/Structural Plans",
+    [DocumentCategory.COMMODITIES]: "Commodity Description",
+    [DocumentCategory.FIRE_PROTECTION]: "Fire Protection",
+    [DocumentCategory.SPECIAL_INSPECTION]: "Special Inspection Agreement",
+    [DocumentCategory.COVER_LETTER]: "Cover Letter",
+  };
+  
+  // Return the mapped display name or fallback to properly formatted category
+  return displayNames[category] || category
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
@@ -10,23 +23,23 @@ export function formatDocumentCategory(category: DocumentCategoryType | string):
 export function getDocumentCategoryDescription(category: DocumentCategoryType | string): string {
   switch (category) {
     case DocumentCategory.SITE_PLAN:
-      return "Dimensioned site plan showing streets, building location, fire hydrants, and fire department access roadways.";
+      return "Streets and overall building outline, fire hydrant locations, fire department access roadways, key plan showing project area.";
     case DocumentCategory.FACILITY_PLAN:
-      return "Dimensioned floor plan showing proposed and existing racking, fire department access doors, etc.";
+      return "Proposed racking layout, fire department access doors, hose valves, pump rooms, and water supply controls.";
     case DocumentCategory.EGRESS_PLAN:
-      return "Floor plan showing means of egress components (aisles, exit access doors, exit doors, etc).";
+      return "Aisle layout with widths, exit access doors, exit doors, discharge points, and emergency lighting details.";
     case DocumentCategory.STRUCTURAL_PLANS:
-      return "Racking plan, shelf dimensions, structural calculations stamped by a licensed engineer.";
+      return "Rack types and heights, shelf specifications, flue space dimensions, floor-to-top measurements, and structural calculations.";
     case DocumentCategory.COMMODITIES:
-      return "Description of commodities stored and their placement method.";
+      return "Commodity class per IFC Table 3203.8 and packaging method (loose, boxed, shrink-wrapped, bins, etc.).";
     case DocumentCategory.FIRE_PROTECTION:
-      return "Information about existing fire protection systems including type of sprinkler system.";
+      return "Sprinkler system specifications, detection systems, hydraulic calculations, and compliance with fire code requirements.";
     case DocumentCategory.SPECIAL_INSPECTION:
-      return "Special Inspection Agreement with 'Storage Racks' marked as requiring inspection.";
+      return "Required storage rack inspection documentation with proper signatures and inspection agency details.";
     case DocumentCategory.COVER_LETTER:
-      return "Auto-generated comprehensive overview for municipal submission.";
+      return "Project overview, valuation details, permit requirements, and comprehensive documentation list for submission.";
     default:
-      return "Document for High-Piled Storage Permit";
+      return "Document for High-Piled Storage Permit application";
   }
 }
 

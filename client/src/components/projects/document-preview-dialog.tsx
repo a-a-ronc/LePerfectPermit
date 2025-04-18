@@ -218,6 +218,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
   };
   
   const handleReject = () => {
+    setReviewComment(""); // Clear any existing comment
     setShowRejectDialog(true);
   };
   
