@@ -25,7 +25,7 @@ import {
   getDocumentStatusColor,
   getDocumentStatusLabel
 } from "@/lib/utils/document-utils";
-import { Check, FileText, Loader2, Download, X, ExternalLink } from "lucide-react";
+import { Check, FileText, Loader2, Download, X, ExternalLink, RotateCcw } from "lucide-react";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 interface DocumentPreviewDialogProps {
@@ -225,7 +225,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
               <div className="space-y-3">
                 <div>
                   <Label className="text-xs mb-1.5 block">Document Status</Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {[
                       { value: DocumentStatus.APPROVED, label: "Approve" },
                       { value: DocumentStatus.REJECTED, label: "Reject" },
@@ -248,6 +248,20 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                         </Button>
                       );
                     })}
+                    
+                    {/* Only show revert option if the document was previously approved */}
+                    {document.status === DocumentStatus.APPROVED && (
+                      <Button
+                        type="button"
+                        variant={reviewStatus === DocumentStatus.PENDING_REVIEW ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleStatusChange(DocumentStatus.PENDING_REVIEW)}
+                        className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200"
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Revert to Review
+                      </Button>
+                    )}
                   </div>
                 </div>
                 

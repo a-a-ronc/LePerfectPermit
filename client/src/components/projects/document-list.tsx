@@ -7,7 +7,8 @@ import {
   Download, 
   MessageSquare, 
   Eye,
-  History
+  History,
+  RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -320,6 +321,25 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                         >
                           <MessageSquare className="h-4 w-4 mr-1" />
                           Review
+                        </Button>
+                      )}
+                      
+                      {/* Add revert option for approved documents */}
+                      {user?.role === "specialist" && doc.status === DocumentStatus.APPROVED && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDocument(doc);
+                            setReviewStatus(DocumentStatus.PENDING_REVIEW);
+                            setReviewComment(`Reverted from Approved status for additional review.\n\nPrevious comments: ${doc.comments || ""}`);
+                            setReviewDialogOpen(true);
+                          }}
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Revert to Review
                         </Button>
                       )}
                     </div>
