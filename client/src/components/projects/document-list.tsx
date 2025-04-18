@@ -128,6 +128,11 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
         title: "Document Deleted",
         description: "The document has been successfully deleted.",
       });
+      
+      // Force page reload to ensure user sees the updated document list
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // Delay to allow toast to be visible
     },
     onError: () => {
       toast({
