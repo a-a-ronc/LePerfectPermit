@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { FileUpload } from "@/components/ui/file-upload";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatDocumentCategory } from "@/lib/utils/document-utils";
 import {
   Dialog,
   DialogContent,
@@ -71,13 +72,21 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
     uploadMutation.mutate({ file, base64, category });
   };
 
+  // Determine the dialog title based on whether a category is selected
+  const dialogTitle = category 
+    ? `Upload ${formatDocumentCategory(category)} Documents` 
+    : "Upload Documents";
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload Documents</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Select one or more documents to upload for this project. You can upload multiple files at once in the same category. All documents will be reviewed by a permit specialist.
+            {category 
+              ? `Select one or more documents to upload for the ${formatDocumentCategory(category)} category. All documents will be reviewed by a permit specialist.`
+              : "Select one or more documents to upload for this project. You can upload multiple files at once in the same category. All documents will be reviewed by a permit specialist."
+            }
           </DialogDescription>
         </DialogHeader>
         
