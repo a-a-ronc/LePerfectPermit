@@ -90,15 +90,18 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
     mutationFn: async () => {
       if (!document) return;
       
-      // Convert checklist to string for comments
-      const checklistDetails = checklist.items
-        .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
-        .join("\n");
-      
+      // For rejected documents, only include the user's comments
+      // For approved documents, include the checklist as well
       const commentWithChecklist = 
+        reviewStatus === DocumentStatus.REJECTED ?
+        reviewComment.trim() : // Only include user's comments for rejections
         reviewComment.trim() ? 
-        `${reviewComment}\n\n${checklist.title}:\n${checklistDetails}` : 
-        `${checklist.title}:\n${checklistDetails}`;
+        `${reviewComment}\n\n${checklist.title}:\n${checklist.items
+            .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
+            .join("\n")}` : 
+        `${checklist.title}:\n${checklist.items
+            .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
+            .join("\n")}`;
       
       const res = await apiRequest("PATCH", `/api/documents/${document.id}`, {
         status: reviewStatus,
