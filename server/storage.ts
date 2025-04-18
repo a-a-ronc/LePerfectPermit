@@ -33,6 +33,7 @@ export interface IStorage {
   getDocument(id: number): Promise<Document | undefined>;
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: number, data: Partial<Document>): Promise<Document | undefined>;
+  deleteDocument(id: number): Promise<boolean>;
   
   // Commodity methods
   getCommoditiesByProject(projectId: number): Promise<Commodity[]>;
@@ -233,6 +234,26 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updatedDocument;
+  }
+  
+  async deleteDocument(id: number): Promise<boolean> {
+    // Get document before deleting to use in activity log
+    const [document] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, id));
+      
+    if (!document) {
+      return false;
+    }
+    
+    // Delete the document
+    const result = await db
+      .delete(documents)
+      .where(eq(documents.id, id))
+      .returning();
+      
+    return result.length > 0;
   }
   
   // Commodity methods

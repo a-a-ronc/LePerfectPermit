@@ -198,6 +198,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: "Failed to update document", error });
     }
   });
+  
+  app.delete("/api/projects/:projectId/documents/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const documentId = parseInt(req.params.id);
+      
+      // Get document information before deleting
+      const document = await storage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Verify document belongs to the specified project
+      if (document.projectId !== projectId) {
+        return res.status(403).json({ message: "Document does not belong to this project" });
+      }
+      
+      // Delete the document
+      const success = await storage.deleteDocument(documentId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Document not found or could not be deleted" });
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        projectId,
+        userId: req.user!.id,
+        activityType: "document_deleted",
+        description: `Document "${document.fileName}" was deleted`
+      });
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
 
   // Commodities routes
   app.get("/api/projects/:projectId/commodities", async (req, res) => {
