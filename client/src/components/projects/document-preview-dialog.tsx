@@ -290,14 +290,36 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                 </div>
                 
                 <div>
-                  <Label htmlFor="comments" className="text-xs mb-1.5 block">Review Comments</Label>
+                  <Label htmlFor="comments" className="text-xs mb-1.5 block flex items-center justify-between">
+                    <span>Review Comments</span>
+                    {reviewStatus === DocumentStatus.REJECTED && (
+                      <span className="text-red-500 text-xs font-medium ml-1 flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Required for rejection
+                      </span>
+                    )}
+                  </Label>
                   <textarea
                     id="comments"
-                    className="w-full min-h-[80px] max-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Add notes about this document..."
+                    className={`w-full min-h-[80px] max-h-[100px] rounded-md border ${
+                      reviewStatus === DocumentStatus.REJECTED 
+                        ? (!reviewComment || reviewComment.trim() === '') 
+                          ? 'border-red-300 focus-visible:ring-red-500' 
+                          : 'border-green-300 focus-visible:ring-green-500'
+                        : 'border-input'
+                    } bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
+                    placeholder={reviewStatus === DocumentStatus.REJECTED 
+                      ? "Please specify why this document is being rejected..." 
+                      : "Add notes about this document..."}
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
                   />
+                  
+                  {reviewStatus === DocumentStatus.REJECTED && (!reviewComment || reviewComment.trim() === '') && (
+                    <p className="text-xs text-red-500 mt-1">
+                      You must provide a reason for rejecting this document.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -342,7 +364,19 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
               <Button 
                 type="button" 
                 size="sm"
-                onClick={() => reviewMutation.mutate()}
+                onClick={() => {
+                  // If the document is being rejected, ensure there's a reason provided
+                  if (reviewStatus === DocumentStatus.REJECTED && (!reviewComment || reviewComment.trim() === '')) {
+                    toast({
+                      title: "Rejection Reason Required",
+                      description: "Please provide a reason for rejecting this document in the comments field.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  reviewMutation.mutate();
+                }}
                 disabled={reviewMutation.isPending}
               >
                 {reviewMutation.isPending ? "Saving..." : "Submit Review"}

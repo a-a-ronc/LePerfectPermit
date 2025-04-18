@@ -435,13 +435,35 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
               </div>
               
               <div className="mb-4">
-                <p className="text-sm font-medium mb-1">Comments</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-medium">Comments</p>
+                  {reviewStatus === DocumentStatus.REJECTED && (
+                    <span className="text-red-500 text-xs font-medium flex items-center">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Required for rejection
+                    </span>
+                  )}
+                </div>
                 <Textarea 
                   value={reviewComment} 
                   onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Add comments about this document..."
+                  placeholder={reviewStatus === DocumentStatus.REJECTED 
+                    ? "Please specify why this document is being rejected..." 
+                    : "Add comments about this document..."}
                   rows={4}
+                  className={`${
+                    reviewStatus === DocumentStatus.REJECTED 
+                      ? (!reviewComment || reviewComment.trim() === '') 
+                        ? 'border-red-300 focus-visible:ring-red-500' 
+                        : 'border-green-300 focus-visible:ring-green-500'
+                      : ''
+                  }`}
                 />
+                {reviewStatus === DocumentStatus.REJECTED && (!reviewComment || reviewComment.trim() === '') && (
+                  <p className="text-xs text-red-500 mt-1">
+                    You must provide a reason for rejecting this document.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -454,7 +476,19 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
               Cancel
             </Button>
             <Button 
-              onClick={() => reviewMutation.mutate()}
+              onClick={() => {
+                // If the document is being rejected, ensure there's a reason provided
+                if (reviewStatus === DocumentStatus.REJECTED && (!reviewComment || reviewComment.trim() === '')) {
+                  toast({
+                    title: "Rejection Reason Required",
+                    description: "Please provide a reason for rejecting this document in the comments field.",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                reviewMutation.mutate();
+              }}
               disabled={reviewMutation.isPending}
             >
               {reviewMutation.isPending ? "Submitting..." : "Submit Review"}
