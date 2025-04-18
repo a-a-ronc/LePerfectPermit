@@ -5,12 +5,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Document } from "@shared/schema";
+import { Document, DocumentStatus } from "@shared/schema";
 import { formatDocumentCategory } from "@/lib/utils/document-utils";
-import { Download, FileText, Loader2, ExternalLink } from "lucide-react";
+import { 
+  Download, 
+  FileText, 
+  Loader2, 
+  ExternalLink, 
+  AlertCircle 
+} from "lucide-react";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface DocumentViewDialogProps {
   isOpen: boolean;
@@ -43,7 +51,20 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
             <FileText className="h-5 w-5" />
             {formatDocumentCategory(document.category)} - {document.fileName}
           </DialogTitle>
+          <DialogDescription>
+            Document preview
+          </DialogDescription>
         </DialogHeader>
+        
+        {document.status === DocumentStatus.REJECTED && document.comments && (
+          <Alert variant="destructive" className="mt-2 mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Document Rejected</AlertTitle>
+            <AlertDescription>
+              {document.comments}
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="flex-1 mt-4 overflow-hidden border rounded-md bg-muted/20 flex items-center justify-center relative">
           {isLoading ? (

@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   Eye,
   History,
-  RotateCcw
+  RotateCcw,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -257,8 +258,20 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                   </div>
                   
                   {doc.comments && (
-                    <div className="mb-3 p-2 bg-gray-50 rounded border border-gray-200">
-                      <p className="text-sm text-gray-700">{doc.comments}</p>
+                    <div className={`mb-3 p-2 rounded border ${
+                      doc.status === DocumentStatus.REJECTED 
+                        ? 'bg-red-50 border-red-200' 
+                        : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      {doc.status === DocumentStatus.REJECTED && (
+                        <div className="flex items-center mb-2 text-red-700 font-medium text-sm">
+                          <AlertCircle className="h-4 w-4 mr-1.5" />
+                          Rejection Reason
+                        </div>
+                      )}
+                      <p className={`text-sm ${
+                        doc.status === DocumentStatus.REJECTED ? 'text-red-700' : 'text-gray-700'
+                      }`}>{doc.comments}</p>
                     </div>
                   )}
                   

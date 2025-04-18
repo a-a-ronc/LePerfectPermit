@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,17 @@ import {
   getDocumentStatusColor,
   getDocumentStatusLabel
 } from "@/lib/utils/document-utils";
-import { Check, FileText, Loader2, Download, X, ExternalLink, RotateCcw } from "lucide-react";
+import { 
+  Check, 
+  FileText, 
+  Loader2, 
+  Download, 
+  X, 
+  ExternalLink, 
+  RotateCcw,
+  AlertCircle 
+} from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 interface DocumentPreviewDialogProps {
@@ -138,7 +149,20 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
             <FileText className="h-5 w-5" />
             {formatDocumentCategory(document.category)} - {document.fileName}
           </DialogTitle>
+          <DialogDescription>
+            Review document and complete checklist
+          </DialogDescription>
         </DialogHeader>
+        
+        {document.status === DocumentStatus.REJECTED && document.comments && (
+          <Alert variant="destructive" className="mt-2 mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Document Rejected</AlertTitle>
+            <AlertDescription className="max-h-[100px] overflow-y-auto">
+              {document.comments}
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="flex flex-1 gap-4 mt-4 overflow-hidden">
           {/* Document preview */}
