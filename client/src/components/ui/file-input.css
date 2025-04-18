@@ -8,11 +8,6 @@
   color: #475569;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.file-input-custom::-webkit-file-upload-button:hover {
-  background-color: #cbd5e1;
 }
 
 /* For Firefox */
@@ -25,9 +20,4 @@
   color: #475569;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.file-input-custom::file-selector-button:hover {
-  background-color: #cbd5e1;
 }
