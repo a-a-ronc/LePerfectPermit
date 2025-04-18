@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Check,
   X,
-  Upload
+  Upload,
+  Trash
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -102,6 +103,54 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
     const sorted = [...docs].sort((a, b) => b.version - a.version);
     return sorted[0];
   });
+
+  // Delete document confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+
+  // Delete document mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      const res = await apiRequest("DELETE", `/api/documents/${documentId}`);
+      return res.ok;
+    },
+    onSuccess: () => {
+      // Invalidate multiple queries to ensure UI updates properly
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list for progress bar
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
+      
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
+      
+      toast({
+        title: "Document Deleted",
+        description: "The document has been successfully deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Delete Failed",
+        description: "There was an error deleting the document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle document deletion
+  const handleDeleteDocument = (document: Document, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row expansion
+    setDocumentToDelete(document);
+    setDeleteDialogOpen(true);
+  };
+
+  // Confirm document deletion
+  const confirmDeleteDocument = () => {
+    if (documentToDelete) {
+      deleteMutation.mutate(documentToDelete.id);
+    }
+  };
 
   // Review document mutation
   const reviewMutation = useMutation({
@@ -308,6 +357,14 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                   }}
                 >
                   <Upload className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="flex items-center h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={(e) => handleDeleteDocument(doc, e)}
+                >
+                  <Trash className="h-4 w-4" />
                 </Button>
                 <button className="text-primary hover:text-primary/80">
                   {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
