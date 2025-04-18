@@ -192,13 +192,23 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
     "cover_letter"
   ];
   
-  // Filter and sort documents by category
-  const orderedDocuments = categories
-    .map(category => {
-      const doc = latestDocuments.find(d => d.category === category);
-      return doc || null;
-    })
-    .filter(doc => doc !== null) as Document[];
+  // Upload dialog state
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedUploadCategory, setSelectedUploadCategory] = useState<string>("");
+  
+  // Create a map of all categories with their documents (or null if no document exists)
+  const categoriesWithDocuments = categories.map(category => {
+    const doc = latestDocuments.find(d => d.category === category);
+    return { 
+      category, 
+      document: doc || null 
+    };
+  });
+  
+  // Filter out null documents for operations that need actual documents
+  const orderedDocuments = categoriesWithDocuments
+    .filter(item => item.document !== null)
+    .map(item => item.document) as Document[];
   
   if (isLoading) {
     return (
@@ -224,26 +234,54 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
     );
   }
 
-  if (orderedDocuments.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No documents yet</h3>
-        <p className="text-gray-500 mb-4">
-          Upload documents using the "Upload Document" button above.
-        </p>
-      </div>
-    );
-  }
+  // Add the document upload dialog with pre-populated category
+  const handleCategoryUpload = (category: string) => {
+    setSelectedUploadCategory(category);
+    setUploadDialogOpen(true);
+  };
 
   return (
     <div className="overflow-hidden">
-      {orderedDocuments.map((doc) => {
+      {categoriesWithDocuments.map(({ category, document }) => {
+        const doc = document;
+        
+        // Create a unique key for each category row
+        const rowKey = doc ? `doc-${doc.id}` : `category-${category}`;
+        
+        if (!doc) {
+          // If this category doesn't have a document yet, show placeholder with upload button
+          return (
+            <div key={rowKey} className="border-b border-gray-200 bg-white">
+              <div className="flex flex-wrap justify-between p-4">
+                <div className="w-full md:w-auto flex items-center">
+                  <FileText className="h-6 w-6 text-gray-400 mr-3" />
+                  <div>
+                    <h3 className="font-medium">{formatDocumentCategory(category)}</h3>
+                    <p className="text-sm text-gray-500">{getDocumentCategoryDescription(category)}</p>
+                  </div>
+                </div>
+                <div className="mt-3 md:mt-0">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center"
+                    onClick={() => handleCategoryUpload(category)}
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Upload Document
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        // For categories with documents, show the document details
         const isExpanded = expandedDocId === doc.id;
         const { bg, text } = getDocumentStatusColor(doc.status);
         
         return (
-          <div key={doc.id} className={`border-b border-gray-200 ${isExpanded ? 'bg-gray-50' : 'bg-white'}`}>
+          <div key={rowKey} className={`border-b border-gray-200 ${isExpanded ? 'bg-gray-50' : 'bg-white'}`}>
             <div 
               className="flex flex-wrap justify-between p-4 cursor-pointer" 
               onClick={() => toggleExpand(doc.id)}
