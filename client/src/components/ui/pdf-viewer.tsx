@@ -9,7 +9,9 @@ interface PDFViewerProps {
 export function PDFViewer({ document }: PDFViewerProps) {
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [viewerType, setViewerType] = useState<'object' | 'embed' | 'data-url'>('object');
+  // Start with iframe viewer since it has fewer restrictions in the Replit environment
+  const [viewerType, setViewerType] = useState<'object' | 'embed' | 'data-url'>('data-url');
+  const [viewerSwitchCount, setViewerSwitchCount] = useState(0);
   
   useEffect(() => {
     // Create a blob URL for the PDF content
@@ -69,36 +71,61 @@ export function PDFViewer({ document }: PDFViewerProps) {
     );
   }
   
+  // Switch PDF viewer type and track attempts
+  const switchViewerType = () => {
+    setViewerSwitchCount(prev => prev + 1);
+    
+    // Determine next viewer type
+    let nextViewerType: 'object' | 'embed' | 'data-url';
+    if (viewerType === 'data-url') nextViewerType = 'embed';
+    else if (viewerType === 'embed') nextViewerType = 'object';
+    else nextViewerType = 'data-url';
+    
+    // Log and set the new type
+    console.log(`Switching from ${viewerType} to ${nextViewerType}, attempt: ${viewerSwitchCount + 1}`);
+    setViewerType(nextViewerType);
+  };
+  
   // Fallback content for all viewer types
   const fallbackContent = (
     <div className="w-full h-full flex items-center justify-center">
       <div className="p-4 border border-amber-200 bg-amber-50 rounded-md text-amber-700 text-sm max-w-md">
-        <p className="font-medium">Your browser doesn't support embedded PDFs.</p>
-        <p className="mt-2">You can:</p>
-        <ul className="list-disc pl-5 mt-1 space-y-1">
-          <li>Try opening the PDF in a new window</li>
-          <li>Download the PDF to view it locally</li>
-          <li>Update your browser to the latest version</li>
-        </ul>
-        <div className="mt-4 flex justify-center gap-2">
+        <p className="font-medium">PDF preview not available</p>
+        <p className="mt-2">This might be due to browser restrictions in the Replit environment.</p>
+        <p className="text-xs mt-1 text-amber-600">Current viewer: {viewerType}</p>
+        <div className="mt-4 flex flex-col gap-2">
           <button 
             onClick={() => window.open(pdfUrl, '_blank')}
-            className="px-3 py-1.5 bg-amber-100 border border-amber-300 rounded text-amber-800 text-xs font-medium hover:bg-amber-200"
+            className="w-full py-2 bg-primary text-white rounded font-medium hover:bg-primary/90"
           >
             Open in New Window
           </button>
           <button 
-            onClick={() => {
-              if (viewerType === 'object') setViewerType('embed');
-              else if (viewerType === 'embed') setViewerType('data-url');
-              else setViewerType('object');
-            }}
-            className="px-3 py-1.5 bg-amber-100 border border-amber-300 rounded text-amber-800 text-xs font-medium hover:bg-amber-200"
+            onClick={switchViewerType}
+            className="w-full py-2 bg-amber-100 border border-amber-300 rounded text-amber-800 font-medium hover:bg-amber-200"
           >
-            Try Different Viewer
+            Try Different Viewer ({viewerSwitchCount}/2)
           </button>
         </div>
       </div>
+    </div>
+  );
+
+  // Common toolbar with buttons for all viewer types
+  const ViewerToolbar = () => (
+    <div className="absolute bottom-4 right-4 flex gap-2">
+      <button
+        onClick={switchViewerType}
+        className="px-3 py-1.5 bg-white/90 backdrop-blur border border-gray-200 rounded text-gray-700 text-xs font-medium hover:bg-gray-50"
+      >
+        Try Different Viewer ({viewerSwitchCount}/2)
+      </button>
+      <button
+        onClick={() => window.open(pdfUrl, '_blank')}
+        className="px-3 py-1.5 bg-primary/90 backdrop-blur text-white rounded text-xs font-medium hover:bg-primary"
+      >
+        Open in New Window
+      </button>
     </div>
   );
 
@@ -112,21 +139,12 @@ export function PDFViewer({ document }: PDFViewerProps) {
         >
           {fallbackContent}
         </object>
-        
-        {/* Since onError isn't well-supported for object tag, add a backup button */}
-        <div className="absolute bottom-4 right-4">
-          <button
-            onClick={() => setViewerType('embed')}
-            className="px-3 py-1.5 bg-white/90 backdrop-blur border border-gray-200 rounded text-gray-700 text-xs font-medium hover:bg-gray-50"
-          >
-            PDF not loading? Try alternative viewer
-          </button>
-        </div>
+        <ViewerToolbar />
       </div>
     );
   } else if (viewerType === 'embed') {
     return (
-      <div className="w-full h-full">
+      <div className="w-full h-full relative">
         <embed 
           src={pdfUrl} 
           type="application/pdf" 
@@ -134,34 +152,21 @@ export function PDFViewer({ document }: PDFViewerProps) {
           height="100%" 
           className="w-full h-full"
         />
-        {/* Embed doesn't support fallback content, so we add our own error handler */}
-        <div className="absolute bottom-4 right-4">
-          <button
-            onClick={() => setViewerType('data-url')}
-            className="px-3 py-1.5 bg-white/90 backdrop-blur border border-gray-200 rounded text-gray-700 text-xs font-medium hover:bg-gray-50"
-          >
-            PDF not loading? Try alternative viewer
-          </button>
-        </div>
+        {/* fallbackContent will be shown by the browser if embed fails */}
+        <ViewerToolbar />
       </div>
     );
   } else {
-    // Last resort: direct data URL in iframe with minimal restrictions
+    // iframe with minimal restrictions - most compatible option
     return (
-      <div className="w-full h-full">
+      <div className="w-full h-full relative">
         <iframe
           src={pdfUrl}
           className="w-full h-full border-0"
           title={document?.fileName || "PDF Document"}
+          sandbox="allow-same-origin allow-scripts allow-forms"
         />
-        <div className="absolute bottom-4 right-4">
-          <button
-            onClick={() => window.open(pdfUrl, '_blank')}
-            className="px-3 py-1.5 bg-white/90 backdrop-blur border border-gray-200 rounded text-gray-700 text-xs font-medium hover:bg-gray-50"
-          >
-            Open in New Window
-          </button>
-        </div>
+        <ViewerToolbar />
       </div>
     );
   }
