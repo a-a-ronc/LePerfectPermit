@@ -70,7 +70,7 @@ export function CustomFileInput({
           Select file(s)
         </Button>
         <Label className="text-sm text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap">
-          {fileName || "No file chosen"}
+          {fileName || "No file selected"}
         </Label>
       </div>
     </div>
