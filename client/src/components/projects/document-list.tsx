@@ -283,21 +283,96 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                     </div>
                   </div>
                   
-                  {doc.comments && (
-                    <div className={`mb-3 p-2 rounded border ${
-                      doc.status === DocumentStatus.REJECTED 
-                        ? 'bg-red-50 border-red-200' 
-                        : 'bg-gray-50 border-gray-200'
-                    }`}>
-                      {doc.status === DocumentStatus.REJECTED && (
-                        <div className="flex items-center mb-2 text-red-700 font-medium text-sm">
-                          <AlertCircle className="h-4 w-4 mr-1.5" />
-                          Rejection Reason
-                        </div>
-                      )}
-                      <p className={`text-sm ${
-                        doc.status === DocumentStatus.REJECTED ? 'text-red-700' : 'text-gray-700'
-                      }`}>{doc.comments}</p>
+                  {/* Show appropriate content based on document status */}
+                  {doc.status === DocumentStatus.REJECTED && doc.comments && (
+                    <div className="mb-3 p-2 rounded border bg-red-50 border-red-200">
+                      <div className="flex items-center mb-2 text-red-700 font-medium text-sm">
+                        <AlertCircle className="h-4 w-4 mr-1.5" />
+                        Rejection Reason
+                      </div>
+                      <p className="text-sm text-red-700">{doc.comments}</p>
+                    </div>
+                  )}
+                  
+                  {/* Show checklist for Approved documents */}
+                  {doc.status === DocumentStatus.APPROVED && doc.comments && (
+                    <div className="mb-3 p-3 rounded border bg-green-50 border-green-200">
+                      <div className="flex items-center mb-2 text-green-700 font-medium text-sm">
+                        <Check className="h-4 w-4 mr-1.5" />
+                        Approval Checklist
+                      </div>
+                      
+                      {(() => {
+                        const parsedChecklist = parseChecklistFromComments(doc.comments);
+                        
+                        if (parsedChecklist && parsedChecklist.items.length > 0) {
+                          // Render checklist items
+                          return (
+                            <div className="space-y-1.5">
+                              {parsedChecklist.items.map((item, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <div className="h-4 w-4 mt-0.5 rounded border border-green-500 bg-green-100 flex items-center justify-center">
+                                    <Check className="h-3 w-3 text-green-600" />
+                                  </div>
+                                  <span className="text-sm text-green-700">{item.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        } else {
+                          // Fallback to showing comments
+                          return <p className="text-sm text-green-700">{doc.comments}</p>;
+                        }
+                      })()}
+                    </div>
+                  )}
+                  
+                  {/* Show partial checklist for In Review documents */}
+                  {doc.status === DocumentStatus.PENDING_REVIEW && doc.comments && (
+                    <div className="mb-3 p-3 rounded border bg-amber-50 border-amber-200">
+                      <div className="flex items-center mb-2 text-amber-700 font-medium text-sm">
+                        <History className="h-4 w-4 mr-1.5" />
+                        Review Progress
+                      </div>
+                      
+                      {(() => {
+                        const parsedChecklist = parseChecklistFromComments(doc.comments);
+                        
+                        if (parsedChecklist && parsedChecklist.items.length > 0) {
+                          // Get category checklist to ensure we show all items
+                          const categoryChecklist = getChecklistForCategory(doc.category);
+                          // Map parsed items to category items for display
+                          const displayItems = categoryChecklist.items.map(item => {
+                            const parsedItem = parsedChecklist.items.find(
+                              parsed => parsed.label.toLowerCase() === item.label.toLowerCase()
+                            );
+                            return {
+                              ...item,
+                              checked: parsedItem ? parsedItem.checked : false
+                            };
+                          });
+                          
+                          return (
+                            <div className="space-y-1.5">
+                              {displayItems.map((item, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  {item.checked ? (
+                                    <div className="h-4 w-4 mt-0.5 rounded border border-amber-500 bg-amber-100 flex items-center justify-center">
+                                      <Check className="h-3 w-3 text-amber-600" />
+                                    </div>
+                                  ) : (
+                                    <div className="h-4 w-4 mt-0.5 rounded border border-amber-300 bg-white"></div>
+                                  )}
+                                  <span className="text-sm text-amber-700">{item.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        } else {
+                          // Fallback to showing comments
+                          return <p className="text-sm text-amber-700">{doc.comments}</p>;
+                        }
+                      })()}
                     </div>
                   )}
                   
