@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { 
   FileText, 
@@ -9,7 +9,9 @@ import {
   Eye,
   History,
   RotateCcw,
-  AlertCircle
+  AlertCircle,
+  Check,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +28,7 @@ import { formatDateTime } from "@/lib/utils/date-utils";
 import { DocumentVersionHistory } from "./document-version-history";
 import { DocumentPreviewDialog } from "./document-preview-dialog";
 import { DocumentViewDialog } from "./document-view-dialog";
+import { getChecklistForCategory } from "@/lib/utils/checklist-data";
 import {
   Dialog,
   DialogContent,
@@ -153,6 +156,29 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
       setExpandedDocId(docId);
     }
   };
+  
+  // Parse existing comments to extract saved checklist state if available
+  const parseChecklistFromComments = useCallback((comments: string) => {
+    if (!comments) return null;
+    
+    // Check if the comments contain a checklist format
+    const checklistMatch = comments.match(/\[(x| )\] .+/g);
+    if (!checklistMatch) return null;
+    
+    const title = comments.split('\n')[0];
+    
+    const items = checklistMatch.map((line, idx) => {
+      const checked = line.startsWith('[x]');
+      const label = line.replace(/\[(x| )\] /, '');
+      return {
+        id: `existing-${idx}`,
+        label,
+        checked
+      };
+    });
+    
+    return { title, items };
+  }, []);
 
   // Categories in specific order
   const categories = [
