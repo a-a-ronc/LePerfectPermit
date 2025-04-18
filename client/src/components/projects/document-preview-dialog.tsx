@@ -259,8 +259,8 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
           {document.status === DocumentStatus.REJECTED && document.comments && (
             <Alert variant="destructive" className="mt-2 mb-2">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Document Rejected</AlertTitle>
-              <AlertDescription className="max-h-[100px] overflow-y-auto">
+              <AlertTitle>Rejection Reason</AlertTitle>
+              <AlertDescription className="max-h-[100px] overflow-y-auto whitespace-pre-wrap">
                 {document.comments}
               </AlertDescription>
             </Alert>
@@ -381,8 +381,8 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                 {/* Show rejection reason if document is rejected */}
                 {document.status === DocumentStatus.REJECTED && document.comments && (
                   <div className="mt-2">
-                    <h4 className="font-medium text-sm mb-2">Rejection Reason:</h4>
-                    <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                    <h4 className="font-medium text-sm mb-2">Rejection Reason</h4>
+                    <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700 whitespace-pre-wrap">
                       {document.comments}
                     </div>
                   </div>
@@ -391,7 +391,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                 {/* Show saved checklist if document is approved */}
                 {document.status === DocumentStatus.APPROVED && document.comments && (
                   <div className="mt-2">
-                    <h4 className="font-medium text-sm mb-2">Approval Checklist:</h4>
+                    <h4 className="font-medium text-sm mb-2">Approval Checklist</h4>
                     <div className="p-3 bg-green-50 border border-green-200 rounded text-sm">
                       <div className="whitespace-pre-wrap">{document.comments}</div>
                     </div>
@@ -453,19 +453,19 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
           <AlertDialogHeader>
             <AlertDialogTitle>Rejection Reason</AlertDialogTitle>
             <AlertDialogDescription>
-              Please provide a reason for rejecting this document. This will be visible to the document submitter.
+              Please provide a reason for rejecting this document.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
             <textarea
               className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Please specify why this document is being rejected..."
+              placeholder="Enter rejection reason..."
               value={reviewComment}
               onChange={(e) => setReviewComment(e.target.value)}
             />
             {(!reviewComment || reviewComment.trim() === '') && (
               <p className="text-xs text-red-500 mt-1">
-                You must provide a reason for rejecting this document.
+                A rejection reason is required
               </p>
             )}
           </div>
@@ -474,6 +474,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
             <AlertDialogAction
               onClick={submitRejection}
               className="bg-red-600 hover:bg-red-700"
+              disabled={!reviewComment || reviewComment.trim() === ''}
             >
               Reject Document
             </AlertDialogAction>

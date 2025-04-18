@@ -285,12 +285,12 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                   
                   {/* Show appropriate content based on document status */}
                   {doc.status === DocumentStatus.REJECTED && doc.comments && (
-                    <div className="mb-3 p-2 rounded border bg-red-50 border-red-200">
-                      <div className="flex items-center mb-2 text-red-700 font-medium text-sm">
+                    <div className="mb-3 p-3 rounded border bg-red-50 border-red-200">
+                      <div className="flex items-center mb-1 text-red-700 font-medium text-sm">
                         <AlertCircle className="h-4 w-4 mr-1.5" />
                         Rejection Reason
                       </div>
-                      <p className="text-sm text-red-700">{doc.comments}</p>
+                      <p className="text-sm text-red-700 whitespace-pre-wrap">{doc.comments}</p>
                     </div>
                   )}
                   
