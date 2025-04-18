@@ -61,14 +61,64 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
   const [reviewComment, setReviewComment] = useState<string>(document?.comments || "");
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [initialChecklist, setInitialChecklist] = useState<{title: string, items: {id: string, label: string, checked: boolean}[]}>({ title: "", items: [] });
+  
+  // Parse existing comments to extract saved checklist state if available
+  const parseChecklistFromComments = useCallback((comments: string) => {
+    if (!comments) return null;
+    
+    // Check if the comments contain a checklist format
+    const checklistMatch = comments.match(/\[(x| )\] .+/g);
+    if (!checklistMatch) return null;
+    
+    const title = comments.split('\n')[0];
+    
+    const items = checklistMatch.map((line, idx) => {
+      const checked = line.startsWith('[x]');
+      const label = line.replace(/\[(x| )\] /, '');
+      return {
+        id: `existing-${idx}`,
+        label,
+        checked
+      };
+    });
+    
+    return { title, items };
+  }, []);
   
   // Reset state when document changes
   React.useEffect(() => {
     if (document) {
-      setChecklist(getChecklistForCategory(document.category));
+      const categoryChecklist = getChecklistForCategory(document.category);
+      setChecklist(categoryChecklist);
       setReviewStatus(document.status || DocumentStatus.PENDING_REVIEW);
       setReviewComment(document.comments || "");
       setShowRejectDialog(false);
+      
+      // Try to parse existing checklist from document comments
+      // Only do this for PENDING_REVIEW documents
+      if (document.status === DocumentStatus.PENDING_REVIEW && document.comments) {
+        const parsedChecklist = parseChecklistFromComments(document.comments);
+        if (parsedChecklist && parsedChecklist.items.length > 0) {
+          // If we have a previously saved checklist, merge it with our category checklist
+          // to preserve the checked state
+          const updatedItems = categoryChecklist.items.map(item => {
+            // Try to find a matching item from parsed checklist
+            const matchingItem = parsedChecklist.items.find(
+              parsed => parsed.label.toLowerCase() === item.label.toLowerCase()
+            );
+            return matchingItem ? { ...item, checked: matchingItem.checked } : item;
+          });
+          
+          setChecklist({
+            ...categoryChecklist,
+            items: updatedItems
+          });
+        }
+        
+        // Store the initial checklist state for comparison
+        setInitialChecklist(categoryChecklist);
+      }
       
       // Simulate document preview loading
       setIsPreviewLoading(true);
@@ -78,7 +128,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
       
       return () => clearTimeout(timer);
     }
-  }, [document]);
+  }, [document, parseChecklistFromComments]);
   
   const toggleChecklistItem = useCallback((itemId: string) => {
     setChecklist(prevChecklist => ({
@@ -96,22 +146,31 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
     mutationFn: async () => {
       if (!document) return;
       
-      // For rejected documents, only include the user's comments
-      // For approved documents, include the checklist as well
-      const commentWithChecklist = 
-        reviewStatus === DocumentStatus.REJECTED ?
-        reviewComment.trim() : // Only include user's comments for rejections
-        reviewComment.trim() ? 
-        `${reviewComment}\n\n${checklist.title}:\n${checklist.items
-            .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
-            .join("\n")}` : 
-        `${checklist.title}:\n${checklist.items
-            .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
-            .join("\n")}`;
+      let comments = "";
+      
+      // Different comment handling based on status
+      if (reviewStatus === DocumentStatus.REJECTED) {
+        // For rejections, just use the rejection reason
+        comments = reviewComment.trim();
+      } else if (reviewStatus === DocumentStatus.APPROVED) {
+        // For approvals, include the full checklist with review comments
+        comments = reviewComment.trim() 
+          ? `${reviewComment}\n\n${checklist.title}:\n${checklist.items
+              .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
+              .join("\n")}`
+          : `${checklist.title}:\n${checklist.items
+              .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
+              .join("\n")}`;
+      } else if (reviewStatus === DocumentStatus.PENDING_REVIEW) {
+        // For "Keep in Review", just save the checklist state
+        comments = `${checklist.title}:\n${checklist.items
+          .map(item => `[${item.checked ? 'x' : ' '}] ${item.label}`)
+          .join("\n")}`;
+      }
       
       const res = await apiRequest("PATCH", `/api/documents/${document.id}`, {
         status: reviewStatus,
-        comments: commentWithChecklist,
+        comments: comments,
       });
       
       return await res.json();
@@ -285,31 +344,57 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
             <div className="w-80 flex-shrink-0 border rounded-md overflow-hidden flex flex-col bg-card">
               <div className="p-3 bg-muted/40 border-b flex flex-col gap-1">
                 <h3 className="font-medium text-sm">{formatDocumentCategory(document.category)}</h3>
-                <div className="text-xs text-muted-foreground">Review Checklist</div>
+                <div className="text-xs text-muted-foreground">{document.fileName}</div>
               </div>
               
               <div className="flex-1 overflow-auto p-3">              
-                <div className="space-y-2">
-                  {checklist.items.map((item) => (
-                    <div key={item.id} className="flex items-start gap-2">
-                      <Checkbox
-                        id={item.id}
-                        checked={item.checked}
-                        onCheckedChange={() => toggleChecklistItem(item.id)}
-                      />
-                      <Label
-                        htmlFor={item.id}
-                        className="text-sm leading-tight cursor-pointer"
-                      >
-                        {item.label}
-                      </Label>
+                {/* Show only the checklist when in review mode */}
+                {(document.status === DocumentStatus.PENDING_REVIEW || reviewStatus === DocumentStatus.PENDING_REVIEW) && (
+                  <>
+                    <h4 className="font-medium text-sm mb-3">Review Checklist</h4>
+                    <div className="space-y-2">
+                      {checklist.items.map((item) => (
+                        <div key={item.id} className="flex items-start gap-2">
+                          <Checkbox
+                            id={item.id}
+                            checked={item.checked}
+                            onCheckedChange={() => toggleChecklistItem(item.id)}
+                          />
+                          <Label
+                            htmlFor={item.id}
+                            className="text-sm leading-tight cursor-pointer"
+                          >
+                            {item.label}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    
+                    {!checklistComplete && (
+                      <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
+                        <strong>Note:</strong> All checklist items must be completed to approve this document.
+                      </div>
+                    )}
+                  </>
+                )}
                 
-                {!checklistComplete && (
-                  <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
-                    <strong>Note:</strong> All checklist items must be completed to approve this document.
+                {/* Show rejection reason if document is rejected */}
+                {document.status === DocumentStatus.REJECTED && document.comments && (
+                  <div className="mt-2">
+                    <h4 className="font-medium text-sm mb-2">Rejection Reason:</h4>
+                    <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                      {document.comments}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show saved checklist if document is approved */}
+                {document.status === DocumentStatus.APPROVED && document.comments && (
+                  <div className="mt-2">
+                    <h4 className="font-medium text-sm mb-2">Approval Checklist:</h4>
+                    <div className="p-3 bg-green-50 border border-green-200 rounded text-sm">
+                      <div className="whitespace-pre-wrap">{document.comments}</div>
+                    </div>
                   </div>
                 )}
               </div>
