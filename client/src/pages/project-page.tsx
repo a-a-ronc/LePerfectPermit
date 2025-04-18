@@ -155,6 +155,11 @@ export default function ProjectPage() {
         title: "Project created",
         description: "New project has been successfully created.",
       });
+      
+      // Refresh the page to show the newly created project
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // Small delay to allow the toast to be visible
     } catch (error) {
       console.error("Error creating project:", error);
       toast({
