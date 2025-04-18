@@ -11,7 +11,8 @@ import {
   RotateCcw,
   AlertCircle,
   Check,
-  X
+  X,
+  Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +29,7 @@ import { formatDateTime } from "@/lib/utils/date-utils";
 import { DocumentVersionHistory } from "./document-version-history";
 import { DocumentPreviewDialog } from "./document-preview-dialog";
 import { DocumentViewDialog } from "./document-view-dialog";
+import { DocumentUploadDialog } from "./document-upload-dialog";
 import { getChecklistForCategory } from "@/lib/utils/checklist-data";
 import {
   Dialog,
@@ -234,7 +236,7 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
     );
   }
 
-  // Add the document upload dialog with pre-populated category
+  // Handler for category-specific uploads
   const handleCategoryUpload = (category: string) => {
     setSelectedUploadCategory(category);
     setUploadDialogOpen(true);
@@ -243,12 +245,10 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
   return (
     <div className="overflow-hidden">
       {categoriesWithDocuments.map(({ category, document }) => {
-        const doc = document;
-        
         // Create a unique key for each category row
-        const rowKey = doc ? `doc-${doc.id}` : `category-${category}`;
+        const rowKey = document ? `doc-${document.id}` : `category-${category}`;
         
-        if (!doc) {
+        if (!document) {
           // If this category doesn't have a document yet, show placeholder with upload button
           return (
             <div key={rowKey} className="border-b border-gray-200 bg-white">
@@ -277,6 +277,7 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
         }
         
         // For categories with documents, show the document details
+        const doc = document; // for readability in the JSX below
         const isExpanded = expandedDocId === doc.id;
         const { bg, text } = getDocumentStatusColor(doc.status);
         
@@ -293,10 +294,21 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                   <p className="text-sm text-gray-500">{getDocumentCategoryDescription(doc.category)}</p>
                 </div>
               </div>
-              <div className="mt-3 md:mt-0 flex items-center">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${bg} ${text} mr-3`}>
+              <div className="mt-3 md:mt-0 flex items-center gap-2">
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${bg} ${text}`}>
                   {getDocumentStatusLabel(doc.status)}
                 </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="flex items-center h-7 w-7 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCategoryUpload(doc.category);
+                  }}
+                >
+                  <Upload className="h-4 w-4" />
+                </Button>
                 <button className="text-primary hover:text-primary/80">
                   {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                 </button>
@@ -536,6 +548,14 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
           </div>
         );
       })}
+
+      {/* Document Upload Dialog */}
+      <DocumentUploadDialog
+        isOpen={uploadDialogOpen}
+        onClose={() => setUploadDialogOpen(false)}
+        projectId={projectId}
+        category={selectedUploadCategory}
+      />
 
       {/* Review Dialog */}
       <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>

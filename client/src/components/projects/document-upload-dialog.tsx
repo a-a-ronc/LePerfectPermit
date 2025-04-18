@@ -15,9 +15,10 @@ interface DocumentUploadDialogProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: number;
+  category?: string; // Optional pre-selected category
 }
 
-export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUploadDialogProps) {
+export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: DocumentUploadDialogProps) {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   
@@ -86,6 +87,7 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId }: DocumentUpl
             acceptedFileTypes=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
             disabled={isUploading || uploadMutation.isPending}
             maxSizeMB={40} // Increased file size limit to 40MB
+            category={category} // Pass the pre-selected category
           />
         </div>
       </DialogContent>
