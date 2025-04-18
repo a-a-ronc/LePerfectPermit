@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, File, Upload, X, Trash } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DocumentCategory } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import "./file-input.css";
+import { CustomFileInput } from "./CustomFileInput";
+import { Input } from "@/components/ui/input";
 
 interface FileUploadProps {
   onFileSelect: (file: File, base64: string, category: string) => void;
@@ -161,28 +161,20 @@ export function FileUpload({
   return (
     <div className="space-y-4">
       <div className="grid w-full gap-1.5">
-        <Label htmlFor="file-upload" className="flex justify-between">
+        <div className="flex justify-between mb-2">
           <span>Upload Documents</span>
           {files.length > 0 && (
             <Badge variant="outline" className="ml-2">
               {files.length} {files.length === 1 ? 'file' : 'files'} selected
             </Badge>
           )}
-        </Label>
-        <Input
+        </div>
+        <CustomFileInput
           id="file-upload"
-          type="file"
           accept={acceptedFileTypes}
           onChange={handleFileChange}
           disabled={disabled || loading}
-          className="cursor-pointer file-input-custom"
           multiple={multiple}
-          style={{
-            // This ensures the base styling of the input remains consistent
-            padding: '0.5rem',
-            border: '1px solid #e2e8f0',
-            borderRadius: '0.375rem',
-          }}
         />
         <p className="text-xs text-muted-foreground">
           Max file size: {maxSizeMB}MB. Accepted file types: {acceptedFileTypes}
