@@ -67,7 +67,7 @@ export function CustomFileInput({
             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' 
           }}
         >
-          Choose files
+          Select file(s)
         </Button>
         <Label className="text-sm text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap">
           {fileName || "No file chosen"}
