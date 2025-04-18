@@ -6,6 +6,7 @@ import { AlertCircle, File, Upload, X, Trash } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DocumentCategory } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
+import "./file-input.css";
 
 interface FileUploadProps {
   onFileSelect: (file: File, base64: string, category: string) => void;
@@ -174,8 +175,14 @@ export function FileUpload({
           accept={acceptedFileTypes}
           onChange={handleFileChange}
           disabled={disabled || loading}
-          className="cursor-pointer"
+          className="cursor-pointer file-input-custom"
           multiple={multiple}
+          style={{
+            // This ensures the base styling of the input remains consistent
+            padding: '0.5rem',
+            border: '1px solid #e2e8f0',
+            borderRadius: '0.375rem',
+          }}
         />
         <p className="text-xs text-muted-foreground">
           Max file size: {maxSizeMB}MB. Accepted file types: {acceptedFileTypes}
