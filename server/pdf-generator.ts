@@ -29,7 +29,7 @@ export async function generatePdfFromText(content: string): Promise<string> {
       const buffers: Buffer[] = [];
       
       // Collect PDF data chunks
-      doc.on('data', (buffer) => buffers.push(buffer));
+      doc.on('data', (buffer: Buffer) => buffers.push(buffer));
       
       // When PDF is complete, combine chunks and resolve with base64
       doc.on('end', () => {
