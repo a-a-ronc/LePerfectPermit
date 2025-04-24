@@ -278,8 +278,50 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
               ) : (
                 <>
                   {/* For PDFs, embed the PDF viewer using blob URL for better compatibility */}
-                  {document.fileType === 'application/pdf' ? (
-                    <PDFViewer document={document} />
+                  {document.fileType === 'application/pdf' || document.fileType === 'text/plain' ? (
+                    <>
+                      <PDFViewer document={document} />
+                      {/* Add Open in New Window button at bottom right */}
+                      <div className="absolute bottom-4 right-4 z-10">
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          className="bg-primary/90 text-white hover:bg-primary backdrop-blur"
+                          onClick={() => {
+                            try {
+                              // Create a blob URL for better browser compatibility
+                              const byteCharacters = atob(document.fileContent);
+                              
+                              // For text files
+                              if (document.fileType === 'text/plain') {
+                                const blob = new Blob([byteCharacters], { type: 'text/plain' });
+                                const url = URL.createObjectURL(blob);
+                                window.open(url, '_blank');
+                                return;
+                              }
+                              
+                              // For other files
+                              const byteNumbers = new Array(byteCharacters.length);
+                              for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                              }
+                              const byteArray = new Uint8Array(byteNumbers);
+                              const blob = new Blob([byteArray], {type: document.fileType});
+                              const url = URL.createObjectURL(blob);
+                              
+                              // Open in new window
+                              window.open(url, '_blank');
+                            } catch (error: any) {
+                              console.error("Error opening file:", error);
+                              alert("Error: " + (error.message || "Could not open file in new window"));
+                            }
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open in New Window
+                        </Button>
+                      </div>
+                    </>
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <FileText className="h-16 w-16 text-muted-foreground mb-4" />
