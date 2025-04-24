@@ -289,25 +289,13 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                           className="bg-primary/90 text-white hover:bg-primary backdrop-blur"
                           onClick={() => {
                             try {
-                              // Create a blob URL for better browser compatibility
-                              const byteCharacters = atob(document.fileContent);
+                              // Create safe URL method with fallbacks
+                              let url;
                               
-                              // For text files
-                              if (document.fileType === 'text/plain') {
-                                const blob = new Blob([byteCharacters], { type: 'text/plain' });
-                                const url = URL.createObjectURL(blob);
-                                window.open(url, '_blank');
-                                return;
-                              }
-                              
-                              // For other files
-                              const byteNumbers = new Array(byteCharacters.length);
-                              for (let i = 0; i < byteCharacters.length; i++) {
-                                byteNumbers[i] = byteCharacters.charCodeAt(i);
-                              }
-                              const byteArray = new Uint8Array(byteNumbers);
-                              const blob = new Blob([byteArray], {type: document.fileType});
-                              const url = URL.createObjectURL(blob);
+                              // Try direct data URL first as the most reliable method
+                              url = `data:${document.fileType};base64,${document.fileContent}`;
+                              window.open(url, '_blank');
+                              return;
                               
                               // Open in new window
                               window.open(url, '_blank');
@@ -342,18 +330,14 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                           variant="secondary" 
                           size="sm"
                           onClick={() => {
-                            // Create a blob URL for better browser compatibility
-                            const byteCharacters = atob(document.fileContent);
-                            const byteNumbers = new Array(byteCharacters.length);
-                            for (let i = 0; i < byteCharacters.length; i++) {
-                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            // Use direct data URI which is more reliable and skips atob
+                            try {
+                              const url = `data:${document.fileType};base64,${document.fileContent}`;
+                              window.open(url, '_blank');
+                            } catch (error) {
+                              console.error("Error opening in new window:", error);
+                              alert("Error: Could not open file in new window. Please try the download option instead.");
                             }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const blob = new Blob([byteArray], {type: document.fileType});
-                            const blobUrl = URL.createObjectURL(blob);
-                            
-                            // Open in new window
-                            window.open(blobUrl, '_blank');
                           }}
                         >
                           <ExternalLink className="h-4 w-4 mr-2" />

@@ -94,25 +94,32 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                       className="bg-primary/90 text-white hover:bg-primary backdrop-blur"
                       onClick={() => {
                         try {
-                          // Create a blob URL for better browser compatibility
-                          const byteCharacters = atob(document.fileContent);
+                          // Create safe URL method with fallbacks
+                          let url;
                           
-                          // For text files
+                          // Try direct data URL first as the most reliable method
+                          url = `data:${document.fileType};base64,${document.fileContent}`;
+                          window.open(url, '_blank');
+                          return;
+                          
+                          /* Keeping the below code commented out as a fallback if we need more complex handling later 
+                          // For text files - simple approach
                           if (document.fileType === 'text/plain') {
-                            const blob = new Blob([byteCharacters], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            window.open(url, '_blank');
-                            return;
+                            try {
+                              // Try to decode from base64 - might not always work if the encoding is invalid
+                              // Instead use a direct data URL which browsers handle better
+                              url = `data:text/plain;base64,${document.fileContent}`;
+                              window.open(url, '_blank');
+                              return;
+                            } catch (textError) {
+                              console.error("Error processing text:", textError);
+                              // Fall through to data URI approach
+                            }
                           }
                           
-                          // For other files
-                          const byteNumbers = new Array(byteCharacters.length);
-                          for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                          }
-                          const byteArray = new Uint8Array(byteNumbers);
-                          const blob = new Blob([byteArray], {type: document.fileType});
-                          const url = URL.createObjectURL(blob);
+                          // For other file types or as fallback for text
+                          url = `data:${document.fileType};base64,${document.fileContent}`;
+                          */
                           
                           // Open in new window
                           window.open(url, '_blank');
@@ -145,18 +152,14 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                       variant="secondary" 
                       size="sm"
                       onClick={() => {
-                        // Create a blob URL for better browser compatibility
-                        const byteCharacters = atob(document.fileContent);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                          byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        // Use direct data URI which is more reliable and skips atob
+                        try {
+                          const url = `data:${document.fileType};base64,${document.fileContent}`;
+                          window.open(url, '_blank');
+                        } catch (error) {
+                          console.error("Error opening in new window:", error);
+                          alert("Error: Could not open file in new window. Please try the download option instead.");
                         }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const blob = new Blob([byteArray], {type: document.fileType});
-                        const blobUrl = URL.createObjectURL(blob);
-                        
-                        // Open in new window
-                        window.open(blobUrl, '_blank');
                       }}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
@@ -169,27 +172,13 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                       onClick={() => {
                         // Create a download link - handle text files differently
                         try {
-                          if (document.fileType === 'text/plain') {
-                            // For text files, create a text file download from decoded content
-                            const byteCharacters = atob(document.fileContent);
-                            const blob = new Blob([byteCharacters], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const a = window.document.createElement('a');
-                            a.href = url;
-                            a.download = document.fileName;
-                            window.document.body.appendChild(a);
-                            a.click();
-                            window.document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                          } else {
-                            // For other files, use data URI
-                            const link = window.document.createElement('a');
-                            link.href = `data:${document.fileType};base64,${document.fileContent}`;
-                            link.download = document.fileName;
-                            window.document.body.appendChild(link);
-                            link.click();
-                            window.document.body.removeChild(link);
-                          }
+                          // For all file types, use data URI which is more reliable
+                          const link = window.document.createElement('a');
+                          link.href = `data:${document.fileType};base64,${document.fileContent}`;
+                          link.download = document.fileName;
+                          window.document.body.appendChild(link);
+                          link.click();
+                          window.document.body.removeChild(link);
                         } catch (error: any) {
                           console.error("Error downloading document:", error);
                           alert("Download error: " + (error.message || "Could not download file"));
