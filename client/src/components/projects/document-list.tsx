@@ -502,13 +502,38 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                         className="flex items-center"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Create a download link
-                          const link = window.document.createElement('a');
-                          link.href = `data:${doc.fileType};base64,${doc.fileContent}`;
-                          link.download = doc.fileName;
-                          window.document.body.appendChild(link);
-                          link.click();
-                          window.document.body.removeChild(link);
+                          try {
+                            // Create a download link
+                            const byteCharacters = atob(doc.fileContent);
+                            
+                            // For text files, create a text file download
+                            if (doc.fileType === 'text/plain') {
+                              const blob = new Blob([byteCharacters], { type: 'text/plain' });
+                              const url = URL.createObjectURL(blob);
+                              const a = window.document.createElement('a');
+                              a.href = url;
+                              a.download = doc.fileName;
+                              window.document.body.appendChild(a);
+                              a.click();
+                              window.document.body.removeChild(a);
+                              URL.revokeObjectURL(url);
+                            } else {
+                              // For other files, use data URI
+                              const link = window.document.createElement('a');
+                              link.href = `data:${doc.fileType};base64,${doc.fileContent}`;
+                              link.download = doc.fileName;
+                              window.document.body.appendChild(link);
+                              link.click();
+                              window.document.body.removeChild(link);
+                            }
+                          } catch (error) {
+                            console.error("Error downloading file:", error);
+                            toast({
+                              title: "Download Error",
+                              description: "There was a problem downloading the file.",
+                              variant: "destructive",
+                            });
+                          }
                         }}
                       >
                         <Download className="h-4 w-4 mr-1" />

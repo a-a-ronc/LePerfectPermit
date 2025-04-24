@@ -30,15 +30,22 @@ interface DocumentViewDialogProps {
 export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDialogProps) {
   const [isLoading, setIsLoading] = useState(true);
   
-  // Reset loading state when document changes
+  // Reset loading state and create reference to the document
   useEffect(() => {
     if (document) {
       setIsLoading(true);
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
       
-      return () => clearTimeout(timer);
+      // For text files, process immediately
+      if (document.fileType === 'text/plain') {
+        setIsLoading(false);
+      } else {
+        // For other files, add a small loading delay
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, [document]);
   

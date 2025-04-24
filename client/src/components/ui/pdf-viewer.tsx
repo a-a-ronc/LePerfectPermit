@@ -15,34 +15,46 @@ export function PDFViewer({ document }: PDFViewerProps) {
   useEffect(() => {
     if (document?.fileContent) {
       try {
-        // Base64 to binary conversion
-        const byteCharacters = atob(document.fileContent);
-        
-        // For text files, just decode and display the text content
+        // For text files, just decode and display the text content directly
         if (document.fileType === 'text/plain') {
-          setFileContent(byteCharacters);
-          setLoading(false);
+          try {
+            // Base64 to text conversion
+            const decodedContent = atob(document.fileContent);
+            setFileContent(decodedContent);
+            setLoading(false);
+          } catch (textError) {
+            console.error("Error decoding text content:", textError);
+            setFileContent("Error displaying text content. The file may be corrupted.");
+            setLoading(false);
+          }
           return;
         }
         
         // For PDFs and other binary files, create a blob URL
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        try {
+          // Base64 to binary conversion
+          const byteCharacters = atob(document.fileContent);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          
+          // Create blob and URL
+          const blob = new Blob([byteArray], { type: document.fileType });
+          const url = URL.createObjectURL(blob);
+          
+          setFileUrl(url);
+          setLoading(false);
+          
+          // Clean up the URL on unmount
+          return () => {
+            if (url) URL.revokeObjectURL(url);
+          };
+        } catch (binaryError) {
+          console.error("Error creating binary file preview:", binaryError);
+          setLoading(false);
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        
-        // Create blob and URL
-        const blob = new Blob([byteArray], { type: document.fileType });
-        const url = URL.createObjectURL(blob);
-        
-        setFileUrl(url);
-        setLoading(false);
-        
-        // Clean up the URL on unmount
-        return () => {
-          if (url) URL.revokeObjectURL(url);
-        };
       } catch (error) {
         console.error("Error creating file preview:", error);
         setLoading(false);
