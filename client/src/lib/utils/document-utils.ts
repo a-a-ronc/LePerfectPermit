@@ -4,12 +4,12 @@ export function formatDocumentCategory(category: DocumentCategoryType | string):
   // Map of categories to formatted display names
   const displayNames: Record<string, string> = {
     [DocumentCategory.SITE_PLAN]: "Site Plan",
-    [DocumentCategory.FACILITY_PLAN]: "Building/Floor Plan",
+    [DocumentCategory.FACILITY_PLAN]: "Facility Plan",
     [DocumentCategory.EGRESS_PLAN]: "Egress Plan",
-    [DocumentCategory.STRUCTURAL_PLANS]: "Racking/Structural Plans",
-    [DocumentCategory.COMMODITIES]: "Commodity Description",
+    [DocumentCategory.STRUCTURAL_PLANS]: "Structural Plans",
+    [DocumentCategory.COMMODITIES]: "Commodities Form",
     [DocumentCategory.FIRE_PROTECTION]: "Fire Protection",
-    [DocumentCategory.SPECIAL_INSPECTION]: "Special Inspection Agreement",
+    [DocumentCategory.SPECIAL_INSPECTION]: "Special Inspection",
     [DocumentCategory.COVER_LETTER]: "Cover Letter",
   };
   
