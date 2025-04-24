@@ -80,20 +80,41 @@ export function PDFViewer({ document }: PDFViewerProps) {
         <div className="absolute top-2 right-2 flex gap-2">
           <button
             onClick={() => {
-              // Download as text file
-              const blob = new Blob([fileContent], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = window.document.createElement('a');
-              a.href = url;
-              a.download = document.fileName || 'download.txt';
-              window.document.body.appendChild(a);
-              a.click();
-              window.document.body.removeChild(a);
-              URL.revokeObjectURL(url);
+              try {
+                // Download as text file
+                const blob = new Blob([fileContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = window.document.createElement('a');
+                a.href = url;
+                a.download = document.fileName || 'download.txt';
+                window.document.body.appendChild(a);
+                a.click();
+                window.document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              } catch (error: any) {
+                console.error("Error downloading text file:", error);
+                alert("Download error: " + (error.message || "Unable to download file"));
+              }
             }}
             className="px-3 py-1.5 bg-primary/90 backdrop-blur text-white rounded text-xs font-medium hover:bg-primary"
           >
             Download
+          </button>
+          <button
+            onClick={() => {
+              // Open in new window
+              try {
+                const blob = new Blob([fileContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+              } catch (error: any) {
+                console.error("Error opening text file:", error);
+                alert("Preview error: " + (error.message || "Unable to open file in new window"));
+              }
+            }}
+            className="px-3 py-1.5 bg-gray-200 backdrop-blur text-gray-800 rounded text-xs font-medium hover:bg-gray-300"
+          >
+            Open in New Window
           </button>
         </div>
         <div className="max-w-3xl mx-auto whitespace-pre-wrap font-mono text-sm leading-relaxed">

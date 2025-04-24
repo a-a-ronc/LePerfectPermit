@@ -125,13 +125,33 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        // Create a download link
-                        const link = window.document.createElement('a');
-                        link.href = `data:${document.fileType};base64,${document.fileContent}`;
-                        link.download = document.fileName;
-                        window.document.body.appendChild(link);
-                        link.click();
-                        window.document.body.removeChild(link);
+                        // Create a download link - handle text files differently
+                        try {
+                          if (document.fileType === 'text/plain') {
+                            // For text files, create a text file download from decoded content
+                            const byteCharacters = atob(document.fileContent);
+                            const blob = new Blob([byteCharacters], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = window.document.createElement('a');
+                            a.href = url;
+                            a.download = document.fileName;
+                            window.document.body.appendChild(a);
+                            a.click();
+                            window.document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          } else {
+                            // For other files, use data URI
+                            const link = window.document.createElement('a');
+                            link.href = `data:${document.fileType};base64,${document.fileContent}`;
+                            link.download = document.fileName;
+                            window.document.body.appendChild(link);
+                            link.click();
+                            window.document.body.removeChild(link);
+                          }
+                        } catch (error: any) {
+                          console.error("Error downloading document:", error);
+                          alert("Download error: " + (error.message || "Could not download file"));
+                        }
                       }}
                     >
                       <Download className="h-4 w-4 mr-2" />

@@ -357,8 +357,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const coverLetterContent = await generateCoverLetterWithAI(project, approvedDocuments);
       
       // We're storing text as a plain text file since we're not generating an actual PDF
-      // The text can be displayed in a viewer using a text format
-      const coverLetterBase64 = Buffer.from(coverLetterContent).toString('base64');
+      // Properly encode the text content to base64 for storage
+      const coverLetterBase64 = Buffer.from(coverLetterContent, 'utf-8').toString('base64');
       
       // Create the cover letter document
       const coverLetter = await storage.createDocument({
