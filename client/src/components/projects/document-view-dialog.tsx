@@ -15,7 +15,8 @@ import {
   FileText, 
   Loader2, 
   ExternalLink, 
-  AlertCircle 
+  AlertCircle,
+  FileCode 
 } from "lucide-react";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -74,8 +75,8 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
             </div>
           ) : (
             <>
-              {/* For PDFs, embed the PDF viewer using blob URL for better compatibility */}
-              {document.fileType === 'application/pdf' ? (
+              {/* Use our file viewer component which now handles both PDFs and text files */}
+              {document.fileType === 'application/pdf' || document.fileType === 'text/plain' ? (
                 <PDFViewer document={document} />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -87,9 +88,7 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                     ({(document.fileSize / (1024 * 1024)).toFixed(2)} MB)
                   </p>
                   <p className="text-xs text-muted-foreground mb-6 max-w-md text-center">
-                    {document.fileType !== 'application/pdf' 
-                      ? `This file type (${document.fileType}) can't be previewed directly in the browser. Please download to view.` 
-                      : "PDF preview is available. If you're having trouble viewing it, please download the file."}
+                    {`This file type (${document.fileType}) can't be previewed directly in the browser. Please download to view.`}
                   </p>
                   
                   <div className="flex gap-2">

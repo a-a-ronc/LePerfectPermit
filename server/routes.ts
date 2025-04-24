@@ -356,14 +356,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate cover letter using OpenAI (with fallback to template-based generation)
       const coverLetterContent = await generateCoverLetterWithAI(project, approvedDocuments);
       
+      // We're storing text as a plain text file since we're not generating an actual PDF
+      // The text can be displayed in a viewer using a text format
+      const coverLetterBase64 = Buffer.from(coverLetterContent).toString('base64');
+      
       // Create the cover letter document
       const coverLetter = await storage.createDocument({
         projectId,
         category: 'cover_letter',
-        fileName: `CoverLetter_${project.name}.pdf`,
-        fileType: 'application/pdf',
+        fileName: `CoverLetter_${project.name}.txt`,
+        fileType: 'text/plain',
         fileSize: coverLetterContent.length,
-        fileContent: coverLetterContent,
+        fileContent: coverLetterBase64,
         status: 'pending_review',
         uploadedById: req.user!.id,
         comments: 'AI-powered cover letter for PainlessPermit™️'
