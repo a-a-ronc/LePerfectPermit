@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { generateCoverLetterWithAI } from "./openai";
+import { generatePdfFromText } from "./pdf-generator";
 import { 
   insertProjectSchema, 
   insertDocumentSchema, 
@@ -356,18 +357,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate cover letter using OpenAI (with fallback to template-based generation)
       const coverLetterContent = await generateCoverLetterWithAI(project, approvedDocuments);
       
-      // We're storing text as a plain text file since we're not generating an actual PDF
-      // Properly encode the text content to base64 for storage
-      const coverLetterBase64 = Buffer.from(coverLetterContent, 'utf-8').toString('base64');
+      // Convert the text content to a properly formatted PDF
+      const coverLetterPdfBase64 = await generatePdfFromText(coverLetterContent);
       
-      // Create the cover letter document
+      // Estimate the file size - we don't have exact byte size for the PDF
+      const estimatedPdfSize = coverLetterContent.length * 1.5; // Rough estimation
+      
+      // Create the cover letter document as a PDF
       const coverLetter = await storage.createDocument({
         projectId,
         category: 'cover_letter',
-        fileName: `CoverLetter_${project.name}.txt`,
-        fileType: 'text/plain',
-        fileSize: coverLetterContent.length,
-        fileContent: coverLetterBase64,
+        fileName: `CoverLetter_${project.name}.pdf`,
+        fileType: 'application/pdf',
+        fileSize: estimatedPdfSize,
+        fileContent: coverLetterPdfBase64,
         status: 'pending_review',
         uploadedById: req.user!.id,
         comments: 'AI-powered cover letter for PainlessPermit™️'
