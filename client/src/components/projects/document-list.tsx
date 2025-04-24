@@ -99,7 +99,13 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
   
   // Get the latest version of each document category
   const latestDocuments = Object.entries(documentsByCategory).map(([category, docs]) => {
-    // Sort by version (descending)
+    // First check if any document in this category is approved
+    const approvedDoc = docs.find(doc => doc.status === 'approved');
+    if (approvedDoc) {
+      return approvedDoc;
+    }
+    
+    // Otherwise get the latest version
     const sorted = [...docs].sort((a, b) => b.version - a.version);
     return sorted[0];
   });
