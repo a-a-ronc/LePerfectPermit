@@ -82,13 +82,37 @@ export default function ProjectDetailsPage() {
       const res = await apiRequest("POST", `/api/projects/${projectId}/generate-cover-letter`);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (coverLetter) => {
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
       setIsCoverLetterDialogOpen(false);
-      toast({
-        title: "AI Cover Letter Generated",
-        description: "Your AI-powered cover letter has been created successfully.",
-      });
+      
+      // Set active tab to documents tab to ensure document view is visible
+      setActiveTab("documents");
+      
+      // Set a slight delay to ensure the document list updates
+      setTimeout(() => {
+        // Use the document ID to find the newly created cover letter
+        // and programmatically click on it to expand it
+        const coverLetterElement = document.getElementById("category-cover_letter");
+        if (coverLetterElement) {
+          // Scroll to the element
+          coverLetterElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Find the clickable area within the cover letter section
+          const clickableArea = coverLetterElement.querySelector('div.cursor-pointer');
+          if (clickableArea) {
+            // Simulate a click to expand it
+            (clickableArea as HTMLElement).click();
+          }
+        }
+        
+        toast({
+          title: "AI Cover Letter Generated",
+          description: "Your AI-powered cover letter has been created and saved in the Cover Letter category.",
+          variant: "default"
+        });
+      }, 1000);
     },
     onError: () => {
       toast({

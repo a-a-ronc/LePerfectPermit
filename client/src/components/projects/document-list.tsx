@@ -311,7 +311,7 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
         if (!document) {
           // If this category doesn't have a document yet, show placeholder with upload button
           return (
-            <div key={rowKey} className="border-b border-gray-200 bg-white">
+            <div key={rowKey} id={`category-${category}`} className="border-b border-gray-200 bg-white">
               <div className="flex flex-wrap justify-between p-4">
                 <div className="w-full md:w-auto flex items-center">
                   <FileText className="h-6 w-6 text-gray-400 mr-3" />
@@ -342,7 +342,7 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
         const { bg, text } = getDocumentStatusColor(doc.status);
         
         return (
-          <div key={rowKey} className={`border-b border-gray-200 ${isExpanded ? 'bg-gray-50' : 'bg-white'}`}>
+          <div key={rowKey} id={`category-${doc.category}`} className={`border-b border-gray-200 ${isExpanded ? 'bg-gray-50' : 'bg-white'}`}>
             <div 
               className="flex flex-wrap justify-between p-4 cursor-pointer" 
               onClick={() => toggleExpand(doc.id)}
