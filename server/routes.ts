@@ -395,27 +395,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const estimatedPdfSize = coverLetterContent.length * 1.5; // Rough estimation
       
       // Create the cover letter document as a PDF
-      const coverLetter = await storage.createDocument({
-        projectId,
-        category: 'cover_letter',
-        fileName: `CoverLetter_${project.name}.pdf`,
-        fileType: 'application/pdf',
-        fileSize: estimatedPdfSize,
-        fileContent: coverLetterPdfBase64,
-        status: 'pending_review',
-        uploadedById: req.user!.id,
-        comments: 'AI-powered cover letter for PainlessPermit™️'
-      });
-      
-      // Log activity
-      await storage.createActivityLog({
-        projectId,
-        userId: req.user!.id,
-        activityType: "cover_letter_generated",
-        description: "AI-powered cover letter was generated for this project"
-      });
-      
-      res.status(201).json(coverLetter);
+      try {
+        const coverLetter = await storage.createDocument({
+          projectId,
+          category: 'cover_letter',
+          fileName: `CoverLetter_${project.name.replace(/[\/\\:*?"<>|]/g, '_')}.pdf`, // Sanitize filename
+          fileType: 'application/pdf',
+          fileSize: estimatedPdfSize,
+          fileContent: coverLetterPdfBase64,
+          status: 'pending_review',
+          uploadedById: req.user!.id,
+          comments: 'AI-powered cover letter for PainlessPermit™️'
+        });
+        
+        // Log success information
+        console.log("Cover letter document created successfully with ID:", coverLetter.id);
+        
+        // Log activity
+        await storage.createActivityLog({
+          projectId,
+          userId: req.user!.id,
+          activityType: "cover_letter_generated",
+          description: "AI-powered cover letter was generated for this project"
+        });
+        
+        res.status(201).json(coverLetter);
+      } catch (error: any) { // Type assertion for error
+        console.error("Error creating cover letter document:", error);
+        throw new Error(`Failed to save cover letter: ${error.message || 'Unknown error'}`);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to generate cover letter", error });
     }
