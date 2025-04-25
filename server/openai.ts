@@ -44,7 +44,7 @@ export async function generateCoverLetterWithAI(
     const prompt = `
 You are an expert permit specialist at Intralog, writing a formal cover letter for a High-Piled Storage Permit application.
 
-Write a professional cover letter for the following project and document submission:
+Write a professional cover letter for the following project and document submission. DO NOT use placeholder text or variables like [Your Name] - use actual data or Intralog's standard information:
 
 Project Name: ${project.name}
 Customer Name: ${project.customerName || "The customer"}
@@ -57,17 +57,19 @@ The following documents are included in this submission (organized by category):
 ${formattedDocumentList}
 
 The cover letter should:
-1. Be addressed to the building department of the jurisdiction/municipality
-2. Begin with "Dear members of [municipality name] building department,"
-3. State that you are formally submitting a permit application on behalf of the customer
+1. Be addressed to the building department of the jurisdiction/municipality specified above
+2. Begin with "Dear members of ${project.jurisdiction || municipality} building department,"
+3. State that you are writing on behalf of Intralog Permit Services to formally submit a permit application for the customer's project
 4. Include the project name, short description, and location address
 5. Mention that you're including an index of supporting documentation with descriptions
 6. List all attached documents organized by category
-7. Provide contact information for further inquiries (use Intralog Permit Services as the contact)
-8. Be signed from "Intralog Permit Services Team" with the current date
-9. Use a professional, concise, and formal tone appropriate for government permit applications
+7. For contact information, include "For any questions or further information, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234."
+8. Include today's date at the top (${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })})
+9. Be signed from "Intralog Permit Services Team"
+10. Use a professional, concise, and formal tone appropriate for government permit applications
 
-Format the letter professionally with proper business letter formatting including date, addressee, subject line, greeting, body, and signature.
+Format the letter professionally with proper business letter formatting including date, addressee, subject line, greeting, body paragraphs, and signature.
+Important: All information must be concrete and specific - no placeholder text with brackets like [Address] or [Phone].
 `;
 
     // At this point, we've already checked that openai is not null
@@ -121,15 +123,17 @@ Subject: High-Piled Storage Permit Application for ${project.name}
 
 Dear members of ${project.jurisdiction || "the local"} building department,
 
-On behalf of ${project.customerName || "our client"}, we are formally submitting a permit application for the ${project.description || "high-piled storage facility"} planned for ${project.facilityAddress || "the specified location"}.
+On behalf of ${project.customerName || "our client"}, I am writing to formally submit a permit application for the ${project.description || "high-piled storage facility"} planned for ${project.facilityAddress || "the specified location"}.
+
+The permit application is for a high-piled storage installation with a permit tracking number of ${project.permitNumber || "to be assigned"}. We have prepared a comprehensive set of documents that meet all the requirements for this type of permit.
 
 Please find attached the complete set of documents for the High-Piled Storage Permit application. Below you will find an index describing the application's supporting documentation:
 
 ${formattedDocumentList}
 
-Permit Number: ${project.permitNumber || "To be assigned"}
+Each document has been carefully prepared to meet or exceed the requirements of your jurisdiction's building and fire codes for high-piled storage installations.
 
-If you require any additional information or clarification, please contact the Intralog Permit Services Team at (800) 555-0123 or permits@intralog.com.
+For any questions or further information, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234.
 
 Sincerely,
 
