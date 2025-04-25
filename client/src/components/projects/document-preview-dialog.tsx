@@ -289,15 +289,16 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                           className="bg-primary/90 text-white hover:bg-primary backdrop-blur"
                           onClick={() => {
                             try {
-                              // Create safe URL method with fallbacks
-                              let url;
+                              // Just use direct data URL as most reliable method - other methods don't work for PDFs reliably
+                              // Check for placeholder text which causes errors
+                              const content = document.fileContent;
+                              if (content.includes('[Your Name]') || content.includes('[') && content.includes(']')) {
+                                console.error("Document contains placeholder text which is invalid for PDF");
+                                alert("This document contains invalid placeholder text. Please regenerate the cover letter.");
+                                return;
+                              }
                               
-                              // Try direct data URL first as the most reliable method
-                              url = `data:${document.fileType};base64,${document.fileContent}`;
-                              window.open(url, '_blank');
-                              return;
-                              
-                              // Open in new window
+                              const url = `data:${document.fileType};base64,${content}`;
                               window.open(url, '_blank');
                             } catch (error: any) {
                               console.error("Error opening file:", error);
@@ -332,7 +333,15 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                           onClick={() => {
                             // Use direct data URI which is more reliable and skips atob
                             try {
-                              const url = `data:${document.fileType};base64,${document.fileContent}`;
+                              // Check for placeholder text which causes errors
+                              const content = document.fileContent;
+                              if (content.includes('[Your Name]') || content.includes('[') && content.includes(']')) {
+                                console.error("Document contains placeholder text which is invalid for PDF");
+                                alert("This document contains invalid placeholder text. Please regenerate the cover letter.");
+                                return;
+                              }
+                              
+                              const url = `data:${document.fileType};base64,${content}`;
                               window.open(url, '_blank');
                             } catch (error) {
                               console.error("Error opening in new window:", error);
@@ -348,13 +357,26 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                           variant="outline" 
                           size="sm"
                           onClick={() => {
+                            // Check for placeholder text which causes errors
+                            const content = document.fileContent;
+                            if (content.includes('[Your Name]') || content.includes('[') && content.includes(']')) {
+                              console.error("Document contains placeholder text which is invalid for PDF");
+                              alert("This document contains invalid placeholder text. Please regenerate the cover letter.");
+                              return;
+                            }
+                            
                             // Create a download link
-                            const link = window.document.createElement('a');
-                            link.href = `data:${document.fileType};base64,${document.fileContent}`;
-                            link.download = document.fileName;
-                            window.document.body.appendChild(link);
-                            link.click();
-                            window.document.body.removeChild(link);
+                            try {
+                              const link = window.document.createElement('a');
+                              link.href = `data:${document.fileType};base64,${content}`;
+                              link.download = document.fileName;
+                              window.document.body.appendChild(link);
+                              link.click();
+                              window.document.body.removeChild(link);
+                            } catch (error) {
+                              console.error("Error downloading file:", error);
+                              alert("Error: Could not download file. The file might be corrupted.");
+                            }
                           }}
                         >
                           <Download className="h-4 w-4 mr-2" />

@@ -357,8 +357,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate cover letter using OpenAI (with fallback to template-based generation)
       const coverLetterContent = await generateCoverLetterWithAI(project, approvedDocuments);
       
+      console.log("Cover letter text content (first 100 chars):", coverLetterContent.substring(0, 100));
+      
+      // Sanitize content if it still contains placeholders
+      const sanitizedContent = coverLetterContent.replace(/\[(.*?)\]/g, (match) => {
+        const placeholder = match.toLowerCase();
+        
+        if (placeholder.includes('name') || placeholder.includes('contact')) {
+          return 'Intralog Permit Services Team';
+        } else if (placeholder.includes('address')) {
+          return '123 Permit Way, Suite 100';
+        } else if (placeholder.includes('city') || placeholder.includes('state') || placeholder.includes('zip')) {
+          return 'Phoenix, AZ 85001';
+        } else if (placeholder.includes('email')) {
+          return 'permits@intralog.com';
+        } else if (placeholder.includes('phone')) {
+          return '(800) 555-1234';
+        } else if (placeholder.includes('date')) {
+          return new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          });
+        } else {
+          // For any other placeholders, use a generic replacement
+          return 'Intralog Permit Services';
+        }
+      });
+      
       // Convert the text content to a properly formatted PDF
-      const coverLetterPdfBase64 = await generatePdfFromText(coverLetterContent);
+      const coverLetterPdfBase64 = await generatePdfFromText(sanitizedContent);
+      
+      // Check if the base64 data looks valid
+      console.log("PDF base64 preview (first 50 chars):", coverLetterPdfBase64.substring(0, 50));
       
       // Estimate the file size - we don't have exact byte size for the PDF
       const estimatedPdfSize = coverLetterContent.length * 1.5; // Rough estimation
