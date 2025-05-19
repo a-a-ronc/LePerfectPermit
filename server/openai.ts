@@ -200,7 +200,7 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
       
       const description = documentDescriptions[rawCategory] || "Supporting documentation for the permit application";
       
-      return `**${category}**:\n${description}\nFiles: ${docs.join(', ')}`;
+      return `<b>${category}</b>\n${description}\nFiles: ${docs.join(', ')}`;
     })
     .join('\n\n');
 
@@ -222,35 +222,35 @@ Enclosed is a comprehensive package of documents required for high-piled storage
 
 ---
 
-**1. Site Plan**  
+<b>1. Site Plan</b>
 This document shows the full layout of the building and the racking system in relation to surrounding areas. It includes building dimensions, fire access roads, fire hydrants, and the location of high-pile storage within the facility.  
-${documentByCategory["Site Plan"] ? "*Files Submitted:* " + documentByCategory["Site Plan"].join(", ") : "*No files submitted*"}
+${documentByCategory["Site Plan"] ? "Files Submitted: " + documentByCategory["Site Plan"].join(", ") : "No files submitted"}
 
-**2. Facility Plan**  
+<b>2. Facility Plan</b>
 This plan includes the layout of interior storage areas, the dimensions and orientation of racks, aisle spacing, storage heights, and locations of exits. It provides details to ensure compliance with minimum aisle and clearance requirements.  
-${documentByCategory["Facility Plan"] ? "*Files Submitted:* " + documentByCategory["Facility Plan"].join(", ") : "*No files submitted*"}
+${documentByCategory["Facility Plan"] ? "Files Submitted: " + documentByCategory["Facility Plan"].join(", ") : "No files submitted"}
 
-**3. Egress Plan**  
+<b>3. Egress Plan</b>
 The egress plan demonstrates how occupants can safely exit the facility. It includes exit paths, travel distances, door widths, and the number and location of exits, ensuring compliance with egress requirements for high-piled storage.  
-${documentByCategory["Egress Plan"] ? "*Files Submitted:* " + documentByCategory["Egress Plan"].join(", ") : "*No files submitted*"}
+${documentByCategory["Egress Plan"] ? "Files Submitted: " + documentByCategory["Egress Plan"].join(", ") : "No files submitted"}
 
-**4. Structural Plans**  
+<b>4. Structural Plans</b>
 These stamped and signed engineering documents include structural calculations and anchorage details for the racking system. They confirm compliance with seismic and load-bearing requirements.  
-${documentByCategory["Structural Plans"] ? "*Files Submitted:* " + documentByCategory["Structural Plans"].join(", ") : "*No files submitted*"}
+${documentByCategory["Structural Plans"] ? "Files Submitted: " + documentByCategory["Structural Plans"].join(", ") : "No files submitted"}
 
-**5. Commodities Form**  
+<b>5. Commodities Form</b>
 A completed high-piled storage commodity form that outlines the classification of stored materials, container types, and packaging. It includes commodity hazard levels used to determine fire protection requirements.  
-${documentByCategory["Commodities Form"] ? "*Files Submitted:* " + documentByCategory["Commodities Form"].join(", ") : "*No files submitted*"}
+${documentByCategory["Commodities Form"] ? "Files Submitted: " + documentByCategory["Commodities Form"].join(", ") : "No files submitted"}
 
-**6. Fire Protection**  
+<b>6. Fire Protection</b>
 These documents detail the existing and/or proposed fire protection systems, including sprinkler coverage, system design, and fire department access. It verifies whether the fire suppression system meets the requirements for the height and class of stored commodities.  
-${documentByCategory["Fire Protection"] ? "*Files Submitted:* " + documentByCategory["Fire Protection"].join(", ") : "*No files submitted*"}
+${documentByCategory["Fire Protection"] ? "Files Submitted: " + documentByCategory["Fire Protection"].join(", ") : "No files submitted"}
 
-**7. Special Inspection**  
+<b>7. Special Inspection</b>
 A report identifying any required special inspections for racking installation, anchorage, or other structural elements, including final inspection verification for code compliance.  
-${documentByCategory["Special Inspection"] ? "*Files Submitted:* " + documentByCategory["Special Inspection"].join(", ") : "*No files submitted*"}
+${documentByCategory["Special Inspection"] ? "Files Submitted: " + documentByCategory["Special Inspection"].join(", ") : "No files submitted"}
 
-**8. Cover Letter**  
+<b>8. Cover Letter</b>
 This letter serves as a summary and index of the included documents for easy reference by the plan reviewer.
 
 ---
