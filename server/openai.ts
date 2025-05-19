@@ -84,7 +84,7 @@ ${enhancedDocumentList}
 
 USE THIS EXACT STRUCTURE:
 1. Start with today's date (${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })})
-2. Building Department address block
+2. Building Department address block (use the Building Department Address provided above, not the Facility Address)
 3. Subject line: "High-Piled Storage Permit Application Submission for Project ${project.name}"
 4. Greeting: "Dear ${project.jurisdiction || municipality} Building Department,"
 5. First paragraph: "I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit application for our customer, ${project.clientName || "our client"}, regarding their project, ${project.name}. This project involves the development of a high-piled storage facility located at ${project.facilityAddress || "the project location"}."
@@ -97,7 +97,8 @@ IMPORTANT INSTRUCTION:
 - Use exact information provided without placeholders
 - Format document categories in bold with their descriptions below each
 - List the documents in the same order as shown in the document list
-- DON'T address the letter to the facility address; address it to the building department
+- The letter should be addressed to the Building Department Address, NOT the Facility Address
+- The first few lines of the letter after the date should be the Building Department name and address exactly as provided
 `;
 
     // At this point, we've already checked that openai is not null
