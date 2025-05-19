@@ -30,6 +30,7 @@ const clientFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   facilityAddress: z.string().min(1, "Facility address is required"),
   jurisdiction: z.string().min(1, "Jurisdiction is required"),
+  jurisdictionAddress: z.string().optional(),
   clientName: z.string().min(1, "Client name is required"),
   zipCode: z.string().optional(),
   status: z.string().default("not_started"),
@@ -364,6 +365,23 @@ export default function ProjectPage() {
                           )}
                         />
                       </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="jurisdictionAddress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Building Department Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Address of the building department for correspondence" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormDescription>
+                              This address will be used for cover letters addressed to the jurisdiction.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       
                       <FormField
                         control={form.control}
