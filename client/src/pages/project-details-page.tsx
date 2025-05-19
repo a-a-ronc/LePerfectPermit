@@ -80,41 +80,69 @@ export default function ProjectDetailsPage() {
   const generateCoverLetterMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/projects/${projectId}/generate-cover-letter`);
+      
+      if (!res.ok) {
+        throw new Error(`Failed to generate cover letter: ${res.statusText}`);
+      }
+      
       return await res.json();
     },
-    onSuccess: (coverLetter) => {
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
+    onSuccess: (data) => {
+      // Close the dialog first
       setIsCoverLetterDialogOpen(false);
       
-      // Set active tab to documents tab to ensure document view is visible
+      // Force invalidation of queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
+      
+      // Switch to documents tab to make sure user can see the generated cover letter
       setActiveTab("documents");
       
-      // Set a slight delay to ensure the document list updates
+      // Show a success toast
+      toast({
+        title: "AI Cover Letter Generated",
+        description: "Your AI-powered cover letter has been created and saved in the Cover Letter category.",
+        variant: "success",
+        duration: 5000 // Show for longer time so user has time to notice
+      });
+      
+      // Use a longer timeout to ensure the document list has fully refreshed
       setTimeout(() => {
-        // Use the document ID to find the newly created cover letter
-        // and programmatically click on it to expand it
-        const coverLetterElement = document.getElementById("category-cover_letter");
-        if (coverLetterElement) {
-          // Scroll to the element
-          coverLetterElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        try {
+          // Try to find the cover letter category element
+          const coverLetterElement = document.getElementById("category-cover_letter");
           
-          // Find the clickable area within the cover letter section
-          const clickableArea = coverLetterElement.querySelector('div.cursor-pointer');
-          if (clickableArea) {
-            // Simulate a click to expand it
-            (clickableArea as HTMLElement).click();
+          if (coverLetterElement) {
+            // Scroll to the element to make it visible
+            coverLetterElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Find the clickable area within the cover letter section
+            const clickableArea = coverLetterElement.querySelector('div.cursor-pointer');
+            if (clickableArea) {
+              // Simulate a click to expand it
+              (clickableArea as HTMLElement).click();
+              
+              // Flash highlight effect to draw attention
+              coverLetterElement.classList.add('bg-primary-50');
+              setTimeout(() => {
+                coverLetterElement.classList.remove('bg-primary-50');
+              }, 1500);
+            }
+          } else {
+            console.warn("Cover letter element not found in DOM after generation");
+            // Force reload as a last resort if element isn't found
+            window.location.reload();
           }
+        } catch (error) {
+          console.error("Error highlighting cover letter:", error);
         }
-        
-        toast({
-          title: "AI Cover Letter Generated",
-          description: "Your AI-powered cover letter has been created and saved in the Cover Letter category.",
-          variant: "default"
-        });
-      }, 1000);
+      }, 1500); // Slightly longer delay for better reliability
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Cover letter generation error:", error);
+      
       toast({
         title: "Generation Failed",
         description: "Failed to generate cover letter. Please try again.",

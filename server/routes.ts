@@ -419,7 +419,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: "AI-powered cover letter was generated for this project"
         });
         
-        res.status(201).json(coverLetter);
+        // Force immediate refresh of documents list for this project
+        const updatedDocuments = await storage.getDocumentsByProject(projectId);
+        
+        // Return both the cover letter and a flag indicating it was successful
+        res.status(201).json({
+          ...coverLetter,
+          success: true,
+          message: "Cover letter generated and added to project documents"
+        });
       } catch (error: any) { // Type assertion for error
         console.error("Error creating cover letter document:", error);
         throw new Error(`Failed to save cover letter: ${error.message || 'Unknown error'}`);
