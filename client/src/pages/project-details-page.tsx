@@ -108,37 +108,11 @@ export default function ProjectDetailsPage() {
         duration: 5000 // Show for longer time so user has time to notice
       });
       
-      // Use a longer timeout to ensure the document list has fully refreshed
+      // Always force a page reload after generating the cover letter
+      // This ensures the letter appears correctly and with all the right details
       setTimeout(() => {
-        try {
-          // Try to find the cover letter category element
-          const coverLetterElement = document.getElementById("category-cover_letter");
-          
-          if (coverLetterElement) {
-            // Scroll to the element to make it visible
-            coverLetterElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Find the clickable area within the cover letter section
-            const clickableArea = coverLetterElement.querySelector('div.cursor-pointer');
-            if (clickableArea) {
-              // Simulate a click to expand it
-              (clickableArea as HTMLElement).click();
-              
-              // Flash highlight effect to draw attention
-              coverLetterElement.classList.add('bg-primary-50');
-              setTimeout(() => {
-                coverLetterElement.classList.remove('bg-primary-50');
-              }, 1500);
-            }
-          } else {
-            console.warn("Cover letter element not found in DOM after generation");
-            // Force reload as a last resort if element isn't found
-            window.location.reload();
-          }
-        } catch (error) {
-          console.error("Error highlighting cover letter:", error);
-        }
-      }, 1500); // Slightly longer delay for better reliability
+        window.location.reload();
+      }, 1200); // Short delay to ensure the toast message is seen first
     },
     onError: (error) => {
       console.error("Cover letter generation error:", error);
