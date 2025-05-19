@@ -327,15 +327,22 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
         const rowKey = document ? `doc-${document.id}` : `category-${category}`;
         
         if (!document) {
-          // If this category doesn't have a document yet, show placeholder with upload button
+          // If this category doesn't have a document yet, show placeholder with appropriate upload button
           return (
-            <div key={rowKey} id={`category-${category}`} className="border-b border-gray-200 bg-white">
+            <div key={rowKey} id={`category-${category}`} className="border-b border-gray-200 bg-white transition-colors duration-300">
               <div className="flex flex-wrap justify-between p-4">
                 <div className="w-full md:w-auto flex items-center">
                   <FileText className="h-6 w-6 text-gray-400 mr-3" />
                   <div>
                     <h3 className="font-medium">{formatDocumentCategory(category)}</h3>
                     <p className="text-sm text-gray-500">{getDocumentCategoryDescription(category)}</p>
+                    
+                    {/* Special message for cover letter category */}
+                    {category === 'cover_letter' && (
+                      <p className="text-xs text-primary mt-1 italic">
+                        Generate a cover letter using the "Generate AI Cover Letter" button at the top of the page
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-3 md:mt-0">

@@ -104,7 +104,7 @@ export default function ProjectDetailsPage() {
       toast({
         title: "AI Cover Letter Generated",
         description: "Your AI-powered cover letter has been created and saved in the Cover Letter category.",
-        variant: "success",
+        variant: "default",
         duration: 5000 // Show for longer time so user has time to notice
       });
       
