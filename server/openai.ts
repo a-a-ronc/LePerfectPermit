@@ -69,7 +69,7 @@ export async function generateCoverLetterWithAI(
     const prompt = `
 You are an expert permit specialist at Intralog, writing a formal cover letter for a High-Piled Storage Permit application.
 
-Write a professional cover letter for the following project and document submission:
+Generate a professional cover letter using the following project information:
 
 Project Name: ${project.name}
 Client/Customer Name: ${project.clientName || "Our client"}
@@ -79,26 +79,69 @@ Building Department: ${project.jurisdiction || municipality} Building Department
 Building Department Address: ${project.jurisdictionAddress || "Municipal Building Department"}
 Project Description: High-piled storage facility permit application
 
-The following documents are included in this submission:
-${enhancedDocumentList}
+FOLLOW THIS EXACT TEMPLATE STRUCTURE:
 
-USE THIS EXACT STRUCTURE:
-1. Start with today's date (${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })})
-2. Building Department address block (use the Building Department Address provided above, not the Facility Address)
-3. Subject line: "High-Piled Storage Permit Application Submission for Project ${project.name}"
-4. Greeting: "Dear ${project.jurisdiction || municipality} Building Department,"
-5. First paragraph: "I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit application for our customer, ${project.clientName || "our client"}, regarding their project, ${project.name}. This project involves the development of a high-piled storage facility located at ${project.facilityAddress || "the project location"}."
-6. Second paragraph: "Please find attached the following documents that comprise our complete submittal package:"
-7. List each document category in bold followed by its description and the filename(s)
-8. Closing paragraph with contact information: "Should you have any questions or require additional information regarding this submission, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234."
-9. End with "Sincerely," and "Intralog Permit Services Team"
+Intralog Permit Services
 
-IMPORTANT INSTRUCTION: 
-- Use exact information provided without placeholders
-- Format document categories in bold with their descriptions below each
-- List the documents in the same order as shown in the document list
-- The letter should be addressed to the Building Department Address, NOT the Facility Address
-- The first few lines of the letter after the date should be the Building Department name and address exactly as provided
+${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+
+${project.jurisdiction || municipality} Building Department  
+${project.jurisdictionAddress || "Municipal Building Department"}  
+${project.jurisdiction || municipality}
+
+**Subject: High-Piled Storage Permit Application Submission for ${project.name}**
+
+Dear ${project.jurisdiction || municipality} Plan Review Team,
+
+I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit Application for the facility located at ${project.facilityAddress || "the project location"}.
+
+Enclosed is a comprehensive package of documents required for high-piled storage permitting. The following is an index of the submitted items:
+
+---
+
+**1. Site Plan**  
+This document shows the full layout of the building and the racking system in relation to surrounding areas. It includes building dimensions, fire access roads, fire hydrants, and the location of high-pile storage within the facility.  
+${documentByCategory["Site Plan"] ? "*Files Submitted:* " + documentByCategory["Site Plan"].join(", ") : "*No files submitted*"}
+
+**2. Facility Plan**  
+This plan includes the layout of interior storage areas, the dimensions and orientation of racks, aisle spacing, storage heights, and locations of exits. It provides details to ensure compliance with minimum aisle and clearance requirements.  
+${documentByCategory["Facility Plan"] ? "*Files Submitted:* " + documentByCategory["Facility Plan"].join(", ") : "*No files submitted*"}
+
+**3. Egress Plan**  
+The egress plan demonstrates how occupants can safely exit the facility. It includes exit paths, travel distances, door widths, and the number and location of exits, ensuring compliance with egress requirements for high-piled storage.  
+${documentByCategory["Egress Plan"] ? "*Files Submitted:* " + documentByCategory["Egress Plan"].join(", ") : "*No files submitted*"}
+
+**4. Structural Plans**  
+These stamped and signed engineering documents include structural calculations and anchorage details for the racking system. They confirm compliance with seismic and load-bearing requirements.  
+${documentByCategory["Structural Plans"] ? "*Files Submitted:* " + documentByCategory["Structural Plans"].join(", ") : "*No files submitted*"}
+
+**5. Commodities Form**  
+A completed high-piled storage commodity form that outlines the classification of stored materials, container types, and packaging. It includes commodity hazard levels used to determine fire protection requirements.  
+${documentByCategory["Commodities Form"] ? "*Files Submitted:* " + documentByCategory["Commodities Form"].join(", ") : "*No files submitted*"}
+
+**6. Fire Protection**  
+These documents detail the existing and/or proposed fire protection systems, including sprinkler coverage, system design, and fire department access. It verifies whether the fire suppression system meets the requirements for the height and class of stored commodities.  
+${documentByCategory["Fire Protection"] ? "*Files Submitted:* " + documentByCategory["Fire Protection"].join(", ") : "*No files submitted*"}
+
+**7. Special Inspection**  
+A report identifying any required special inspections for racking installation, anchorage, or other structural elements, including final inspection verification for code compliance.  
+${documentByCategory["Special Inspection"] ? "*Files Submitted:* " + documentByCategory["Special Inspection"].join(", ") : "*No files submitted*"}
+
+**8. Cover Letter**  
+This letter serves as a summary and index of the included documents for easy reference by the plan reviewer.
+
+---
+
+For any questions or further information, please contact the Intralog Permit Services Team at:  
+**Email:** permits@intralog.io  
+**Phone:** (801) 441-8992
+
+We appreciate your time and review of this application and look forward to your feedback.
+
+Sincerely,  
+Intralog Permit Services Team
+
+Generated by PainlessPermit™ by Intralog
 `;
 
     // At this point, we've already checked that openai is not null
@@ -161,28 +204,67 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
     })
     .join('\n\n');
 
-  return `${date}
+  return `Intralog Permit Services
 
-${project.jurisdiction || "Municipal"} Building Department
-${project.jurisdictionAddress || "Municipal Government Center"}
+${date}
 
-Subject: High-Piled Storage Permit Application Submission for Project ${project.name}
+${project.jurisdiction || "Municipal"} Building Department  
+${project.jurisdictionAddress || "Municipal Building Department"}  
+${project.jurisdiction || "Municipal"}
 
-Dear ${project.jurisdiction || "Municipal"} Building Department,
+**Subject: High-Piled Storage Permit Application Submission for ${project.name}**
 
-I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit application for our customer, ${project.clientName || "our client"}, regarding their project, ${project.name}. This project involves the development of a high-piled storage facility located at ${project.facilityAddress || "the project location"}.
+Dear ${project.jurisdiction || "Municipal"} Plan Review Team,
 
-Please find attached the following documents that comprise our complete submittal package:
+I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit Application for the facility located at ${project.facilityAddress || "the project location"}.
 
-${formattedDocumentList}
+Enclosed is a comprehensive package of documents required for high-piled storage permitting. The following is an index of the submitted items:
 
-Each document has been prepared in accordance with local building codes and high-piled storage regulations. The documentation provides comprehensive details about the project's design, safety measures, and compliance with all applicable standards.
+---
 
-Should you have any questions or require additional information regarding this submission, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234.
+**1. Site Plan**  
+This document shows the full layout of the building and the racking system in relation to surrounding areas. It includes building dimensions, fire access roads, fire hydrants, and the location of high-pile storage within the facility.  
+${documentByCategory["Site Plan"] ? "*Files Submitted:* " + documentByCategory["Site Plan"].join(", ") : "*No files submitted*"}
 
-Sincerely,
+**2. Facility Plan**  
+This plan includes the layout of interior storage areas, the dimensions and orientation of racks, aisle spacing, storage heights, and locations of exits. It provides details to ensure compliance with minimum aisle and clearance requirements.  
+${documentByCategory["Facility Plan"] ? "*Files Submitted:* " + documentByCategory["Facility Plan"].join(", ") : "*No files submitted*"}
 
+**3. Egress Plan**  
+The egress plan demonstrates how occupants can safely exit the facility. It includes exit paths, travel distances, door widths, and the number and location of exits, ensuring compliance with egress requirements for high-piled storage.  
+${documentByCategory["Egress Plan"] ? "*Files Submitted:* " + documentByCategory["Egress Plan"].join(", ") : "*No files submitted*"}
+
+**4. Structural Plans**  
+These stamped and signed engineering documents include structural calculations and anchorage details for the racking system. They confirm compliance with seismic and load-bearing requirements.  
+${documentByCategory["Structural Plans"] ? "*Files Submitted:* " + documentByCategory["Structural Plans"].join(", ") : "*No files submitted*"}
+
+**5. Commodities Form**  
+A completed high-piled storage commodity form that outlines the classification of stored materials, container types, and packaging. It includes commodity hazard levels used to determine fire protection requirements.  
+${documentByCategory["Commodities Form"] ? "*Files Submitted:* " + documentByCategory["Commodities Form"].join(", ") : "*No files submitted*"}
+
+**6. Fire Protection**  
+These documents detail the existing and/or proposed fire protection systems, including sprinkler coverage, system design, and fire department access. It verifies whether the fire suppression system meets the requirements for the height and class of stored commodities.  
+${documentByCategory["Fire Protection"] ? "*Files Submitted:* " + documentByCategory["Fire Protection"].join(", ") : "*No files submitted*"}
+
+**7. Special Inspection**  
+A report identifying any required special inspections for racking installation, anchorage, or other structural elements, including final inspection verification for code compliance.  
+${documentByCategory["Special Inspection"] ? "*Files Submitted:* " + documentByCategory["Special Inspection"].join(", ") : "*No files submitted*"}
+
+**8. Cover Letter**  
+This letter serves as a summary and index of the included documents for easy reference by the plan reviewer.
+
+---
+
+For any questions or further information, please contact the Intralog Permit Services Team at:  
+**Email:** permits@intralog.io  
+**Phone:** (801) 441-8992
+
+We appreciate your time and review of this application and look forward to your feedback.
+
+Sincerely,  
 Intralog Permit Services Team
+
+Generated by PainlessPermit™ by Intralog
   `.trim();
 }
 
