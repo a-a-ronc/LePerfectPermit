@@ -391,9 +391,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if the base64 data looks valid
       console.log("PDF base64 preview (first 50 chars):", coverLetterPdfBase64.substring(0, 50));
       
-      // Estimate the file size - we don't have exact byte size for the PDF
-      // Make sure to use an integer for database storage to prevent SQL errors
-      const estimatedPdfSize = Math.floor(coverLetterContent.length); // Always use a whole number for file size
+      // Estimate the file size - we need to ensure we use an integer for database storage
+      // Base64 strings are often longer than the actual file, so we'll estimate the size
+      // Using Math.ceil to ensure we always have a whole number for the file size
+      const estimatedPdfSize = Math.ceil(coverLetterPdfBase64.length / 1.37); // Convert to approximate byte size as integer
       
       // Create the cover letter document as a PDF
       try {
