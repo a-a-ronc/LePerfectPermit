@@ -117,30 +117,48 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
   // Delete document mutation
   const deleteMutation = useMutation({
     mutationFn: async (documentId: number) => {
-      const res = await apiRequest("DELETE", `/api/projects/${projectId}/documents/${documentId}`);
-      return res.ok;
+      try {
+        const res = await apiRequest("DELETE", `/api/projects/${projectId}/documents/${documentId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to delete document: ${res.statusText}`);
+        }
+        return true;
+      } catch (error) {
+        console.error("Error deleting document:", error);
+        throw error; // Re-throw to trigger onError handler
+      }
     },
-    onSuccess: () => {
-      // Invalidate multiple queries to ensure UI updates properly
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list for progress bar
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
-      
+    onSuccess: async () => {
+      try {
+        // Immediately invalidate queries - this is important to force a refetch
+        await queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/projects"] }); // Refresh project list for progress bar
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] }); // Refresh project details
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] }); // Refresh activity log
+        
+        // Clear dialog state
+        setDeleteDialogOpen(false);
+        setDocumentToDelete(null);
+        
+        // Show success toast
+        toast({
+          title: "Document Deleted",
+          description: "The document has been successfully deleted.",
+        });
+        
+        // Force a full page reload to ensure the UI is completely refreshed
+        // This is the most reliable way to ensure the document categories update properly
+        setTimeout(() => {
+          window.location.reload();
+        }, 800); // Slightly shorter delay for better UX
+      } catch (error) {
+        console.error("Error updating cache after document deletion:", error);
+      }
+    },
+    onError: (error) => {
+      console.error("Delete mutation error:", error);
       setDeleteDialogOpen(false);
-      setDocumentToDelete(null);
       
-      toast({
-        title: "Document Deleted",
-        description: "The document has been successfully deleted.",
-      });
-      
-      // Force page reload to ensure user sees the updated document list
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000); // Delay to allow toast to be visible
-    },
-    onError: () => {
       toast({
         title: "Delete Failed",
         description: "There was an error deleting the document. Please try again.",
