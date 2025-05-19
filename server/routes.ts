@@ -424,10 +424,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updatedDocuments = await storage.getDocumentsByProject(projectId);
         
         // Return both the cover letter and a flag indicating it was successful
+        // Include a refresh flag to tell the client to reload the page
         res.status(201).json({
           ...coverLetter,
           success: true,
-          message: "Cover letter generated and added to project documents"
+          message: "Cover letter generated and added to project documents",
+          refresh: true // Signal to client to refresh after success
         });
       } catch (error: any) { // Type assertion for error
         console.error("Error creating cover letter document:", error);
