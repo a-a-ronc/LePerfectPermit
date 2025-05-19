@@ -41,35 +41,63 @@ export async function generateCoverLetterWithAI(
       })
       .join('\n\n');
 
+    // Build document descriptions map
+    const documentDescriptions: Record<string, string> = {
+      "site_plan": "Site plan showing the building layout, locations of exits, and fire access points",
+      "facility_plan": "Detailed facility plan with dimensions and structural information",
+      "egress_plan": "Plan showing all emergency exits, egress paths, and evacuation routes",
+      "structural_plans": "Engineering drawings showing rack layouts and structural specifications",
+      "commodities": "Documentation of stored materials, their classifications, and storage arrangements",
+      "fire_protection": "Specifications for fire suppression systems and fire prevention measures",
+      "special_inspection": "Reports from certified inspection authorities and compliance documentation",
+      "cover_letter": "Formal cover letter accompanying the permit submission"
+    };
+    
+    // Create enhanced document list with descriptions
+    const enhancedDocumentList = Object.entries(documentByCategory)
+      .map(([category, docs]) => {
+        const rawCategory = Object.keys(documentDescriptions).find(
+          key => formatDocumentCategory(key) === category
+        ) || '';
+        
+        const description = documentDescriptions[rawCategory] || "Supporting documentation for the permit application";
+        
+        return `**${category}**:\n${description}\nFiles: ${docs.map(doc => `${doc}`).join(', ')}`;
+      })
+      .join('\n\n');
+
     const prompt = `
 You are an expert permit specialist at Intralog, writing a formal cover letter for a High-Piled Storage Permit application.
 
-Write a professional cover letter for the following project and document submission. DO NOT use placeholder text or variables like [Your Name] - use actual data or Intralog's standard information:
+Write a professional cover letter for the following project and document submission:
 
 Project Name: ${project.name}
-Customer Name: ${project.customerName || "The customer"}
+Client/Customer Name: ${project.clientName || "Our client"}
 Permit Number: ${project.permitNumber || "To be assigned"}
-Facility Address: ${project.facilityAddress || "the specified location"}
-Jurisdiction: ${project.jurisdiction || municipality}
-Project Description: ${project.description || "High-piled storage facility"}
+Facility Address: ${project.facilityAddress || "the project location"}
+Building Department: ${project.jurisdiction || municipality} Building Department
+Building Department Address: ${project.jurisdictionAddress || "Municipal Building Department"}
+Project Description: High-piled storage facility permit application
 
-The following documents are included in this submission (organized by category):
-${formattedDocumentList}
+The following documents are included in this submission:
+${enhancedDocumentList}
 
-The cover letter should:
-1. Be addressed to the building department of the jurisdiction/municipality specified above
-2. Begin with "Dear members of ${project.jurisdiction || municipality} building department,"
-3. State that you are writing on behalf of Intralog Permit Services to formally submit a permit application for the customer's project
-4. Include the project name, short description, and location address
-5. Mention that you're including an index of supporting documentation with descriptions
-6. List all attached documents organized by category
-7. For contact information, include "For any questions or further information, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234."
-8. Include today's date at the top (${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })})
-9. Be signed from "Intralog Permit Services Team"
-10. Use a professional, concise, and formal tone appropriate for government permit applications
+USE THIS EXACT STRUCTURE:
+1. Start with today's date (${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })})
+2. Building Department address block
+3. Subject line: "High-Piled Storage Permit Application Submission for Project ${project.name}"
+4. Greeting: "Dear ${project.jurisdiction || municipality} Building Department,"
+5. First paragraph: "I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit application for our customer, ${project.clientName || "our client"}, regarding their project, ${project.name}. This project involves the development of a high-piled storage facility located at ${project.facilityAddress || "the project location"}."
+6. Second paragraph: "Please find attached the following documents that comprise our complete submittal package:"
+7. List each document category in bold followed by its description and the filename(s)
+8. Closing paragraph with contact information: "Should you have any questions or require additional information regarding this submission, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234."
+9. End with "Sincerely," and "Intralog Permit Services Team"
 
-Format the letter professionally with proper business letter formatting including date, addressee, subject line, greeting, body paragraphs, and signature.
-Important: All information must be concrete and specific - no placeholder text with brackets like [Address] or [Phone].
+IMPORTANT INSTRUCTION: 
+- Use exact information provided without placeholders
+- Format document categories in bold with their descriptions below each
+- List the documents in the same order as shown in the document list
+- DON'T address the letter to the facility address; address it to the building department
 `;
 
     // At this point, we've already checked that openai is not null
@@ -106,34 +134,50 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
     documentByCategory[category].push(doc.fileName);
   });
   
-  // Format document list by category
+  // Document descriptions map
+  const documentDescriptions: Record<string, string> = {
+    "site_plan": "Site plan showing the building layout, locations of exits, and fire access points",
+    "facility_plan": "Detailed facility plan with dimensions and structural information",
+    "egress_plan": "Plan showing all emergency exits, egress paths, and evacuation routes",
+    "structural_plans": "Engineering drawings showing rack layouts and structural specifications",
+    "commodities": "Documentation of stored materials, their classifications, and storage arrangements",
+    "fire_protection": "Specifications for fire suppression systems and fire prevention measures",
+    "special_inspection": "Reports from certified inspection authorities and compliance documentation",
+    "cover_letter": "Formal cover letter accompanying the permit submission"
+  };
+  
+  // Format document list by category with descriptions
   const formattedDocumentList = Object.entries(documentByCategory)
     .map(([category, docs]) => {
-      return `${category}:\n${docs.map(doc => `  - ${doc}`).join('\n')}`;
+      // Find the raw category to get the description
+      const rawCategory = Object.keys(documentDescriptions).find(
+        key => formatDocumentCategory(key) === category
+      ) || '';
+      
+      const description = documentDescriptions[rawCategory] || "Supporting documentation for the permit application";
+      
+      return `**${category}**:\n${description}\nFiles: ${docs.join(', ')}`;
     })
     .join('\n\n');
 
-  return `
-${date}
+  return `${date}
 
-Building Department
-${project.jurisdiction || "Local Authority Having Jurisdiction"}
+${project.jurisdiction || "Municipal"} Building Department
+${project.jurisdictionAddress || "Municipal Government Center"}
 
-Subject: High-Piled Storage Permit Application for ${project.name}
+Subject: High-Piled Storage Permit Application Submission for Project ${project.name}
 
-Dear members of ${project.jurisdiction || "the local"} building department,
+Dear ${project.jurisdiction || "Municipal"} Building Department,
 
-On behalf of ${project.customerName || "our client"}, I am writing to formally submit a permit application for the ${project.description || "high-piled storage facility"} planned for ${project.facilityAddress || "the specified location"}.
+I am writing on behalf of Intralog Permit Services to formally submit a High-Piled Storage Permit application for our customer, ${project.clientName || "our client"}, regarding their project, ${project.name}. This project involves the development of a high-piled storage facility located at ${project.facilityAddress || "the project location"}.
 
-The permit application is for a high-piled storage installation with a permit tracking number of ${project.permitNumber || "to be assigned"}. We have prepared a comprehensive set of documents that meet all the requirements for this type of permit.
-
-Please find attached the complete set of documents for the High-Piled Storage Permit application. Below you will find an index describing the application's supporting documentation:
+Please find attached the following documents that comprise our complete submittal package:
 
 ${formattedDocumentList}
 
-Each document has been carefully prepared to meet or exceed the requirements of your jurisdiction's building and fire codes for high-piled storage installations.
+Each document has been prepared in accordance with local building codes and high-piled storage regulations. The documentation provides comprehensive details about the project's design, safety measures, and compliance with all applicable standards.
 
-For any questions or further information, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234.
+Should you have any questions or require additional information regarding this submission, please contact the Intralog Permit Services Team at permits@intralog.com or (800) 555-1234.
 
 Sincerely,
 

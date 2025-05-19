@@ -24,6 +24,7 @@ export const projects = pgTable("projects", {
   name: text("name").notNull(),
   facilityAddress: text("facility_address").notNull(),
   jurisdiction: text("jurisdiction").notNull(),
+  jurisdictionAddress: text("jurisdiction_address"), // Building department address for correspondence
   clientName: text("client_name").notNull(),
   permitNumber: text("permit_number"),
   zipCode: text("zip_code"),
