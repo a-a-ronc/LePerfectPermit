@@ -375,9 +375,9 @@ export default function ProjectPage() {
                             <FormControl>
                               <Input placeholder="Address of the building department for correspondence" {...field} value={field.value || ''} />
                             </FormControl>
-                            <FormDescription>
+                            <p className="text-sm text-muted-foreground mt-1">
                               This address will be used for cover letters addressed to the jurisdiction.
-                            </FormDescription>
+                            </p>
                             <FormMessage />
                           </FormItem>
                         )}
