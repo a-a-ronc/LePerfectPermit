@@ -21,9 +21,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
+      // Add error logging to help diagnose the issue
+      console.log("Getting projects for user:", req.user?.id);
+      
       const projects = await storage.getProjects();
+      
+      // Log success for debugging
+      console.log(`Successfully retrieved ${projects.length} projects`);
+      
       res.json(projects);
     } catch (error) {
+      // Log the exact error for debugging
+      console.error("Error retrieving projects:", error);
       res.status(500).json({ message: "Failed to get projects" });
     }
   });
