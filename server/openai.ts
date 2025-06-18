@@ -101,7 +101,7 @@ Enclosed is a comprehensive package of documents required for high-piled storage
 
 ${desiredOrder.map((cat, i) => {
   const files = documentByCategory[cat] || [];
-  return `<b>${i + 1}. ${cat}</b>\n${files.length ? "Files Submitted: " + files.join(", ") : "No files submitted"}`;
+  return `${i + 1}. ${cat}\n${files.length ? "Files Submitted: " + files.join(", ") : "No files submitted"}`;
 }).join("\n\n")}
 
 ---
