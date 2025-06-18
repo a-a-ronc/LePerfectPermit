@@ -32,6 +32,8 @@ const clientFormSchema = z.object({
   jurisdiction: z.string().min(1, "Jurisdiction is required"),
   jurisdictionAddress: z.string().optional(),
   clientName: z.string().min(1, "Customer name is required"),
+  contactEmail: z.string().optional(),
+  contactPhone: z.string().optional(),
   zipCode: z.string().optional(),
   status: z.string().default("not_started"),
   deadline: z.string().optional(),
@@ -113,6 +115,8 @@ export default function ProjectPage() {
       facilityAddress: "",
       jurisdiction: "",
       clientName: "",
+      contactEmail: "",
+      contactPhone: "",
       zipCode: "",
       status: "not_started",
       deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -125,6 +129,8 @@ export default function ProjectPage() {
         ...data,
         zipCode: data.zipCode || null,
         jurisdictionAddress: data.jurisdictionAddress || null,
+        contactEmail: data.contactEmail || null,
+        contactPhone: data.contactPhone || null,
         deadline: data.deadline ? new Date(data.deadline) : null,
       };
       
@@ -387,6 +393,36 @@ export default function ProjectPage() {
                           </FormItem>
                         )}
                       />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="contactEmail"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Project Contact Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="e.g., john@company.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="contactPhone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Project Contact Phone</FormLabel>
+                              <FormControl>
+                                <Input type="tel" placeholder="e.g., (801) 555-1234" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       
                       <FormField
                         control={form.control}

@@ -89,7 +89,7 @@ ${project.jurisdiction || municipality} Building Department
 ${address}  
 ${project.jurisdiction || municipality}
 
-**Subject: High-Piled Storage Permit Application Submission for ${cleanName}**
+Subject: High-Piled Storage Permit Application Submission for ${cleanName}
 
 Dear ${project.jurisdiction || municipality} Plan Review Team,
 
@@ -107,8 +107,8 @@ ${desiredOrder.map((cat, i) => {
 ---
 
 For any questions or further information, please contact:  
-**Email:** ${user?.email || "permits@intralog.io"}  
-**Phone:** ${user?.phone || "(801) 441-8992"}
+Email: ${project.contactEmail || user?.email || "permits@intralog.io"}  
+Phone: ${project.contactPhone || user?.phone || "(801) 441-8992"}
 
 We appreciate your time and review of this application and look forward to your feedback.
 
@@ -192,8 +192,8 @@ ${indexItems}
 ---
 
 For any questions or further information, please contact:
-Email: permits@intralog.io
-Phone: (801) 441-8992
+Email: ${project.contactEmail || "permits@intralog.io"}
+Phone: ${project.contactPhone || "(801) 441-8992"}
 
 We appreciate your time and review of this application and look forward to your feedback.
 
