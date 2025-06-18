@@ -40,12 +40,15 @@ export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const projectId = parseInt(id);
   const { toast } = useToast();
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("documents");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isStakeholderDialogOpen, setIsStakeholderDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isCoverLetterDialogOpen, setIsCoverLetterDialogOpen] = useState(false);
+  const [editableContactEmail, setEditableContactEmail] = useState("");
+  const [editableContactPhone, setEditableContactPhone] = useState("");
 
   // Load project details
   const { data: project, isLoading: isLoadingProject } = useQuery({

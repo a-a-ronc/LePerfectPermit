@@ -157,6 +157,26 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Update user's default contact information
+  app.put("/api/user/contact-defaults", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { defaultContactEmail, defaultContactPhone } = req.body;
+      const userId = req.user!.id;
+      
+      await storage.updateUserContactDefaults(userId, {
+        defaultContactEmail,
+        defaultContactPhone,
+      });
+      
+      res.json({ success: true, message: "Contact defaults updated" });
+    } catch (error) {
+      console.error("Error updating user contact defaults:", error);
+      res.status(500).json({ error: "Failed to update contact defaults" });
+    }
+  });
+
   // Get users for stakeholder assignment
   app.get("/api/users", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
