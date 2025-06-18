@@ -1,7 +1,7 @@
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import * as fs from "fs";
 
-export async function generateCoverLetterDocx(content: string, fileName: string = "CoverLetter.docx") {
+export async function generateCoverLetterDocx(content: string, fileName: string = "CoverLetter.docx"): Promise<Buffer> {
   const doc = new Document({
     sections: [
       {
@@ -15,5 +15,9 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
   });
 
   const buffer = await Packer.toBuffer(doc);
-  fs.writeFileSync(fileName, buffer);
+  
+  // Optional: Save to file system if needed for debugging
+  // fs.writeFileSync(fileName, buffer);
+  
+  return buffer;
 }

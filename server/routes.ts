@@ -416,18 +416,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 </body>
 </html>`;
 
-      // Use a fixed integer file size to avoid database issues
-      const fileSize = 8000; // Safe integer value
+      // Generate Word document using docx
+      const { generateCoverLetterDocx } = await import("./docxGenerator");
+      const docxBuffer = await generateCoverLetterDocx(sanitizedContent);
       
-      // Create the cover letter document as HTML
+      // Use a fixed integer file size to avoid database issues
+      const fileSize = docxBuffer.length;
+      
+      // Create the cover letter document as DOCX
       try {
         const coverLetter = await storage.createDocument({
           projectId,
           category: 'cover_letter',
-          fileName: `CoverLetter_${project.name.replace(/[\/\\:*?"<>|]/g, '_')}.html`, // HTML file
-          fileType: 'text/html',
-          fileSize: fileSize, // Fixed integer size
-          fileContent: Buffer.from(htmlContent).toString('base64'), // Convert HTML to base64
+          fileName: `CoverLetter_${project.name.replace(/[\/\\:*?"<>|]/g, '_')}.docx`, // DOCX file
+          fileType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          fileSize: fileSize, // Actual buffer size
+          fileContent: docxBuffer.toString('base64'), // Convert DOCX buffer to base64
           status: 'pending_review',
           uploadedById: req.user!.id,
           comments: 'AI-powered cover letter for PainlessPermit™️'
