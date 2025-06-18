@@ -52,9 +52,7 @@ type ProjectRow = {
 };
 
 export default function ProjectPage() {
-  const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   // Fetch user data
   useEffect(() => {
@@ -75,7 +73,9 @@ export default function ProjectPage() {
     
     fetchUser();
   }, []);
-
+  const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["/api/projects"],
   });
@@ -115,18 +115,21 @@ export default function ProjectPage() {
       clientName: "",
       zipCode: "",
       status: "not_started",
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
     },
   });
   
   const onSubmit = async (data: ProjectFormValues) => {
     try {
+      // Format the data before sending - convert string date to Date object
       const formattedData = {
         ...data,
         zipCode: data.zipCode || null,
         jurisdictionAddress: data.jurisdictionAddress || null,
         deadline: data.deadline ? new Date(data.deadline) : null,
       };
+      
+      console.log("Submitting project data:", formattedData);
       
       const response = await fetch('/api/projects', {
         method: 'POST',
@@ -139,10 +142,12 @@ export default function ProjectPage() {
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Server error response:", errorData);
         throw new Error(errorData.message || 'Failed to create project');
       }
       
       const result = await response.json();
+      console.log("Project creation result:", result);
       
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       setIsCreateDialogOpen(false);
@@ -152,9 +157,10 @@ export default function ProjectPage() {
         description: "New project has been successfully created.",
       });
       
+      // Refresh the page to show the newly created project
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1000); // Small delay to allow the toast to be visible
     } catch (error) {
       console.error("Error creating project:", error);
       toast({
@@ -166,7 +172,7 @@ export default function ProjectPage() {
   };
   
   // Prepare table data
-  const projectsTableData: ProjectRow[] = projects.map((project: any) => {
+  const projectsTableData: ProjectRow[] = projects.map(project => {
     const documents = documentsByProject[project.id] || [];
     const progress = calculateProjectDocumentProgress(documents);
     
@@ -409,7 +415,6 @@ export default function ProjectPage() {
                   </Form>
                 </DialogContent>
               </Dialog>
-            )}
           </div>
           
           {/* Projects Table */}
