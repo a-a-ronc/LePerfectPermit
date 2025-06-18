@@ -166,7 +166,8 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
   const indexItems = desiredOrder.map((category, index) => {
     const files = documentByCategory[category] || [];
     const filesList = files.length > 0 ? `Files Submitted: ${files.join(", ")}` : "No files submitted";
-    return `${index + 1}. ${category}\n${filesList}`;
+    return `${index + 1}. ${category}
+${filesList}`;
   }).join("\n\n");
 
   return `Intralog Permit Services
@@ -185,11 +186,7 @@ I am writing on behalf of Intralog Permit Services to formally submit a High-Pil
 
 Enclosed is a comprehensive package of documents required for high-piled storage permitting. The following is an index of the submitted items:
 
----
-
 ${indexItems}
-
----
 
 For any questions or further information, please contact:
 Email: ${project.contactEmail || "permits@intralog.io"}
