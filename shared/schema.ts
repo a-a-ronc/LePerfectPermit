@@ -26,6 +26,8 @@ export const projects = pgTable("projects", {
   jurisdiction: text("jurisdiction").notNull(),
   jurisdictionAddress: text("jurisdiction_address"), // Building department address for correspondence
   clientName: text("client_name").notNull(),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
   permitNumber: text("permit_number"),
   zipCode: text("zip_code"),
   status: text("status").notNull().default("not_started"), // not_started, in_progress, ready_for_submission, under_review, approved, rejected

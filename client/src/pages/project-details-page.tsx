@@ -375,15 +375,53 @@ export default function ProjectDetailsPage() {
       
       {/* Generate Cover Letter Dialog */}
       <Dialog open={isCoverLetterDialogOpen} onOpenChange={setIsCoverLetterDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Generate AI-Powered Cover Letter</DialogTitle>
             <DialogDescription>
               Our AI will generate a professional cover letter based on all approved documents.
-              The cover letter will include project details, document references, and be formatted
-              according to industry standards for high-piled storage permit submissions.
+              Please verify the contact information below before generating.
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label className="text-right text-sm font-medium">Project:</label>
+              <div className="col-span-3 text-sm">{project?.name}</div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label className="text-right text-sm font-medium">Customer:</label>
+              <div className="col-span-3 text-sm">{project?.clientName}</div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label className="text-right text-sm font-medium">Facility:</label>
+              <div className="col-span-3 text-sm">{project?.facilityAddress}</div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label className="text-right text-sm font-medium">Jurisdiction:</label>
+              <div className="col-span-3 text-sm">{project?.jurisdiction}</div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label className="text-right text-sm font-medium text-red-600">Contact Email:</label>
+              <div className="col-span-3 text-sm font-medium">
+                {project?.contactEmail || "permits@intralog.io (default)"}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label className="text-right text-sm font-medium text-red-600">Contact Phone:</label>
+              <div className="col-span-3 text-sm font-medium">
+                {project?.contactPhone || "(801) 441-8992 (default)"}
+              </div>
+            </div>
+            {(!project?.contactEmail || !project?.contactPhone) && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ Contact information is missing. Default Intralog contact details will be used.
+                  Consider updating the project with specific contact information.
+                </p>
+              </div>
+            )}
+          </div>
           
           <DialogFooter>
             <Button 
