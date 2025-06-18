@@ -29,9 +29,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CommoditiesForm } from "@/components/commodities/commodities-form";
 import { calculateProjectDocumentProgress } from "@/lib/utils/document-utils";
 import { ProjectStatus } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
