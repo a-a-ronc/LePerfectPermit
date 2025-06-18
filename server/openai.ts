@@ -97,14 +97,10 @@ I am writing on behalf of Intralog Permit Services to formally submit a High-Pil
 
 Enclosed is a comprehensive package of documents required for high-piled storage permitting. The following is an index of the submitted items:
 
----
-
 ${desiredOrder.map((cat, i) => {
   const files = documentByCategory[cat] || [];
   return `${i + 1}. ${cat}\n${files.length ? "Files Submitted: " + files.join(", ") : "No files submitted"}`;
 }).join("\n\n")}
-
----
 
 For any questions or further information, please contact:  
 Email: ${project.contactEmail || user?.email || "permits@intralog.io"}  
