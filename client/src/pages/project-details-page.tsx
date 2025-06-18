@@ -441,8 +441,22 @@ export default function ProjectDetailsPage() {
                   id="contact-phone"
                   type="tel"
                   value={editableContactPhone}
-                  onChange={(e) => setEditableContactPhone(e.target.value)}
-                  placeholder="Enter contact phone"
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    let formatted = '';
+                    if (value.length > 0) {
+                      formatted = '(' + value.substring(0, 3);
+                      if (value.length > 3) {
+                        formatted += ') ' + value.substring(3, 6);
+                        if (value.length > 6) {
+                          formatted += '-' + value.substring(6, 10);
+                        }
+                      }
+                    }
+                    setEditableContactPhone(formatted);
+                  }}
+                  placeholder="(714) 697-6431"
+                  maxLength={14}
                 />
               </div>
             </div>

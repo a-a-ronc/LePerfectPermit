@@ -1,43 +1,58 @@
 import { Document, Packer, Paragraph, TextRun } from "docx";
 
 export async function generateCoverLetterDocx(content: string, fileName: string = "CoverLetter.docx"): Promise<Buffer> {
-  // Parse content to create formatted paragraphs with bold text for document categories
-  const lines = content.split("\n");
-  const paragraphs = lines.map(line => {
-    // Check if line contains numbered document categories (1. Site Plan, 2. Facility Plan, etc.)
-    const categoryMatch = line.match(/^(\d+\.\s+)(.+)$/);
-    
-    if (categoryMatch) {
-      const [, number, category] = categoryMatch;
-      return new Paragraph({
-        children: [
-          new TextRun({ text: number }),
-          new TextRun({ text: category, bold: true })
-        ]
-      });
+  try {
+    // Split content by lines and process each line
+    const lines = content.split('\n');
+    const paragraphs: any[] = [];
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // Skip empty lines
+      if (!trimmedLine) {
+        continue;
+      }
+
+      // Check if this is a document category line (starts with number and period)
+      if (/^\d+\.\s/.test(trimmedLine)) {
+        // This is a document category - make it bold
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: trimmedLine,
+                bold: true,
+              }),
+            ],
+          })
+        );
+      } else {
+        // Regular paragraph
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: trimmedLine,
+              }),
+            ],
+          })
+        );
+      }
     }
-    
-    // Check for subject line
-    if (line.includes("Subject:")) {
-      return new Paragraph({
-        children: [new TextRun({ text: line, bold: true })]
-      });
-    }
-    
-    // Regular paragraphs
-    return new Paragraph({
-      children: [new TextRun({ text: line })]
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: paragraphs,
+        },
+      ],
     });
-  });
 
-  const doc = new Document({
-    sections: [
-      {
-        children: paragraphs,
-      },
-    ],
-  });
-
-  const buffer = await Packer.toBuffer(doc);
-  return buffer;
+    return await Packer.toBuffer(doc);
+  } catch (error) {
+    console.error("Error generating DOCX:", error);
+    throw new Error("Failed to generate Word document");
+  }
 }
