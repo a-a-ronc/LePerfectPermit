@@ -1,5 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import { ReactNode, useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
 // Pages
@@ -12,8 +13,10 @@ import StakeholderPage from "@/pages/stakeholder-page";
 import NotFound from "@/pages/not-found";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "./lib/queryClient";
 import { ProtectedRoute } from "./lib/protected-route";
+import { AuthProvider } from "@/hooks/use-auth";
 
 // Landing Page
 function LandingPage() {
@@ -79,36 +82,41 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <Switch>
-        <Route path="/">
-          <LandingPage />
-        </Route>
-        <Route path="/auth">
-          <AuthPage onLoginSuccess={handleLogin} />
-        </Route>
-        
-        {/* Use ProtectedRoute for authenticated routes */}
-        <Route path="/dashboard">
-          <ProtectedRoute component={() => <DashboardPage onLogout={handleLogout} />} />
-        </Route>
-        <Route path="/projects">
-          <ProtectedRoute component={() => <ProjectPage />} />
-        </Route>
-        <Route path="/project/:id">
-          <ProtectedRoute component={() => <ProjectDetailsPage />} />
-        </Route>
-        <Route path="/documents">
-          <ProtectedRoute component={() => <DocumentsPage />} />
-        </Route>
-        <Route path="/stakeholders">
-          <ProtectedRoute component={() => <StakeholderPage />} />
-        </Route>
-        <Route>
-          <NotFound />
-        </Route>
-      </Switch>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <div className="app">
+          <Switch>
+            <Route path="/">
+              <LandingPage />
+            </Route>
+            <Route path="/auth">
+              <AuthPage onLoginSuccess={handleLogin} />
+            </Route>
+            
+            {/* Use ProtectedRoute for authenticated routes */}
+            <Route path="/dashboard">
+              <ProtectedRoute component={() => <DashboardPage onLogout={handleLogout} />} />
+            </Route>
+            <Route path="/projects">
+              <ProtectedRoute component={() => <ProjectPage />} />
+            </Route>
+            <Route path="/project/:id">
+              <ProtectedRoute component={() => <ProjectDetailsPage />} />
+            </Route>
+            <Route path="/documents">
+              <ProtectedRoute component={() => <DocumentsPage />} />
+            </Route>
+            <Route path="/stakeholders">
+              <ProtectedRoute component={() => <StakeholderPage />} />
+            </Route>
+            <Route>
+              <NotFound />
+            </Route>
+          </Switch>
+        </div>
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
