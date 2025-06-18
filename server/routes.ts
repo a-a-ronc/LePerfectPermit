@@ -381,18 +381,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const projectId = parseInt(req.params.projectId);
+      const { contactEmail, contactPhone } = req.body;
       const project = await storage.getProject(projectId);
       
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
       
+      // Override project contact info with the submitted values
+      const projectWithContactInfo = {
+        ...project,
+        contactEmail: contactEmail || project.contactEmail,
+        contactPhone: contactPhone || project.contactPhone,
+      };
+      
       // Get all approved documents for the project
       const documents = await storage.getDocumentsByProject(projectId);
       const approvedDocuments = documents.filter(doc => doc.status === 'approved');
       
       // Generate cover letter using OpenAI (with fallback to template-based generation)
-      const coverLetterContent = await generateCoverLetterWithAI(project, approvedDocuments);
+      const coverLetterContent = await generateCoverLetterWithAI(projectWithContactInfo, approvedDocuments);
       
       console.log("Cover letter text content (first 100 chars):", coverLetterContent.substring(0, 100));
       

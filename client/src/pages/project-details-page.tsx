@@ -79,7 +79,16 @@ export default function ProjectDetailsPage() {
   // Generate cover letter mutation
   const generateCoverLetterMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/projects/${projectId}/generate-cover-letter`);
+      // Update user's default contact information
+      await apiRequest("PUT", "/api/user/contact-defaults", {
+        defaultContactEmail: editableContactEmail,
+        defaultContactPhone: editableContactPhone,
+      });
+      
+      const res = await apiRequest("POST", `/api/projects/${projectId}/generate-cover-letter`, {
+        contactEmail: editableContactEmail,
+        contactPhone: editableContactPhone,
+      });
       
       if (!res.ok) {
         throw new Error(`Failed to generate cover letter: ${res.statusText}`);
@@ -222,6 +231,12 @@ export default function ProjectDetailsPage() {
       return;
     }
     
+    // Set default values for editable fields
+    const defaultEmail = (project as any)?.contactEmail || (user as any)?.defaultContactEmail || (user as any)?.email || "permits@intralog.io";
+    const defaultPhone = (project as any)?.contactPhone || (user as any)?.defaultContactPhone || "(801) 441-8992";
+    
+    setEditableContactEmail(defaultEmail);
+    setEditableContactPhone(defaultPhone);
     setIsCoverLetterDialogOpen(true);
   };
 
@@ -402,25 +417,34 @@ export default function ProjectDetailsPage() {
               <div className="col-span-3 text-sm">{project?.jurisdiction}</div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right text-sm font-medium text-red-600">Contact Email:</label>
-              <div className="col-span-3 text-sm font-medium">
-                {project?.contactEmail || "permits@intralog.io (default)"}
+              <Label htmlFor="contact-email" className="text-right text-sm font-medium text-red-600">Contact Email:</Label>
+              <div className="col-span-3">
+                <Input
+                  id="contact-email"
+                  type="email"
+                  value={editableContactEmail}
+                  onChange={(e) => setEditableContactEmail(e.target.value)}
+                  placeholder="Enter contact email"
+                />
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right text-sm font-medium text-red-600">Contact Phone:</label>
-              <div className="col-span-3 text-sm font-medium">
-                {project?.contactPhone || "(801) 441-8992 (default)"}
+              <Label htmlFor="contact-phone" className="text-right text-sm font-medium text-red-600">Contact Phone:</Label>
+              <div className="col-span-3">
+                <Input
+                  id="contact-phone"
+                  type="tel"
+                  value={editableContactPhone}
+                  onChange={(e) => setEditableContactPhone(e.target.value)}
+                  placeholder="Enter contact phone"
+                />
               </div>
             </div>
-            {(!project?.contactEmail || !project?.contactPhone) && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                <p className="text-sm text-yellow-800">
-                  ⚠️ Contact information is missing. Default Intralog contact details will be used.
-                  Consider updating the project with specific contact information.
-                </p>
-              </div>
-            )}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <p className="text-sm text-blue-800">
+                💡 These contact details will be saved as your defaults for future cover letters.
+              </p>
+            </div>
           </div>
           
           <DialogFooter>
@@ -431,7 +455,7 @@ export default function ProjectDetailsPage() {
               Cancel
             </Button>
             <Button 
-              disabled={generateCoverLetterMutation.isPending} 
+              disabled={generateCoverLetterMutation.isPending || !editableContactEmail.trim() || !editableContactPhone.trim()} 
               onClick={() => generateCoverLetterMutation.mutate()}
             >
               {generateCoverLetterMutation.isPending ? "AI Generating..." : "Generate AI Cover Letter"}

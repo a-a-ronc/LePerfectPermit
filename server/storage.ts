@@ -21,6 +21,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
+  updateUserContactDefaults(id: number, data: { defaultContactEmail?: string; defaultContactPhone?: string }): Promise<User | undefined>;
   
   // Project methods
   getProjects(): Promise<Project[]>;
@@ -83,6 +84,18 @@ export class DatabaseStorage implements IStorage {
   
   async getUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async updateUserContactDefaults(id: number, data: { defaultContactEmail?: string; defaultContactPhone?: string }): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        defaultContactEmail: data.defaultContactEmail,
+        defaultContactPhone: data.defaultContactPhone,
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
   }
   
   // Project methods
