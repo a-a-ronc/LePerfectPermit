@@ -347,6 +347,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate cover letter download endpoint
+  app.get("/api/projects/:id/cover-letter", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getProject(projectId);
+      const documents = await storage.getDocumentsByProject(projectId);
+
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      const coverLetter = await generateCoverLetterWithAI(project, documents);
+      
+      // Generate Word document using docx
+      const { generateCoverLetterDocx } = await import("./docxGenerator");
+      const docxBuffer = await generateCoverLetterDocx(coverLetter);
+      
+      // Set headers for Word document download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="Cover_Letter_${project.name.replace(/\s+/g, '_')}.docx"`);
+      
+      res.send(docxBuffer);
+    } catch (error) {
+      console.error("Error generating cover letter:", error);
+      res.status(500).json({ error: "Failed to generate cover letter" });
+    }
+  });
+
   // Cover letter generation
   app.post("/api/projects/:projectId/generate-cover-letter", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

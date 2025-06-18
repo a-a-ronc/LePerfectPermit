@@ -87,7 +87,7 @@ export default function ProjectPage() {
       const projectDocuments: Record<number, any[]> = {};
       
       // For each project, fetch its documents
-      for (const project of projects) {
+      for (const project of projects as any[]) {
         const res = await fetch(`/api/projects/${project.id}/documents`, {
           credentials: "include",
         });
@@ -100,7 +100,7 @@ export default function ProjectPage() {
       
       return projectDocuments;
     },
-    enabled: projects.length > 0,
+    enabled: (projects as any[]).length > 0,
   });
   
   const isLoading = isLoadingProjects || isLoadingDocuments;
@@ -166,7 +166,7 @@ export default function ProjectPage() {
   };
   
   // Prepare table data
-  const projectsTableData: ProjectRow[] = projects.map((project: any) => {
+  const projectsTableData: ProjectRow[] = (projects as any[]).map((project: any) => {
     const documents = documentsByProject[project.id] || [];
     const progress = calculateProjectDocumentProgress(documents);
     
