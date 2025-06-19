@@ -113,7 +113,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 19, 2025: Fixed vite configuration compatibility issue with tsx/esbuild
 - June 19, 2025: Created vite-bypass.ts to resolve top-level await problems  
 - June 19, 2025: Application successfully running on port 5000
-- June 19, 2025: Restructured AI cover letter generation with dynamic numbering - only shows categories with submitted files, improved document alignment, removed strict approval requirements
+- June 19, 2025: Restructured AI cover letter generation with dynamic numbering - only shows categories with submitted files, improved document alignment, removed strict approval requirements, cleaned filenames to remove copy quantities
 
 ## Changelog
 

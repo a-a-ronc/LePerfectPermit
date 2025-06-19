@@ -53,7 +53,9 @@ export async function generateCoverLetterWithAI(
       if (!documentByCategory[category]) {
         documentByCategory[category] = [];
       }
-      documentByCategory[category].push(doc.fileName);
+      // Remove copy quantities from filename (e.g., "(8 copies)", "(22 copies)")
+      const cleanFileName = doc.fileName.replace(/\s*\(\d+\s+copies?\)/gi, '');
+      documentByCategory[category].push(cleanFileName);
     });
 
     const desiredOrder = [
@@ -152,7 +154,9 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
     if (!documentByCategory[category]) {
       documentByCategory[category] = [];
     }
-    documentByCategory[category].push(doc.fileName);
+    // Remove copy quantities from filename (e.g., "(8 copies)", "(22 copies)")
+    const cleanFileName = doc.fileName.replace(/\s*\(\d+\s+copies?\)/gi, '');
+    documentByCategory[category].push(cleanFileName);
   });
 
   const desiredOrder = [
