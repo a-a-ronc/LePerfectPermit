@@ -118,6 +118,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 19, 2025: Final formatting corrections - ensured all filenames use 10pt Times New Roman with consistent left alignment and proper indentation, normalized styling across all document categories
 - June 19, 2025: Critical alignment fix - removed &nbsp; entities, unified Special Inspection formatting with 0.125in left margin, enforced consistent 10pt Times New Roman across all filename entries
 - June 19, 2025: Consolidated filename handling - created single helper function to ensure ALL filenames (including Special Inspection) use identical 10pt Times New Roman formatting with consistent 0.125in left alignment
+- June 19, 2025: Enhanced document upload dialog with dynamic resizing - popup window now automatically adjusts width based on filename length to prevent text overflow, improved filename display with break-all instead of truncate
 
 ## Changelog
 

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 
 interface FileUploadProps {
   onFileSelect: (file: File, base64: string, category: string) => void;
+  onFilesChange?: (files: File[]) => void;
   acceptedFileTypes?: string;
   category?: string;
   disabled?: boolean;
@@ -19,6 +20,7 @@ interface FileUploadProps {
 
 export function FileUpload({
   onFileSelect,
+  onFilesChange,
   acceptedFileTypes = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
   category,
   disabled = false,
@@ -149,6 +151,7 @@ export function FileUpload({
       
       // Clear files list after successful upload
       setFiles([]);
+      onFilesChange?.([]);
       
     } catch (err) {
       setError("An error occurred while processing the files.");
@@ -218,7 +221,10 @@ export function FileUpload({
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setFiles([])}
+              onClick={() => {
+                setFiles([]);
+                onFilesChange?.([]);
+              }}
               disabled={loading}
               className="h-7 px-2 text-xs"
             >
@@ -229,7 +235,7 @@ export function FileUpload({
             <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-background">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span className="text-sm truncate">{file.name}</span>
+                <span className="text-sm break-all">{file.name}</span>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   ({(file.size / (1024 * 1024)).toFixed(2)} MB)
                 </span>
