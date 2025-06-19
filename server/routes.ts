@@ -431,20 +431,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Use HTML directly instead of generating a PDF to avoid file size calculation issues
-      // Format the content as HTML
+      // Format the content as HTML with improved alignment for all document categories
       const htmlContent = `<html>
 <head>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; text-align: left; }
     h1 { color: #0084C6; }
     .header { margin-bottom: 40px; }
     .recipient { margin: 30px 0; }
     .subject { font-weight: bold; margin: 20px 0; }
-    .category { font-weight: bold; margin-top: 15px; }
-    .description { margin-top: 5px; margin-bottom: 15px; }
-    .files { margin-left: 20px; margin-bottom: 20px; }
+    .category { font-weight: bold; margin-top: 15px; text-align: left; }
+    .description { margin-top: 5px; margin-bottom: 15px; text-align: left; }
+    .files { margin-left: 0px; margin-bottom: 20px; text-align: left; }
     .signature { margin-top: 40px; }
     .contact { margin-top: 30px; }
+    .document-list { text-align: left; }
+    .document-item { margin-bottom: 15px; text-align: left; }
+    p { text-align: left; }
+    div { text-align: left; }
   </style>
 </head>
 <body>
