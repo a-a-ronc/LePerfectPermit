@@ -169,19 +169,27 @@ export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDi
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => {
-                        // Create a download link - handle text files differently
+                      onClick={async () => {
                         try {
-                          // For all file types, use data URI which is more reliable
-                          const link = window.document.createElement('a');
-                          link.href = `data:${document.fileType};base64,${document.fileContent}`;
-                          link.download = document.fileName;
-                          window.document.body.appendChild(link);
-                          link.click();
-                          window.document.body.removeChild(link);
-                        } catch (error: any) {
-                          console.error("Error downloading document:", error);
-                          alert("Download error: " + (error.message || "Could not download file"));
+                          const success = await downloadDocument(
+                            document.fileName,
+                            document.fileContent,
+                            document.fileType
+                          );
+                          
+                          if (success) {
+                            toast({
+                              title: "File Downloaded",
+                              description: `${document.fileName} has been saved successfully.`,
+                            });
+                          }
+                        } catch (error) {
+                          console.error("Error downloading file:", error);
+                          toast({
+                            title: "Download Error",
+                            description: "There was a problem downloading the file.",
+                            variant: "destructive",
+                          });
                         }
                       }}
                     >

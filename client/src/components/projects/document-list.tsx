@@ -32,6 +32,7 @@ import { DocumentPreviewDialog } from "./document-preview-dialog";
 import { DocumentViewDialog } from "./document-view-dialog";
 import { DocumentUploadDialog } from "./document-upload-dialog";
 import { getChecklistForCategory } from "@/lib/utils/checklist-data";
+import { downloadDocument } from "@/lib/utils/file-download";
 import {
   Dialog,
   DialogContent,
@@ -525,31 +526,20 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                         variant="outline" 
                         size="sm" 
                         className="flex items-center"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            // Create a download link
-                            const byteCharacters = atob(doc.fileContent);
+                            const success = await downloadDocument(
+                              doc.fileName,
+                              doc.fileContent,
+                              doc.fileType
+                            );
                             
-                            // For text files, create a text file download
-                            if (doc.fileType === 'text/plain') {
-                              const blob = new Blob([byteCharacters], { type: 'text/plain' });
-                              const url = URL.createObjectURL(blob);
-                              const a = window.document.createElement('a');
-                              a.href = url;
-                              a.download = doc.fileName;
-                              window.document.body.appendChild(a);
-                              a.click();
-                              window.document.body.removeChild(a);
-                              URL.revokeObjectURL(url);
-                            } else {
-                              // For other files, use data URI
-                              const link = window.document.createElement('a');
-                              link.href = `data:${doc.fileType};base64,${doc.fileContent}`;
-                              link.download = doc.fileName;
-                              window.document.body.appendChild(link);
-                              link.click();
-                              window.document.body.removeChild(link);
+                            if (success) {
+                              toast({
+                                title: "File Downloaded",
+                                description: `${doc.fileName} has been saved successfully.`,
+                              });
                             }
                           } catch (error) {
                             console.error("Error downloading file:", error);

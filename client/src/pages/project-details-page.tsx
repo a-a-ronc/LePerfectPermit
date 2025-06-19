@@ -35,6 +35,7 @@ import { CommoditiesForm } from "@/components/commodities/commodities-form";
 import { calculateProjectDocumentProgress } from "@/lib/utils/document-utils";
 import { ProjectStatus } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
+import { createSubmissionZipNative } from "@/lib/utils/zip-creator";
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -441,9 +442,72 @@ export default function ProjectDetailsPage() {
             </Button>
             <Button 
               disabled={!isReadyForSubmission || submitProjectMutation.isPending} 
-              onClick={() => submitProjectMutation.mutate()}
+              onClick={async () => {
+                try {
+                  // Get all documents with content for ZIP creation
+                  const documentsWithContent = await Promise.all(
+                    documents.map(async (doc) => {
+                      const response = await fetch(`/api/documents/${doc.id}/content`, {
+                        credentials: 'include'
+                      });
+                      if (!response.ok) throw new Error('Failed to fetch document content');
+                      const fullDoc = await response.json();
+                      return fullDoc;
+                    })
+                  );
+
+                  // Find cover letter
+                  const coverLetterDoc = documentsWithContent.find(doc => 
+                    doc.category === 'cover_letter' || doc.fileName.toLowerCase().includes('cover')
+                  );
+
+                  if (!coverLetterDoc) {
+                    toast({
+                      title: "Cover Letter Required",
+                      description: "Please generate a cover letter before submitting.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+
+                  // Create submission ZIP
+                  const zipSuccess = await createSubmissionZipNative(
+                    atob(coverLetterDoc.fileContent), // Decode cover letter content
+                    documentsWithContent
+                      .filter(doc => doc.category !== 'cover_letter')
+                      .map(doc => ({
+                        fileName: doc.fileName,
+                        fileContent: doc.fileContent,
+                        category: doc.category
+                      })),
+                    project.name
+                  );
+
+                  if (zipSuccess) {
+                    toast({
+                      title: "Submission Package Created",
+                      description: "Your submission package has been saved successfully.",
+                    });
+                    // Also update project status
+                    submitProjectMutation.mutate();
+                  } else {
+                    toast({
+                      title: "Submission Error",
+                      description: "Failed to create submission package.",
+                      variant: "destructive",
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error creating submission package:', error);
+                  toast({
+                    title: "Submission Error",
+                    description: "Failed to create submission package.",
+                    variant: "destructive",
+                  });
+                }
+              }}
             >
-              {submitProjectMutation.isPending ? "Submitting..." : "Submit Project"}
+              {submitProjectMutation.isPending ? "Creating Package..." : "Submit to Authority"}
               <Send className="ml-2 h-4 w-4" />
             </Button>
           </DialogFooter>
