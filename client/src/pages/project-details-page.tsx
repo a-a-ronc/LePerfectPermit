@@ -49,6 +49,11 @@ export default function ProjectDetailsPage() {
   const [isCoverLetterDialogOpen, setIsCoverLetterDialogOpen] = useState(false);
   const [editableContactEmail, setEditableContactEmail] = useState("");
   const [editableContactPhone, setEditableContactPhone] = useState("");
+  const [editableProjectName, setEditableProjectName] = useState("");
+  const [editableCustomerName, setEditableCustomerName] = useState("");
+  const [editableFacilityAddress, setEditableFacilityAddress] = useState("");
+  const [editableJurisdiction, setEditableJurisdiction] = useState("");
+  const [editableJurisdictionAddress, setEditableJurisdictionAddress] = useState("");
 
   // Load project details
   const { data: project, isLoading: isLoadingProject } = useQuery({
@@ -94,6 +99,11 @@ export default function ProjectDetailsPage() {
       const res = await apiRequest("POST", `/api/projects/${projectId}/generate-cover-letter`, {
         contactEmail: editableContactEmail,
         contactPhone: editableContactPhone,
+        projectName: editableProjectName,
+        customerName: editableCustomerName,
+        facilityAddress: editableFacilityAddress,
+        jurisdiction: editableJurisdiction,
+        jurisdictionAddress: editableJurisdictionAddress,
       });
       
       if (!res.ok) {
@@ -210,13 +220,40 @@ export default function ProjectDetailsPage() {
   ];
   
   const handleGenerateCoverLetter = () => {
-    // Set default values for editable fields
+    // Set default values for all editable fields
     const defaultEmail = (project as any)?.contactEmail || (user as any)?.defaultContactEmail || (user as any)?.email || "permits@intralog.io";
     const defaultPhone = (project as any)?.contactPhone || (user as any)?.defaultContactPhone || "(801) 441-8992";
     
     setEditableContactEmail(defaultEmail);
     setEditableContactPhone(defaultPhone);
+    setEditableProjectName((project as any)?.name || "");
+    setEditableCustomerName((project as any)?.clientName || "");
+    setEditableFacilityAddress((project as any)?.facilityAddress || "");
+    setEditableJurisdiction((project as any)?.jurisdiction || "");
+    
+    // Auto-resolve jurisdiction address
+    const resolvedAddress = resolveJurisdictionAddress((project as any)?.jurisdiction || "");
+    setEditableJurisdictionAddress((project as any)?.jurisdictionAddress || resolvedAddress);
+    
     setIsCoverLetterDialogOpen(true);
+  };
+
+  // Function to resolve jurisdiction address (same logic as server)
+  const resolveJurisdictionAddress = (jurisdiction: string): string => {
+    const jurisdictionMap: Record<string, string> = {
+      "West Valley City": "3600 S Constitution Blvd, West Valley City, UT 84119",
+      "Salt Lake City": "451 S State St, Salt Lake City, UT 84111",
+      "Murray": "5025 S State St, Murray, UT 84107",
+      "Sandy": "10000 Centennial Pkwy, Sandy, UT 84070",
+      "South Jordan": "1600 W Towne Center Dr, South Jordan, UT 84095",
+      "Midvale": "655 W Center St, Midvale, UT 84047",
+      "Draper": "1020 E Pioneer Rd, Draper, UT 84020",
+      "Taylorsville": "2600 W Taylorsville Blvd, Taylorsville, UT 84129",
+      "Millcreek": "3330 S 1300 E, Millcreek, UT 84106",
+      "Cottonwood Heights": "2277 E Bengal Blvd, Cottonwood Heights, UT 84121"
+    };
+    
+    return jurisdictionMap[jurisdiction] || `${jurisdiction} Building Department`;
   };
 
   return (
@@ -445,7 +482,7 @@ export default function ProjectDetailsPage() {
               Cancel
             </Button>
             <Button 
-              disabled={generateCoverLetterMutation.isPending || !editableContactEmail.trim() || !editableContactPhone.trim()} 
+              disabled={generateCoverLetterMutation.isPending || !editableContactEmail.trim() || !editableContactPhone.trim() || !editableProjectName.trim() || !editableFacilityAddress.trim() || !editableJurisdiction.trim()} 
               onClick={() => generateCoverLetterMutation.mutate()}
             >
               {generateCoverLetterMutation.isPending ? "AI Generating..." : "Generate AI Cover Letter"}

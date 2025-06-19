@@ -381,16 +381,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const projectId = parseInt(req.params.projectId);
-      const { contactEmail, contactPhone } = req.body;
+      const { 
+        contactEmail, 
+        contactPhone, 
+        projectName, 
+        customerName, 
+        facilityAddress, 
+        jurisdiction, 
+        jurisdictionAddress 
+      } = req.body;
       const project = await storage.getProject(projectId);
       
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
       
-      // Override project contact info with the submitted values
-      const projectWithContactInfo = {
+      // Override project details with the submitted values
+      const projectWithUpdatedInfo = {
         ...project,
+        name: projectName || project.name,
+        clientName: customerName || project.clientName,
+        facilityAddress: facilityAddress || project.facilityAddress,
+        jurisdiction: jurisdiction || project.jurisdiction,
+        jurisdictionAddress: jurisdictionAddress || project.jurisdictionAddress,
         contactEmail: contactEmail || project.contactEmail,
         contactPhone: contactPhone || project.contactPhone,
       };
@@ -400,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const submittedDocuments = documents.filter(doc => doc.status === 'approved' || doc.status === 'pending_review');
       
       // Generate cover letter using OpenAI (with fallback to template-based generation)
-      const coverLetterContent = await generateCoverLetterWithAI(projectWithContactInfo, submittedDocuments);
+      const coverLetterContent = await generateCoverLetterWithAI(projectWithUpdatedInfo, submittedDocuments);
       
       console.log("Cover letter text content (first 100 chars):", coverLetterContent.substring(0, 100));
       
@@ -468,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const coverLetter = await storage.createDocument({
           projectId,
           category: 'cover_letter',
-          fileName: `CoverLetter_${project.name.replace(/[\/\\:*?"<>|]/g, '_')}.docx`, // DOCX file
+          fileName: `CoverLetter_${projectWithUpdatedInfo.name.replace(/[\/\\:*?"<>|]/g, '_')}.docx`, // DOCX file
           fileType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           fileSize: fileSize, // Actual buffer size
           fileContent: docxBuffer.toString('base64'), // Convert DOCX buffer to base64
