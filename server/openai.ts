@@ -107,7 +107,8 @@ Enclosed is a comprehensive package of documents required for high-piled storage
 
 ${categoriesWithFiles.map((cat, i) => {
   const files = documentByCategory[cat] || [];
-  return `**${i + 1}. ${cat}**\nFiles Submitted: ${files.join(", ")}`;
+  const fileList = files.map(file => `    ${file}`).join("\n");
+  return `**${i + 1}. ${cat}**\nFiles Submitted:\n${fileList}`;
 }).join("\n\n")}
 
 For any questions or further information, please contact:  
@@ -179,8 +180,10 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
   
   const indexItems = categoriesWithFiles.map((category, index) => {
     const files = documentByCategory[category] || [];
+    const fileList = files.map(file => `    ${file}`).join("\n");
     return `${index + 1}. ${category}
-Files Submitted: ${files.join(", ")}`;
+Files Submitted:
+${fileList}`;
   }).join("\n\n");
 
   return `Intralog Permit Services

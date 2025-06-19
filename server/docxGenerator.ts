@@ -55,13 +55,14 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Subject line
-      if (trimmedLine.startsWith("Subject:") || trimmedLine.startsWith("RE:")) {
+      // Subject line - handle both plain and bold markdown
+      if (trimmedLine.startsWith("Subject:") || trimmedLine.startsWith("RE:") || trimmedLine.startsWith("**Subject:")) {
+        const subjectText = trimmedLine.replace(/^\*\*/, '').replace(/\*\*$/, ''); // Remove markdown
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: trimmedLine,
+                text: subjectText,
                 bold: true,
                 size: 22, // 11pt
               }),
@@ -100,20 +101,39 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Files submitted lines (indented under categories) - ensure left alignment for ALL categories
-      if (trimmedLine.startsWith("Files Submitted:") || trimmedLine === "No files submitted") {
+      // Files submitted header line
+      if (trimmedLine === "Files Submitted:") {
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
                 text: "    " + trimmedLine, // Add indentation
                 size: 20, // 10pt
-                italics: trimmedLine === "No files submitted",
               }),
             ],
-            alignment: "left", // Force left alignment - fixes Special Inspection right-alignment issue
+            alignment: "left",
             indent: {
-              left: 0, // Reset any inherited indentation
+              left: 0,
+            },
+          })
+        );
+        continue;
+      }
+
+      // Individual file names (should be indented and left-aligned)
+      if (trimmedLine.startsWith("    ") && (trimmedLine.includes(".pdf") || trimmedLine.includes(".docx") || trimmedLine.includes(".xlsx"))) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: trimmedLine, // Already has indentation
+                size: 20, // 10pt - consistent for ALL files including Special Inspection
+                font: "Times New Roman", // Ensure Times New Roman
+              }),
+            ],
+            alignment: "left", // Force left alignment for ALL files including Special Inspection
+            indent: {
+              left: 0, // Reset any inherited indentation that might cause right alignment
             },
           })
         );
