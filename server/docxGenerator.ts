@@ -107,34 +107,34 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
           new Paragraph({
             children: [
               new TextRun({
-                text: "    " + trimmedLine, // Add indentation
-                size: 20, // 10pt
+                text: trimmedLine,
+                size: 22, // 11pt for "Files Submitted:" headers
+                font: "Times New Roman",
+                bold: false,
               }),
             ],
-            alignment: "left",
-            indent: {
-              left: 0,
-            },
+            alignment: AlignmentType.LEFT,
           })
         );
         continue;
       }
 
-      // Individual file names (should be indented and left-aligned)
+      // Individual file names (10pt, left-aligned with indent)
       if (trimmedLine.startsWith("    ") && (trimmedLine.includes(".pdf") || trimmedLine.includes(".docx") || trimmedLine.includes(".xlsx"))) {
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: trimmedLine, // Already has indentation
-                size: 20, // 10pt font size for filenames as requested
-                font: "Times New Roman", // Ensure Times New Roman
+                text: trimmedLine.trim(), // Remove leading spaces, we'll use indent instead
+                size: 20, // 10pt font size for ALL filenames
+                font: "Times New Roman",
+                bold: false, // Ensure filenames are not bold
               }),
             ],
-            alignment: AlignmentType.LEFT, // Explicit left alignment for ALL files including Special Inspection
+            alignment: AlignmentType.LEFT, // Force left alignment for ALL files
             indent: {
-              left: 720, // 0.5 inch left indent for filenames
-              firstLine: 0, // No additional first line indent
+              left: 720, // 0.5 inch left indent (1.25em equivalent)
+              firstLine: 0,
             },
             spacing: {
               before: 0,
