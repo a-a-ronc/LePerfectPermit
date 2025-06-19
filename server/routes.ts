@@ -147,6 +147,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual document with content
+  app.get("/api/documents/:id/content", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const documentId = parseInt(req.params.id);
+      const document = await storage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      console.error("Error fetching document content:", error);
+      res.status(500).json({ message: "Failed to get document content" });
+    }
+  });
+
   app.post("/api/projects/:projectId/documents", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     

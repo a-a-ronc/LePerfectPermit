@@ -8,7 +8,7 @@ import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { pool } from "./db";
 
 // Define the storage interface
@@ -172,12 +172,28 @@ export class DatabaseStorage implements IStorage {
   async getDocumentsByProject(projectId: number): Promise<Document[]> {
     try {
       console.log(`Fetching documents for project ${projectId}`);
+      // Exclude fileContent to avoid response size limits
       const docs = await db
-        .select()
+        .select({
+          id: documents.id,
+          projectId: documents.projectId,
+          category: documents.category,
+          fileName: documents.fileName,
+          fileType: documents.fileType,
+          fileSize: documents.fileSize,
+          status: documents.status,
+          uploadedById: documents.uploadedById,
+          uploadedAt: documents.uploadedAt,
+          reviewedById: documents.reviewedById,
+          reviewedAt: documents.reviewedAt,
+          comments: documents.comments,
+          version: documents.version,
+          fileContent: sql`NULL` // Exclude large content from list view
+        })
         .from(documents)
         .where(eq(documents.projectId, projectId));
       console.log(`Found ${docs.length} documents for project ${projectId}`);
-      return docs;
+      return docs as Document[];
     } catch (error) {
       console.error(`Error fetching documents for project ${projectId}:`, error);
       throw new Error(`Failed to fetch documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
