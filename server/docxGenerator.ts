@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
 
 export async function generateCoverLetterDocx(content: string, fileName: string = "CoverLetter.docx"): Promise<Buffer> {
   try {
@@ -25,13 +25,15 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Company header (first line)
-      if (i === 0 && trimmedLine === "Intralog Permit Services") {
+      // Company header (first line) - handle both plain and bold markdown
+      if ((i === 0 && trimmedLine === "Intralog Permit Services") || 
+          (i === 0 && trimmedLine === "**Intralog Permit Services**")) {
+        const headerText = trimmedLine.replace(/\*\*/g, ''); // Remove markdown
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: trimmedLine,
+                text: headerText,
                 bold: true,
                 size: 28, // 14pt
               }),
@@ -98,7 +100,7 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Files submitted lines (indented under categories) - ensure left alignment
+      // Files submitted lines (indented under categories) - ensure left alignment for ALL categories
       if (trimmedLine.startsWith("Files Submitted:") || trimmedLine === "No files submitted") {
         paragraphs.push(
           new Paragraph({
@@ -109,7 +111,10 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
                 italics: trimmedLine === "No files submitted",
               }),
             ],
-            alignment: "left", // Force left alignment
+            alignment: "left", // Force left alignment - fixes Special Inspection right-alignment issue
+            indent: {
+              left: 0, // Reset any inherited indentation
+            },
           })
         );
         continue;
@@ -139,15 +144,17 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Closing
-      if (trimmedLine === "Sincerely," || trimmedLine.includes("Permit Services Team")) {
+      // Closing - handle both plain and bold markdown for team signature
+      if (trimmedLine === "Sincerely," || trimmedLine.includes("Permit Services Team") || 
+          trimmedLine.includes("**Intralog Permit Services Team**")) {
+        const closingText = trimmedLine.replace(/\*\*/g, ''); // Remove markdown
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: trimmedLine,
+                text: closingText,
                 size: 22, // 11pt
-                bold: trimmedLine.includes("Permit Services Team"),
+                bold: closingText.includes("Permit Services Team"),
               }),
             ],
           })
