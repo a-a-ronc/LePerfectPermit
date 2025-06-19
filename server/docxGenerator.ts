@@ -205,6 +205,28 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
+      // Catch any remaining filename entries that might have been missed
+      if (trimmedLine.includes(".pdf") || trimmedLine.includes(".docx") || trimmedLine.includes(".xlsx")) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: trimmedLine.startsWith("    ") ? trimmedLine.trim() : "    " + trimmedLine.trim(),
+                size: 20, // 10pt for ALL filenames
+                font: "Times New Roman",
+                bold: false,
+              }),
+            ],
+            alignment: AlignmentType.LEFT,
+            indent: {
+              left: 720, // 0.5 inch left indent
+              firstLine: 0,
+            },
+          })
+        );
+        continue;
+      }
+      
       // Regular paragraph text
       paragraphs.push(
         new Paragraph({
@@ -212,8 +234,10 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
             new TextRun({
               text: trimmedLine,
               size: 22, // 11pt
+              font: "Times New Roman",
             }),
           ],
+          alignment: AlignmentType.LEFT,
         })
       );
     }
