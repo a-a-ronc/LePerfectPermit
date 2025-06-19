@@ -170,10 +170,18 @@ export class DatabaseStorage implements IStorage {
   
   // Document methods
   async getDocumentsByProject(projectId: number): Promise<Document[]> {
-    return await db
-      .select()
-      .from(documents)
-      .where(eq(documents.projectId, projectId));
+    try {
+      console.log(`Fetching documents for project ${projectId}`);
+      const docs = await db
+        .select()
+        .from(documents)
+        .where(eq(documents.projectId, projectId));
+      console.log(`Found ${docs.length} documents for project ${projectId}`);
+      return docs;
+    } catch (error) {
+      console.error(`Error fetching documents for project ${projectId}:`, error);
+      throw new Error(`Failed to fetch documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
   
   async getDocument(id: number): Promise<Document | undefined> {
