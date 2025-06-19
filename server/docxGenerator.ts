@@ -127,14 +127,19 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
             children: [
               new TextRun({
                 text: trimmedLine, // Already has indentation
-                size: 18, // 9pt - smaller font size for filenames
+                size: 20, // 10pt font size for filenames as requested
                 font: "Times New Roman", // Ensure Times New Roman
               }),
             ],
-            alignment: "left", // Force left alignment for ALL files including Special Inspection
+            alignment: AlignmentType.LEFT, // Explicit left alignment for ALL files including Special Inspection
             indent: {
               left: 720, // 0.5 inch left indent for filenames
+              firstLine: 0, // No additional first line indent
             },
+            spacing: {
+              before: 0,
+              after: 0,
+            }
           })
         );
         continue;

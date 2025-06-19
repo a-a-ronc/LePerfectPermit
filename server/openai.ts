@@ -54,7 +54,7 @@ export async function generateCoverLetterWithAI(
         documentByCategory[category] = [];
       }
       // Remove copy quantities from filename (e.g., "(8 copies)", "(22 copies)")
-      const cleanFileName = doc.fileName.replace(/\s*\(\d+\s+copies?\)/gi, '');
+      const cleanFileName = doc.fileName.replace(/\s*\(\d+\s*copies?\)\s*/gi, '').trim();
       documentByCategory[category].push(cleanFileName);
     });
 
@@ -157,7 +157,7 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
       documentByCategory[category] = [];
     }
     // Remove copy quantities from filename (e.g., "(8 copies)", "(22 copies)")
-    const cleanFileName = doc.fileName.replace(/\s*\(\d+\s+copies?\)/gi, '');
+    const cleanFileName = doc.fileName.replace(/\s*\(\d+\s*copies?\)\s*/gi, '').trim();
     documentByCategory[category].push(cleanFileName);
   });
 
