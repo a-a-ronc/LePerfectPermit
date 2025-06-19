@@ -210,33 +210,6 @@ export default function ProjectDetailsPage() {
   ];
   
   const handleGenerateCoverLetter = () => {
-    // Check which categories have approved documents
-    const approvedCategories = new Set();
-    documents.forEach(doc => {
-      if (doc.status === 'approved') {
-        approvedCategories.add(doc.category);
-      }
-    });
-    
-    // Check if any required categories are missing approval
-    const missingCategories = requiredDocumentCategories.filter(
-      category => !approvedCategories.has(category)
-    );
-    
-    if (missingCategories.length > 0) {
-      const formattedMissingCategories = missingCategories
-        .map(cat => cat.replace(/_/g, ' '))
-        .map(cat => cat.charAt(0).toUpperCase() + cat.slice(1))
-        .join(', ');
-      
-      toast({
-        title: "Cannot Generate Cover Letter",
-        description: `The following documents still need approval: ${formattedMissingCategories}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
     // Set default values for editable fields
     const defaultEmail = (project as any)?.contactEmail || (user as any)?.defaultContactEmail || (user as any)?.email || "permits@intralog.io";
     const defaultPhone = (project as any)?.contactPhone || (user as any)?.defaultContactPhone || "(801) 441-8992";
@@ -291,9 +264,6 @@ export default function ProjectDetailsPage() {
                         <div className="flex gap-2">
                           <Button 
                             onClick={handleGenerateCoverLetter}
-                            disabled={requiredDocumentCategories.some(category => 
-                              !documents.some(doc => doc.category === category && doc.status === 'approved')
-                            )}
                           >
                             Generate AI Cover Letter
                           </Button>
