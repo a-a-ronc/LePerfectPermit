@@ -9,6 +9,7 @@ neonConfig.webSocketConstructor = ws;
 // Add connection retry configuration
 neonConfig.poolQueryViaFetch = true;
 neonConfig.fetchConnectionCache = true;
+neonConfig.pipelineConnect = false;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
