@@ -108,10 +108,18 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - `SENDGRID_API_KEY`: Email service integration
 - `SESSION_SECRET`: Session encryption key
 
+## Recent Changes
+
+- June 19, 2025: Fixed vite configuration compatibility issue with tsx/esbuild
+- June 19, 2025: Created vite-bypass.ts to resolve top-level await problems  
+- June 19, 2025: Application successfully running on port 5000
+- June 19, 2025: Fixed cover letter generation document filtering issue - now includes all uploaded documents
+
 ## Changelog
 
 Changelog:
 - June 18, 2025. Initial setup
+- June 19, 2025. Resolved startup configuration issues
 
 ## User Preferences
 

@@ -395,9 +395,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contactPhone: contactPhone || project.contactPhone,
       };
       
-      // Get all approved documents for the project
+      // Get all documents for the project (including pending/uploaded ones)
       const documents = await storage.getDocumentsByProject(projectId);
-      const approvedDocuments = documents.filter(doc => doc.status === 'approved');
+      // Include documents that are approved or don't have a status set (null/undefined means uploaded)
+      const approvedDocuments = documents.filter(doc => doc.status === 'approved' || !doc.status);
       
       // Generate cover letter using OpenAI (with fallback to template-based generation)
       const coverLetterContent = await generateCoverLetterWithAI(projectWithContactInfo, approvedDocuments);
