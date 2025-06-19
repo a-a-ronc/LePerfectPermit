@@ -175,6 +175,12 @@ export async function downloadDocument(
   mimeType: string
 ): Promise<boolean> {
   try {
+    // Handle the case where fileContent might be null/undefined (from list view)
+    if (!fileContent) {
+      console.warn('No file content available for download');
+      return false;
+    }
+    
     const content = base64ToUint8Array(fileContent);
     const savedPath = await saveFileWithPicker(fileName, content, mimeType);
     return savedPath !== null;

@@ -356,7 +356,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => {
+                          onClick={async () => {
                             // Check for placeholder text which causes errors
                             const content = document.fileContent;
                             if (content.includes('[Your Name]') || content.includes('[') && content.includes(']')) {
@@ -365,14 +365,16 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                               return;
                             }
                             
-                            // Create a download link
                             try {
-                              const link = window.document.createElement('a');
-                              link.href = `data:${document.fileType};base64,${content}`;
-                              link.download = document.fileName;
-                              window.document.body.appendChild(link);
-                              link.click();
-                              window.document.body.removeChild(link);
+                              const success = await downloadDocument(
+                                document.fileName,
+                                document.fileContent,
+                                document.fileType
+                              );
+                              
+                              if (!success) {
+                                alert("Error: Could not download file. The file might be corrupted.");
+                              }
                             } catch (error) {
                               console.error("Error downloading file:", error);
                               alert("Error: Could not download file. The file might be corrupted.");

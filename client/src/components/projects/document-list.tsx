@@ -529,10 +529,17 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
+                            // Since we now exclude fileContent from list view, fetch it first
+                            const response = await fetch(`/api/documents/${doc.id}/content`, {
+                              credentials: 'include'
+                            });
+                            if (!response.ok) throw new Error('Failed to fetch document content');
+                            const fullDoc = await response.json();
+                            
                             const success = await downloadDocument(
-                              doc.fileName,
-                              doc.fileContent,
-                              doc.fileType
+                              fullDoc.fileName,
+                              fullDoc.fileContent,
+                              fullDoc.fileType
                             );
                             
                             if (success) {

@@ -28,6 +28,7 @@ interface DocumentViewDialogProps {
 }
 
 export function DocumentViewDialog({ isOpen, onClose, document }: DocumentViewDialogProps) {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   
   // Reset loading state and create reference to the document

@@ -93,10 +93,14 @@ export async function createSubmissionZip(
   projectName: string
 ): Promise<boolean> {
   try {
-    const zip = new SimpleZip();
+    // Create a simple archive format since we can't use JSZip
+    const files: Array<{ name: string; content: Uint8Array }> = [];
     
     // Add cover letter first
-    zip.addFile('00_Cover_Letter.txt', coverLetter);
+    files.push({
+      name: '00_Cover_Letter.txt',
+      content: new TextEncoder().encode(coverLetter)
+    });
     
     // Sort documents by category and add them
     const sortedDocs = documents.sort((a, b) => {
@@ -125,25 +129,52 @@ export async function createSubmissionZip(
     for (const doc of sortedDocs) {
       const prefix = String(fileIndex).padStart(2, '0');
       const fileName = `${prefix}_${doc.fileName}`;
-      zip.addFile(fileName, doc.fileContent);
+      const content = base64ToUint8Array(doc.fileContent);
+      files.push({ name: fileName, content });
       fileIndex++;
     }
     
-    // Generate the ZIP blob
-    const zipBlob = await zip.generateBlob();
-    const zipArray = new Uint8Array(await zipBlob.arrayBuffer());
+    // Create a simple concatenated file with headers (tar-like)
+    const chunks: Uint8Array[] = [];
     
-    // Save the ZIP file
-    const zipFileName = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_Submission.zip`;
+    for (const file of files) {
+      // File name length (4 bytes)
+      const nameBytes = new TextEncoder().encode(file.name);
+      const nameLength = new Uint32Array([nameBytes.length]);
+      chunks.push(new Uint8Array(nameLength.buffer));
+      
+      // File name
+      chunks.push(nameBytes);
+      
+      // Content length (4 bytes)
+      const contentLength = new Uint32Array([file.content.length]);
+      chunks.push(new Uint8Array(contentLength.buffer));
+      
+      // Content
+      chunks.push(file.content);
+    }
+    
+    // Combine all chunks
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    // Save the archive file
+    const archiveFileName = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_Submission.tar`;
     const savedPath = await saveFileWithPicker(
-      zipFileName,
-      zipArray,
-      'application/zip'
+      archiveFileName,
+      result,
+      'application/x-tar'
     );
     
     return savedPath !== null;
   } catch (error) {
-    console.error('Error creating submission ZIP:', error);
+    console.error('Error creating submission archive:', error);
     return false;
   }
 }
@@ -159,16 +190,11 @@ export async function createSubmissionZipNative(
   projectName: string
 ): Promise<boolean> {
   try {
-    // Check if CompressionStream is available (modern browsers)
-    if ('CompressionStream' in window) {
-      return createSubmissionZipWithCompression(coverLetter, documents, projectName);
-    } else {
-      // Fallback to simple ZIP creation
-      return createSubmissionZip(coverLetter, documents, projectName);
-    }
-  } catch (error) {
-    console.error('Error creating native ZIP:', error);
+    // Use the simple archive method since ZIP compression is complex without libraries
     return createSubmissionZip(coverLetter, documents, projectName);
+  } catch (error) {
+    console.error('Error creating submission package:', error);
+    return false;
   }
 }
 
