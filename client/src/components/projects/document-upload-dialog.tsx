@@ -59,9 +59,19 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
     },
     onError: (error: Error) => {
       console.error('Document upload error:', error);
+      let errorMessage = "There was an error uploading your document. Please try again.";
+      
+      if (error.message.includes('413') || error.message.includes('too large')) {
+        errorMessage = "File size too large. Please use a file smaller than 15MB.";
+      } else if (error.message.includes('408') || error.message.includes('timeout')) {
+        errorMessage = "Upload timeout. Please try with a smaller file or check your connection.";
+      } else if (error.message.includes('aborted')) {
+        errorMessage = "Upload was interrupted. Please try again with a smaller file.";
+      }
+      
       toast({
         title: "Upload Failed",
-        description: error.message || "There was an error uploading your document. Please try again or reduce the file size.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -130,7 +140,7 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
             onFilesChange={handleFilesChange}
             acceptedFileTypes=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
             disabled={isUploading || uploadMutation.isPending}
-            maxSizeMB={40} // Increased file size limit to 40MB
+            maxSizeMB={15} // Reduced to prevent timeout issues
             category={category} // Pass the pre-selected category
           />
         </div>

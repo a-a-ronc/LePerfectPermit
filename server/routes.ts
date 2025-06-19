@@ -152,6 +152,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const projectId = parseInt(req.params.projectId);
+      
+      // Check file size before processing
+      if (req.body.fileSize && req.body.fileSize > 20 * 1024 * 1024) { // 20MB limit
+        return res.status(413).json({ 
+          message: "File size too large. Maximum allowed size is 15MB." 
+        });
+      }
+      
+      console.log(`Document upload request for project ${projectId}: ${req.body.fileName} (${Math.round(req.body.fileSize / 1024)}KB)`);
+      
       const validatedData = insertDocumentSchema.parse({
         ...req.body,
         projectId,
@@ -168,9 +178,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: `Document "${document.fileName}" was uploaded for category "${document.category}"`
       });
       
+      console.log(`Document uploaded successfully: ${document.fileName}`);
       res.status(201).json(document);
     } catch (error) {
-      res.status(400).json({ message: "Invalid document data", error });
+      console.error("Document upload error:", error);
+      
+      if (error instanceof Error) {
+        // Handle specific error types
+        if (error.message.includes('aborted')) {
+          res.status(408).json({ message: "Upload timeout. Please try with a smaller file." });
+        } else if (error.message.includes('too large')) {
+          res.status(413).json({ message: "File size too large. Maximum allowed size is 15MB." });
+        } else {
+          res.status(400).json({ message: "Upload failed. Please try again with a smaller file.", error: error.message });
+        }
+      } else {
+        res.status(500).json({ message: "Server error during upload. Please try again." });
+      }
     }
   });
 
