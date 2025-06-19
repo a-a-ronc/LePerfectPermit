@@ -56,7 +56,10 @@ export class DatabaseStorage implements IStorage {
     const PostgresSessionStore = connectPg(session);
     this.sessionStore = new PostgresSessionStore({ 
       pool, 
-      createTableIfMissing: true 
+      createTableIfMissing: true,
+      errorLog: (error: Error) => {
+        console.error('Session store error:', error);
+      }
     });
   }
   
