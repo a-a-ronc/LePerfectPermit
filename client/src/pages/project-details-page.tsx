@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -47,13 +47,57 @@ export default function ProjectDetailsPage() {
   const [isStakeholderDialogOpen, setIsStakeholderDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isCoverLetterDialogOpen, setIsCoverLetterDialogOpen] = useState(false);
-  const [editableContactEmail, setEditableContactEmail] = useState("");
-  const [editableContactPhone, setEditableContactPhone] = useState("");
-  const [editableProjectName, setEditableProjectName] = useState("");
-  const [editableCustomerName, setEditableCustomerName] = useState("");
-  const [editableFacilityAddress, setEditableFacilityAddress] = useState("");
-  const [editableJurisdiction, setEditableJurisdiction] = useState("");
-  const [editableJurisdictionAddress, setEditableJurisdictionAddress] = useState("");
+  // Form state with localStorage persistence
+  const [editableContactEmail, setEditableContactEmail] = useState(() => 
+    localStorage.getItem('coverLetter_contactEmail') || ""
+  );
+  const [editableContactPhone, setEditableContactPhone] = useState(() => 
+    localStorage.getItem('coverLetter_contactPhone') || ""
+  );
+  const [editableProjectName, setEditableProjectName] = useState(() => 
+    localStorage.getItem('coverLetter_projectName') || ""
+  );
+  const [editableCustomerName, setEditableCustomerName] = useState(() => 
+    localStorage.getItem('coverLetter_customerName') || ""
+  );
+  const [editableFacilityAddress, setEditableFacilityAddress] = useState(() => 
+    localStorage.getItem('coverLetter_facilityAddress') || ""
+  );
+  const [editableJurisdiction, setEditableJurisdiction] = useState(() => 
+    localStorage.getItem('coverLetter_jurisdiction') || ""
+  );
+  const [editableJurisdictionAddress, setEditableJurisdictionAddress] = useState(() => 
+    localStorage.getItem('coverLetter_jurisdictionAddress') || ""
+  );
+
+  // Persist form values to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('coverLetter_contactEmail', editableContactEmail);
+  }, [editableContactEmail]);
+
+  useEffect(() => {
+    localStorage.setItem('coverLetter_contactPhone', editableContactPhone);
+  }, [editableContactPhone]);
+
+  useEffect(() => {
+    localStorage.setItem('coverLetter_projectName', editableProjectName);
+  }, [editableProjectName]);
+
+  useEffect(() => {
+    localStorage.setItem('coverLetter_customerName', editableCustomerName);
+  }, [editableCustomerName]);
+
+  useEffect(() => {
+    localStorage.setItem('coverLetter_facilityAddress', editableFacilityAddress);
+  }, [editableFacilityAddress]);
+
+  useEffect(() => {
+    localStorage.setItem('coverLetter_jurisdiction', editableJurisdiction);
+  }, [editableJurisdiction]);
+
+  useEffect(() => {
+    localStorage.setItem('coverLetter_jurisdictionAddress', editableJurisdictionAddress);
+  }, [editableJurisdictionAddress]);
 
   // Load project details
   const { data: project, isLoading: isLoadingProject } = useQuery({
@@ -220,20 +264,25 @@ export default function ProjectDetailsPage() {
   ];
   
   const handleGenerateCoverLetter = () => {
-    // Set default values for all editable fields
-    const defaultEmail = (project as any)?.contactEmail || (user as any)?.defaultContactEmail || (user as any)?.email || "permits@intralog.io";
-    const defaultPhone = (project as any)?.contactPhone || (user as any)?.defaultContactPhone || "(801) 441-8992";
+    // Use stored values if they exist, otherwise fall back to project defaults
+    const defaultEmail = editableContactEmail || (project as any)?.contactEmail || (user as any)?.defaultContactEmail || (user as any)?.email || "permits@intralog.io";
+    const defaultPhone = editableContactPhone || (project as any)?.contactPhone || (user as any)?.defaultContactPhone || "(801) 441-8992";
+    const defaultProjectName = editableProjectName || (project as any)?.name || "West Valley Relocation";
+    const defaultCustomerName = editableCustomerName || (project as any)?.clientName || "";
+    const defaultFacilityAddress = editableFacilityAddress || (project as any)?.facilityAddress || "";
+    const defaultJurisdiction = editableJurisdiction || (project as any)?.jurisdiction || "";
     
+    // Set values with persistence
     setEditableContactEmail(defaultEmail);
     setEditableContactPhone(defaultPhone);
-    setEditableProjectName((project as any)?.name || "");
-    setEditableCustomerName((project as any)?.clientName || "");
-    setEditableFacilityAddress((project as any)?.facilityAddress || "");
-    setEditableJurisdiction((project as any)?.jurisdiction || "");
+    setEditableProjectName(defaultProjectName);
+    setEditableCustomerName(defaultCustomerName);
+    setEditableFacilityAddress(defaultFacilityAddress);
+    setEditableJurisdiction(defaultJurisdiction);
     
     // Auto-resolve jurisdiction address
-    const resolvedAddress = resolveJurisdictionAddress((project as any)?.jurisdiction || "");
-    setEditableJurisdictionAddress((project as any)?.jurisdictionAddress || resolvedAddress);
+    const resolvedAddress = editableJurisdictionAddress || (project as any)?.jurisdictionAddress || resolveJurisdictionAddress(defaultJurisdiction);
+    setEditableJurisdictionAddress(resolvedAddress);
     
     setIsCoverLetterDialogOpen(true);
   };
@@ -403,7 +452,7 @@ export default function ProjectDetailsPage() {
       
       {/* Generate Cover Letter Dialog */}
       <Dialog open={isCoverLetterDialogOpen} onOpenChange={setIsCoverLetterDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generate AI Cover Letter</DialogTitle>
             <DialogDescription>

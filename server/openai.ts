@@ -107,8 +107,9 @@ Enclosed is a comprehensive package of documents required for high-piled storage
 
 ${categoriesWithFiles.map((cat, i) => {
   const files = documentByCategory[cat] || [];
-  const fileList = files.map(file => `    ${file}`).join("\n");
-  return `**${i + 1}. ${cat}**\nFiles Submitted:\n${fileList}`;
+  // Show only the latest file (last in array)
+  const latestFile = files.length > 0 ? files[files.length - 1] : '';
+  return `**${i + 1}. ${cat}**\nFiles Submitted:\n    ${latestFile}`;
 }).join("\n\n")}
 
 For any questions or further information, please contact:  
@@ -180,10 +181,11 @@ function generateTemplateCoverLetter(project: any, documents: any[]): string {
   
   const indexItems = categoriesWithFiles.map((category, index) => {
     const files = documentByCategory[category] || [];
-    const fileList = files.map(file => `    ${file}`).join("\n");
+    // Show only the latest file (last in array)
+    const latestFile = files.length > 0 ? files[files.length - 1] : '';
     return `${index + 1}. ${category}
 Files Submitted:
-${fileList}`;
+    ${latestFile}`;
   }).join("\n\n");
 
   return `Intralog Permit Services
