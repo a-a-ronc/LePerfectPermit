@@ -403,47 +403,85 @@ export default function ProjectDetailsPage() {
       
       {/* Generate Cover Letter Dialog */}
       <Dialog open={isCoverLetterDialogOpen} onOpenChange={setIsCoverLetterDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Generate AI-Powered Cover Letter</DialogTitle>
+            <DialogTitle>Generate AI Cover Letter</DialogTitle>
             <DialogDescription>
-              Our AI will generate a professional cover letter based on all approved documents.
-              Please verify the contact information below before generating.
+              Review and edit project information before generating the cover letter.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right text-sm font-medium">Project:</label>
-              <div className="col-span-3 text-sm">{project?.name}</div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="project-name">Project Name</Label>
+                <Input
+                  id="project-name"
+                  value={editableProjectName}
+                  onChange={(e) => setEditableProjectName(e.target.value)}
+                  placeholder="Enter project name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customer-name">Customer Name</Label>
+                <Input
+                  id="customer-name"
+                  value={editableCustomerName}
+                  onChange={(e) => setEditableCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right text-sm font-medium">Customer:</label>
-              <div className="col-span-3 text-sm">{project?.clientName}</div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="facility-address">Facility Address</Label>
+              <Input
+                id="facility-address"
+                value={editableFacilityAddress}
+                onChange={(e) => setEditableFacilityAddress(e.target.value)}
+                placeholder="Enter facility address"
+              />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right text-sm font-medium">Facility:</label>
-              <div className="col-span-3 text-sm">{project?.facilityAddress}</div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jurisdiction">Jurisdiction</Label>
+                <Input
+                  id="jurisdiction"
+                  value={editableJurisdiction}
+                  onChange={(e) => {
+                    setEditableJurisdiction(e.target.value);
+                    // Auto-update jurisdiction address when jurisdiction changes
+                    const resolvedAddress = resolveJurisdictionAddress(e.target.value);
+                    setEditableJurisdictionAddress(resolvedAddress);
+                  }}
+                  placeholder="Enter jurisdiction"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jurisdiction-address">Jurisdiction Address</Label>
+                <Input
+                  id="jurisdiction-address"
+                  value={editableJurisdictionAddress}
+                  onChange={(e) => setEditableJurisdictionAddress(e.target.value)}
+                  placeholder="Building department address"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right text-sm font-medium">Jurisdiction:</label>
-              <div className="col-span-3 text-sm">{project?.jurisdiction}</div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contact-email" className="text-right text-sm font-medium text-red-600">Contact Email:</Label>
-              <div className="col-span-3">
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact-email">Contact Email</Label>
                 <Input
                   id="contact-email"
                   type="email"
                   value={editableContactEmail}
                   onChange={(e) => setEditableContactEmail(e.target.value)}
-                  placeholder="Enter contact email"
+                  placeholder="permits@intralog.io"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contact-phone" className="text-right text-sm font-medium text-red-600">Contact Phone:</Label>
-              <div className="col-span-3">
+              <div className="space-y-2">
+                <Label htmlFor="contact-phone">Contact Phone</Label>
                 <Input
                   id="contact-phone"
                   type="tel"
@@ -467,9 +505,10 @@ export default function ProjectDetailsPage() {
                 />
               </div>
             </div>
+            
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
               <p className="text-sm text-blue-800">
-                💡 These contact details will be saved as your defaults for future cover letters.
+                All project details can be edited here to ensure accuracy before generating the cover letter.
               </p>
             </div>
           </div>
