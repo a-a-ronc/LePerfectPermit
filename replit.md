@@ -116,6 +116,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 19, 2025: Restructured AI cover letter generation with dynamic numbering - only shows categories with submitted files, improved document alignment, removed strict approval requirements, cleaned filenames to remove copy quantities, added editable project fields in cover letter popup, enhanced popup with localStorage persistence, latest file display, improved sizing and filename styling
 - June 19, 2025: Fixed critical formatting issues - removed copy quantity text from filenames, corrected Special Inspection section alignment to left, enforced 10pt font for all filenames
 - June 19, 2025: Final formatting corrections - ensured all filenames use 10pt Times New Roman with consistent left alignment and proper indentation, normalized styling across all document categories
+- June 19, 2025: Critical alignment fix - removed &nbsp; entities, unified Special Inspection formatting with 0.125in left margin, enforced consistent 10pt Times New Roman across all filename entries
 
 ## Changelog
 

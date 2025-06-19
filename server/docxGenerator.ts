@@ -93,9 +93,10 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
                 text: cleanText,
                 bold: true,
                 size: 22, // 11pt
+                font: "Times New Roman",
               }),
             ],
-            alignment: "left", // Ensure left alignment
+            alignment: AlignmentType.LEFT,
           })
         );
         continue;
@@ -119,13 +120,13 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Individual file names (10pt, left-aligned with indent)
+      // Individual file names (10pt, left-aligned with 0.125in indent)
       if (trimmedLine.startsWith("    ") && (trimmedLine.includes(".pdf") || trimmedLine.includes(".docx") || trimmedLine.includes(".xlsx"))) {
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: trimmedLine.trim(), // Remove leading spaces, we'll use indent instead
+                text: trimmedLine.trim(), // Remove leading spaces and any &nbsp; entities
                 size: 20, // 10pt font size for ALL filenames
                 font: "Times New Roman",
                 bold: false, // Ensure filenames are not bold
@@ -133,7 +134,7 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
             ],
             alignment: AlignmentType.LEFT, // Force left alignment for ALL files
             indent: {
-              left: 720, // 0.5 inch left indent (1.25em equivalent)
+              left: 90, // 0.125 inch left indent (9pt equivalent)
               firstLine: 0,
             },
             spacing: {
@@ -211,7 +212,7 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
           new Paragraph({
             children: [
               new TextRun({
-                text: trimmedLine.startsWith("    ") ? trimmedLine.trim() : "    " + trimmedLine.trim(),
+                text: trimmedLine.trim().replace(/&nbsp;/g, ' '), // Remove &nbsp; entities and clean
                 size: 20, // 10pt for ALL filenames
                 font: "Times New Roman",
                 bold: false,
@@ -219,9 +220,13 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
             ],
             alignment: AlignmentType.LEFT,
             indent: {
-              left: 720, // 0.5 inch left indent
+              left: 90, // 0.125 inch left indent (consistent with other filenames)
               firstLine: 0,
             },
+            spacing: {
+              before: 0,
+              after: 0,
+            }
           })
         );
         continue;
