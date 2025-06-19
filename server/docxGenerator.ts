@@ -2,16 +2,47 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
 
 export async function generateCoverLetterDocx(content: string, fileName: string = "CoverLetter.docx"): Promise<Buffer> {
   try {
-    // Clean content by removing HTML tags and unwanted separators
+    // Clean content by removing HTML tags, unwanted separators, and normalize filenames
     const cleanContent = content
       .replace(/<b>/g, '')
       .replace(/<\/b>/g, '')
       .replace(/---/g, '')
+      .replace(/&nbsp;/g, ' ') // Remove any remaining &nbsp; entities
+      .replace(/\s*\(\d+\s*copies?\)\s*/gi, '') // Remove copy quantities throughout
       .trim();
+
+    // Helper function to check if a line is a filename
+    const isFilename = (line: string): boolean => {
+      return line.includes('.pdf') || line.includes('.docx') || line.includes('.xlsx') || 
+             line.includes('.doc') || line.includes('.png') || line.includes('.jpg');
+    };
+
+    // Helper function to create consistent filename paragraph
+    const createFilenameParagraph = (text: string): Paragraph => {
+      return new Paragraph({
+        children: [
+          new TextRun({
+            text: text.trim(),
+            size: 20, // 10pt font size for ALL filenames
+            font: "Times New Roman",
+            bold: false,
+          }),
+        ],
+        alignment: AlignmentType.LEFT,
+        indent: {
+          left: 90, // 0.125 inch left indent
+          firstLine: 0,
+        },
+        spacing: {
+          before: 0,
+          after: 0,
+        }
+      });
+    };
 
     // Split content by lines and process each line
     const lines = cleanContent.split('\n');
-    const paragraphs: any[] = [];
+    const paragraphs: Paragraph[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const trimmedLine = lines[i].trim();
@@ -120,29 +151,9 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Individual file names (10pt, left-aligned with 0.125in indent)
-      if (trimmedLine.startsWith("    ") && (trimmedLine.includes(".pdf") || trimmedLine.includes(".docx") || trimmedLine.includes(".xlsx"))) {
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: trimmedLine.trim(), // Remove leading spaces and any &nbsp; entities
-                size: 20, // 10pt font size for ALL filenames
-                font: "Times New Roman",
-                bold: false, // Ensure filenames are not bold
-              }),
-            ],
-            alignment: AlignmentType.LEFT, // Force left alignment for ALL files
-            indent: {
-              left: 90, // 0.125 inch left indent (9pt equivalent)
-              firstLine: 0,
-            },
-            spacing: {
-              before: 0,
-              after: 0,
-            }
-          })
-        );
+      // ALL filename entries - use helper function for consistency
+      if (trimmedLine.startsWith("    ") && isFilename(trimmedLine)) {
+        paragraphs.push(createFilenameParagraph(trimmedLine));
         continue;
       }
 
@@ -206,29 +217,9 @@ export async function generateCoverLetterDocx(content: string, fileName: string 
         continue;
       }
 
-      // Catch any remaining filename entries that might have been missed
-      if (trimmedLine.includes(".pdf") || trimmedLine.includes(".docx") || trimmedLine.includes(".xlsx")) {
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: trimmedLine.trim().replace(/&nbsp;/g, ' '), // Remove &nbsp; entities and clean
-                size: 20, // 10pt for ALL filenames
-                font: "Times New Roman",
-                bold: false,
-              }),
-            ],
-            alignment: AlignmentType.LEFT,
-            indent: {
-              left: 90, // 0.125 inch left indent (consistent with other filenames)
-              firstLine: 0,
-            },
-            spacing: {
-              before: 0,
-              after: 0,
-            }
-          })
-        );
+      // Catch ALL remaining filename entries - use helper function
+      if (isFilename(trimmedLine)) {
+        paragraphs.push(createFilenameParagraph(trimmedLine));
         continue;
       }
       
