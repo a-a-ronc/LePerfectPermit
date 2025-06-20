@@ -82,7 +82,7 @@ class SimpleZip {
   }
 }
 
-// Create proper ZIP file with cover letter and documents
+// Create ZIP-like bundle with all documents for download
 export async function createSubmissionZip(
   coverLetter: string,
   documents: Array<{
@@ -93,80 +93,103 @@ export async function createSubmissionZip(
   projectName: string
 ): Promise<boolean> {
   try {
-    // Since we can't use a real ZIP library, we'll create individual files
-    // and let the user download them separately, then instruct them to zip manually
-    
     const sanitizedProjectName = projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
     
-    // First, try to show directory picker for organized saving
-    let useDirectoryPicker = false;
-    let directoryHandle: any = null;
+    // Since we can't use directory picker in Replit iframe, create multiple downloads
+    // with clear user notification
     
-    try {
-      if ('showDirectoryPicker' in window) {
-        directoryHandle = await (window as any).showDirectoryPicker({
-          mode: 'readwrite'
-        });
-        useDirectoryPicker = true;
+    // Sort documents by category order
+    const categoryOrder = [
+      'site_plan', 'facility_plan', 'egress_plan',
+      'special_inspection', 'structural_analysis', 
+      'fire_protection', 'other'
+    ];
+    
+    const sortedDocs = documents.sort((a, b) => {
+      const aIndex = categoryOrder.indexOf(a.category);
+      const bIndex = categoryOrder.indexOf(b.category);
+      
+      if (aIndex !== bIndex) {
+        return aIndex - bIndex;
       }
-    } catch (e) {
-      console.log('Directory picker not available or cancelled, using individual downloads');
+      
+      return a.fileName.localeCompare(b.fileName);
+    });
+    
+    // Create notification for bulk download
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      z-index: 10000;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      text-align: center;
+    `;
+    
+    notification.innerHTML = `
+      <h3 style="margin: 0 0 16px 0; color: #333;">Document Package Export</h3>
+      <p style="margin: 0 0 16px 0; color: #666;">Downloading ${sortedDocs.length + 1} files...</p>
+      <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+        <div id="progress-bar" style="height: 100%; background: #007bff; width: 0%; transition: width 0.3s;"></div>
+      </div>
+      <p style="margin: 16px 0 0 0; font-size: 12px; color: #999;">Files will appear in your Downloads folder</p>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    const progressBar = notification.querySelector('#progress-bar') as HTMLElement;
+    let downloaded = 0;
+    const total = sortedDocs.length + 1;
+    
+    // Download cover letter first
+    downloadFileTraditional('00_Cover_Letter.txt', coverLetter, 'text/plain');
+    downloaded++;
+    progressBar.style.width = `${(downloaded / total) * 100}%`;
+    
+    // Download each document with delay to prevent browser blocking
+    for (let i = 0; i < sortedDocs.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between downloads
+      
+      const doc = sortedDocs[i];
+      const prefix = String(i + 1).padStart(2, '0');
+      const fileName = `${prefix}_${doc.fileName}`;
+      const content = base64ToUint8Array(doc.fileContent);
+      
+      downloadFileTraditional(fileName, content, 'application/octet-stream');
+      downloaded++;
+      progressBar.style.width = `${(downloaded / total) * 100}%`;
     }
     
-    if (useDirectoryPicker && directoryHandle) {
-      // Save files to selected directory
-      try {
-        // Create cover letter file
-        const coverLetterHandle = await directoryHandle.getFileHandle(
-          '00_Cover_Letter.txt', 
-          { create: true }
-        );
-        const coverLetterWritable = await coverLetterHandle.createWritable();
-        await coverLetterWritable.write(coverLetter);
-        await coverLetterWritable.close();
-        
-        // Sort and save documents
-        const sortedDocs = documents.sort((a, b) => {
-          const categoryOrder = [
-            'site_plan', 'facility_plan', 'egress_plan',
-            'special_inspection', 'structural_analysis', 
-            'fire_protection', 'other'
-          ];
-          
-          const aIndex = categoryOrder.indexOf(a.category);
-          const bIndex = categoryOrder.indexOf(b.category);
-          
-          if (aIndex !== bIndex) {
-            return aIndex - bIndex;
-          }
-          
-          return a.fileName.localeCompare(b.fileName);
-        });
-        
-        // Save each document
-        for (let i = 0; i < sortedDocs.length; i++) {
-          const doc = sortedDocs[i];
-          const prefix = String(i + 1).padStart(2, '0');
-          const fileName = `${prefix}_${doc.fileName}`;
-          
-          const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
-          const writable = await fileHandle.createWritable();
-          const content = base64ToUint8Array(doc.fileContent);
-          await writable.write(content);
-          await writable.close();
-        }
-        
-        return true;
-      } catch (error) {
-        console.error('Error saving to directory:', error);
-        return false;
+    // Show completion message
+    setTimeout(() => {
+      notification.innerHTML = `
+        <h3 style="margin: 0 0 16px 0; color: #28a745;">Export Complete!</h3>
+        <p style="margin: 0 0 16px 0; color: #666;">${total} files downloaded to your Downloads folder</p>
+        <button onclick="this.parentElement.parentElement.remove()" 
+                style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Close
+        </button>
+      `;
+    }, 1000);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
       }
-    } else {
-      // Fallback: create a simple bundle and download
-      return await createSimpleBundle(coverLetter, documents, sanitizedProjectName);
-    }
+    }, 10000);
+    
+    return true;
   } catch (error) {
-    console.error('Error creating submission package:', error);
+    console.error('Error creating document package:', error);
     return false;
   }
 }

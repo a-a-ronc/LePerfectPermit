@@ -33,43 +33,43 @@ export async function saveFileWithPicker(
   mimeType: string
 ): Promise<string | null> {
   try {
-    // Always try the File System Access API first if available
-    if ('showSaveFilePicker' in window) {
-      try {
-        const options: any = {
-          suggestedName: fileName,
-          types: [{
-            description: 'Files',
-            accept: {
-              [mimeType]: [`.${fileName.split('.').pop()}`]
-            }
-          }]
-        };
-
-        const fileHandle = await (window as any).showSaveFilePicker(options);
-        const writable = await fileHandle.createWritable();
-        
-        if (typeof content === 'string') {
-          await writable.write(content);
-        } else {
-          await writable.write(content);
-        }
-        await writable.close();
-
-        localStorage.setItem(LAST_DOWNLOAD_PATH_KEY, 'file-picker-used');
-        return fileHandle.name;
-      } catch (error) {
-        const err = error as Error;
-        if (err.name === 'AbortError') {
-          return null; // User cancelled
-        }
-        console.log('File picker failed, falling back to download:', err.message);
-      }
-    }
-
-    // Fallback to traditional download
+    // In iframe environments like Replit, File System Access API is blocked
+    // Use traditional download with user notification
     downloadFileTraditional(fileName, content, mimeType);
-    return 'traditional-download';
+    
+    // Show user notification about download location
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 10000;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+    `;
+    notification.innerHTML = `
+      <strong>File Downloaded:</strong><br>
+      ${fileName}<br>
+      <small>Check your Downloads folder</small>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 5000);
+    
+    return 'downloaded-to-default';
   } catch (error) {
     console.error('Error in saveFileWithPicker:', error);
     downloadFileTraditional(fileName, content, mimeType);

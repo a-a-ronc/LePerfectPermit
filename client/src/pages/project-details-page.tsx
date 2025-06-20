@@ -110,10 +110,8 @@ export default function ProjectDetailsPage() {
     },
     onSuccess: (success) => {
       if (success) {
-        toast({
-          title: "Export Complete",
-          description: "Documents have been organized and saved. Check your selected folder or downloads.",
-        });
+        // Success message is handled by the zip creator notification
+        console.log('Document package export completed successfully');
       } else {
         toast({
           title: "Export Failed", 
