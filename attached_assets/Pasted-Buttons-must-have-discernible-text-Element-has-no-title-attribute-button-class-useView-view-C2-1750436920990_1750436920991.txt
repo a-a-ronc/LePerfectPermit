@@ -1,0 +1,69 @@
+Buttons must have discernible text: Element has no title attribute
+<button class=" useView_view__C2mnv css-jaribb"></button>
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<button class=" useView_view__C2mnv css-jaribb"></button>
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<button id="op-button" class="appearing" aria-describedby="inline-tooltip-root" style="position: fixed; z-index: 2147483647; top: 979.68px; left: 1681.62px; min-width: 31px; width: 31px; max-width: 31px; min-height: 18px; height: 18px; max-height: 18px; overflow: hidden; border: none; outline: 0px; cursor: pointer; opacity: 0; background-size: cover; background-repeat: no-repeat; background-image: url(&quot;chrome-extension://dppgmdbiimibapkepcbdbmkaabgiofem/inline/images/icons/onepassword-stateful-container-right.svg&quot;);">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+Form elements must have labels: Element has no title attribute Element has no placeholder attribute
+<input type="file" multiple="" accept="*" style="display: none;">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<input type="file" webkitdirectory="true" mozdirectory="true" msdirectory="true" odirectory="true" directory="true" accept="*" style="display: none;">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<input type="file" multiple="" accept="*" style="display: none;">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<input type="file" webkitdirectory="true" mozdirectory="true" msdirectory="true" odirectory="true" directory="true" accept="*" style="display: none;">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<input class="css-1slbbn4" data-rac="" value="/project/1" data-np-intersection-state="visible">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<textarea id="g-recaptcha-response-100000" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid rgb(193, 193, 193); margin: 10px 25px; padding: 0px; resize: none; display: none;">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading
+Learn more about this axe rule at Deque University
+Learn why this is important and how to fix it on webhint.io
+<input class="css-1slbbn4" data-rac="" value="/auth" data-np-intersection-state="visible">
+Open in Elements
+Request
+https://replit.com/@intralog-admin/IntralogStorage
+Further Reading

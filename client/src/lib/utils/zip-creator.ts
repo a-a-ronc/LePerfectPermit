@@ -164,15 +164,16 @@ export async function createSubmissionZip(
       offset += chunk.length;
     }
     
-    // Save the archive file
-    const archiveFileName = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_Submission.tar`;
+    // Save the archive file with better naming
+    const sanitizedProjectName = projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+    const archiveFileName = `${sanitizedProjectName}_Documents.zip`;
     const savedPath = await saveFileWithPicker(
       archiveFileName,
       result,
-      'application/x-tar'
+      'application/zip'
     );
     
-    return savedPath !== null;
+    return savedPath !== null && savedPath !== 'fallback-download';
   } catch (error) {
     console.error('Error creating submission archive:', error);
     return false;

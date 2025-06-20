@@ -112,12 +112,12 @@ export default function ProjectDetailsPage() {
       if (success) {
         toast({
           title: "Export Complete",
-          description: "All documents have been exported successfully.",
+          description: "All documents have been packaged and saved successfully.",
         });
       } else {
         toast({
           title: "Export Failed",
-          description: "Failed to export documents.",
+          description: "Failed to export documents. Please try again.",
           variant: "destructive",
         });
       }

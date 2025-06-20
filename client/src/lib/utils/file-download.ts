@@ -23,7 +23,7 @@ export interface FileSystemWritableFileStream extends WritableStream {
 
 // Check if File System Access API is supported
 export function isFileSystemAccessSupported(): boolean {
-  return 'showSaveFilePicker' in window && 'showDirectoryPicker' in window;
+  return 'showSaveFilePicker' in window;
 }
 
 // Save file with file picker dialog
@@ -33,10 +33,11 @@ export async function saveFileWithPicker(
   mimeType: string
 ): Promise<string | null> {
   try {
-    if (!isFileSystemAccessSupported()) {
-      // Fallback to traditional download
+    // Check if the File System Access API is supported
+    if (!('showSaveFilePicker' in window)) {
+      console.log('File System Access API not supported, using traditional download');
       downloadFileTraditional(fileName, content, mimeType);
-      return null;
+      return 'traditional-download';
     }
 
     const options: any = {
@@ -49,33 +50,6 @@ export async function saveFileWithPicker(
       }]
     };
 
-    // Try to use the last saved directory if available
-    const lastPath = localStorage.getItem(LAST_DOWNLOAD_PATH_KEY);
-    if (lastPath) {
-      try {
-        const dirHandle = await (window as any).showDirectoryPicker({ 
-          startIn: lastPath as any,
-          mode: 'readwrite'
-        });
-        // If successful, create file in that directory
-        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
-        
-        if (typeof content === 'string') {
-          await writable.write(content);
-        } else {
-          await writable.write(content);
-        }
-        await writable.close();
-        
-        // Store the directory path for next time
-        localStorage.setItem(LAST_DOWNLOAD_PATH_KEY, dirHandle.name);
-        return dirHandle.name;
-      } catch (e) {
-        // If lastPath fails, continue with normal picker
-      }
-    }
-
     // Show save file picker
     const fileHandle = await (window as any).showSaveFilePicker(options);
     const writable = await fileHandle.createWritable();
@@ -87,22 +61,19 @@ export async function saveFileWithPicker(
     }
     await writable.close();
 
-    // Store the parent directory for next time
-    const pathParts = fileHandle.name.split('/');
-    if (pathParts.length > 1) {
-      const parentPath = pathParts.slice(0, -1).join('/');
-      localStorage.setItem(LAST_DOWNLOAD_PATH_KEY, parentPath);
-    }
+    // Store the file path for next time (simplified approach)
+    localStorage.setItem(LAST_DOWNLOAD_PATH_KEY, 'file-picker-used');
 
     return fileHandle.name;
   } catch (error) {
-    if ((error as Error).name === 'AbortError') {
+    const err = error as Error;
+    if (err.name === 'AbortError') {
       return null; // User cancelled
     }
     console.error('Error saving file:', error);
     // Fallback to traditional download
     downloadFileTraditional(fileName, content, mimeType);
-    return null;
+    return 'fallback-download';
   }
 }
 
