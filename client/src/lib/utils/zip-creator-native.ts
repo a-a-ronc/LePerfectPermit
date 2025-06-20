@@ -27,11 +27,13 @@ export async function createSubmissionZipNative(
     // First, show file picker dialog for ZIP file location
     const zipFileName = `${sanitizedProjectName}_Documents.zip`;
     
-    // First try native file picker for ZIP destination
-    let useNativePicker = false;
+    // Check if we're in an iframe (like Replit)
+    const isInIframe = window !== window.parent;
+    
+    // First try native file picker for ZIP destination (only if not in iframe)
     let zipBlob: Blob | null = null;
     
-    if ('showSaveFilePicker' in window) {
+    if ('showSaveFilePicker' in window && !isInIframe) {
       try {
         // Create ZIP file first
         const zip = new JSZip();
@@ -168,8 +170,15 @@ export async function createSubmissionZipNative(
           <div style="margin-bottom: 8px;">📁 ${documents.length} Project Documents</div>
           <div style="font-size: 12px; color: #666; margin-top: 12px;">Files will be organized by category with numbered prefixes</div>
         </div>
-        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 12px; border-radius: 6px; margin: 16px 0;">
-          <div style="font-size: 13px; color: #856404;">💾 File will be saved to your Downloads folder as: <strong>${zipFileName}</strong></div>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 16px; border-radius: 6px; margin: 16px 0;">
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <span style="color: #856404; margin-right: 8px;">⚠️</span>
+            <strong style="color: #856404;">Limited Folder Selection</strong>
+          </div>
+          <div style="font-size: 13px; color: #856404;">
+            ${isInIframe ? 'For full folder selection, open this app in a new browser tab<br>' : 'For folder selection, use Chrome/Edge in a new tab<br>'}
+            ZIP file will be saved to Downloads as: <strong>${zipFileName}</strong>
+          </div>
         </div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee;">
           <button id="cancel-export" style="padding: 10px 20px; background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Cancel</button>

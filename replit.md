@@ -131,6 +131,8 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 20, 2025: Implemented proper ZIP file creation using JSZip library with file picker dialogs for export functionality
 - June 20, 2025: Fixed email personalization to use dynamic jurisdiction from project data instead of hardcoded text
 - June 20, 2025: Enhanced file download dialogs with proper filename selection and download notifications
+- June 20, 2025: Improved file picker implementation with iframe detection and browser compatibility guidance
+- June 20, 2025: Added comprehensive fallback dialog system with user education about file system limitations
 
 ## Changelog
 
