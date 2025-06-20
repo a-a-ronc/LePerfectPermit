@@ -137,7 +137,7 @@ export default function ProjectDetailsPage() {
   const handleSubmitToAuthority = () => {
     // Create email subject and body
     const subject = `${project.name}: High-Piled Storage Permit Submission`;
-    const body = `Dear Building Department,
+    const body = `Dear ${project.jurisdiction || 'Building'} Building Department,
 
 Please find attached our permit submission for the following project:
 

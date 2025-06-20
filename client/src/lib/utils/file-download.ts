@@ -75,7 +75,7 @@ export async function saveFileWithPicker(
     
     modal.innerHTML = `
       <h3 style="margin: 0 0 16px 0; color: #333;">Save File</h3>
-      <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">Choose filename and location:</p>
+      <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">Choose filename (will be saved to Downloads folder):</p>
     `;
     
     modal.appendChild(pathInput);
@@ -101,7 +101,7 @@ export async function saveFileWithPicker(
     `;
     
     const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save to Downloads';
+    saveButton.textContent = 'Download File';
     saveButton.style.cssText = `
       padding: 8px 16px;
       background: #007bff;

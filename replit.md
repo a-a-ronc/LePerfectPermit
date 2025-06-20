@@ -128,6 +128,9 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 19, 2025: Fixed zip file creation issues in Replit environment - now uses directory picker to save organized files or provides manifest with download instructions
 - June 20, 2025: Implemented file picker dialogs for all downloads - users can now choose filename and save location for individual files and export packages, with proper progress indicators and success notifications
 - June 20, 2025: Updated Submit to Authority email to dynamically extract city name from project location for personalized greeting (e.g., "Dear West Valley City Building Department")
+- June 20, 2025: Implemented proper ZIP file creation using JSZip library with file picker dialogs for export functionality
+- June 20, 2025: Fixed email personalization to use dynamic jurisdiction from project data instead of hardcoded text
+- June 20, 2025: Enhanced file download dialogs with proper filename selection and download notifications
 
 ## Changelog
 

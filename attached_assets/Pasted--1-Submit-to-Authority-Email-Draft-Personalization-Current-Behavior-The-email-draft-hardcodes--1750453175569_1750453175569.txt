@@ -1,0 +1,123 @@
+🔹 1. Submit to Authority – Email Draft Personalization
+Current Behavior:
+The email draft hardcodes the salutation as:
+
+text
+Copy
+Edit
+Dear Building Department,
+Issue:
+This does not reflect the actual jurisdiction from the project data.
+
+Required Behavior:
+
+Use the jurisdiction value from the project metadata to populate the greeting dynamically.
+
+For example, if jurisdiction = "West Valley City", the email draft should begin:
+
+text
+Copy
+Edit
+Dear West Valley City Building Department,
+Implementation Details:
+
+Locate the component or function that generates the email draft body (e.g., generateEmailBody() or similar).
+
+Update the static string "Dear Building Department" to:
+
+js
+Copy
+Edit
+`Dear ${jurisdiction} Building Department,`
+jurisdiction is already shown elsewhere in the draft (see: "Jurisdiction: West Valley City"), so it's likely stored in state or passed as a prop.
+
+🔹 2. Download Button – Proper File Explorer Dialog
+Current Behavior:
+
+When the user clicks a download button (e.g., "Download Floor Plan", "Download Report"), a modal appears with only:
+
+Filename input
+
+Two buttons: Cancel and Save to Downloads
+
+Issue:
+
+There is no actual file path navigation, and the file is automatically saved to the Downloads folder without user choice.
+
+Required Behavior:
+
+Replace or enhance the modal with a native file save dialog (like window.showSaveFilePicker() where supported), allowing:
+
+Full directory navigation (a visual file explorer)
+
+Custom filename entry
+
+File type confirmation (e.g., .pdf, .docx, etc.)
+
+Notes:
+
+If Electron or Tauri is being used, utilize their APIs to trigger OS-native dialogs.
+
+In a pure web context, use the File System Access API with window.showSaveFilePicker().
+
+🔹 3. Export Button – Functional Zip and Save Flow
+Current Behavior:
+
+When the "Export" button is clicked, a loader appears that says:
+"Downloading 76 files..."
+
+Often followed by an error:
+"Could not create document package. Try downloading individually."
+
+Issue:
+
+Files are not getting zipped or saved.
+
+There is no file picker allowing user to choose save destination.
+
+Required Behavior:
+
+Aggregate All Files
+
+Collect all attached files tied to the current permit/project.
+
+If files are stored in project.files or similar, aggregate using that.
+
+Compress Into ZIP
+
+Use a client-side ZIP utility like jszip to zip the files.
+
+Filename: e.g., ${project.name}_submission_package.zip
+
+Prompt Save Dialog
+
+After ZIP is ready, prompt the user with a native file save dialog.
+
+Use window.showSaveFilePicker() or equivalent depending on tech stack.
+
+Final Save
+
+Save the compressed ZIP file to the location the user selects.
+
+Ensure fallback behavior is available for unsupported browsers.
+
+Implementation Pointers:
+
+If you’re already using an exportDocuments() function, add these steps after aggregation:
+
+js
+Copy
+Edit
+import JSZip from "jszip";
+const zip = new JSZip();
+project.files.forEach(file => {
+  zip.file(file.name, file.content);
+});
+const zipBlob = await zip.generateAsync({ type: "blob" });
+const handle = await window.showSaveFilePicker({
+  suggestedName: `${project.name}_submission_package.zip`,
+  types: [{ description: 'ZIP file', accept: { 'application/zip': ['.zip'] } }]
+});
+const writable = await handle.createWritable();
+await writable.write(zipBlob);
+await writable.close();
