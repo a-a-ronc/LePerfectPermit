@@ -74,7 +74,6 @@ export function ProjectDetailsHeader({ project, documentProgress, onSubmit }: Pr
         </Button>
         <Button 
           onClick={onSubmit} 
-          disabled={!isSubmittable}
           className="flex items-center"
         >
           <Send className="h-4 w-4 mr-1" />

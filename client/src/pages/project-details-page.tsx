@@ -48,6 +48,7 @@ export default function ProjectDetailsPage() {
   const [isStakeholderDialogOpen, setIsStakeholderDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isCoverLetterDialogOpen, setIsCoverLetterDialogOpen] = useState(false);
+  
   // Form state with localStorage persistence
   const [editableContactEmail, setEditableContactEmail] = useState(() => 
     localStorage.getItem('coverLetter_contactEmail') || ""
@@ -70,6 +71,98 @@ export default function ProjectDetailsPage() {
   const [editableJurisdictionAddress, setEditableJurisdictionAddress] = useState(() => 
     localStorage.getItem('coverLetter_jurisdictionAddress') || ""
   );
+
+  // Export documents mutation
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      // Get all documents with content for export
+      const documentsWithContent = await Promise.all(
+        documents.map(async (doc) => {
+          const response = await fetch(`/api/documents/${doc.id}/content`, {
+            credentials: 'include'
+          });
+          if (!response.ok) throw new Error('Failed to fetch document content');
+          return response.json();
+        })
+      );
+
+      // Find cover letter
+      const coverLetterDoc = documentsWithContent.find(doc => 
+        doc.category === 'cover_letter' || doc.fileName.toLowerCase().includes('cover')
+      );
+
+      if (!coverLetterDoc) {
+        throw new Error('Cover letter not found');
+      }
+
+      // Create export package
+      return await createSubmissionZipNative(
+        atob(coverLetterDoc.fileContent),
+        documentsWithContent
+          .filter(doc => doc.category !== 'cover_letter')
+          .map(doc => ({
+            fileName: doc.fileName,
+            fileContent: doc.fileContent,
+            category: doc.category
+          })),
+        project.name
+      );
+    },
+    onSuccess: (success) => {
+      if (success) {
+        toast({
+          title: "Export Complete",
+          description: "All documents have been exported successfully.",
+        });
+      } else {
+        toast({
+          title: "Export Failed",
+          description: "Failed to export documents.",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Error",
+        description: "Failed to export documents.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleExportDocuments = () => {
+    exportMutation.mutate();
+  };
+
+  const handleSubmitToAuthority = () => {
+    // Create email subject and body
+    const subject = `${project.name}: High-Piled Storage Permit Submission`;
+    const body = `Dear Building Department,
+
+Please find attached our permit submission for the following project:
+
+Project Name: ${project.name}
+Permit Number: ${project.permitNumber}
+Location: ${project.location}
+Jurisdiction: ${project.jurisdiction}
+
+This submission includes all required documentation for the high-piled storage permit application. Please review and let us know if any additional information is needed.
+
+Thank you for your time and consideration.
+
+Best regards,
+${user?.fullName || 'Permit Specialist'}
+${user?.defaultContactEmail || 'permits@intralog.io'}
+${user?.defaultContactPhone || '(714) 697-6431'}`;
+
+    // Create Outlook mailto link
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Open Outlook
+    window.location.href = mailtoLink;
+  };
 
   // Persist form values to localStorage whenever they change
   useEffect(() => {
@@ -324,7 +417,7 @@ export default function ProjectDetailsPage() {
             <>
               <ProjectDetailsHeader 
                 project={project} 
-                onSubmit={() => setIsSubmitDialogOpen(true)}
+                onSubmit={handleSubmitToAuthority}
                 documentProgress={progress}
               />
               
@@ -354,6 +447,15 @@ export default function ProjectDetailsPage() {
                           >
                             Generate AI Cover Letter
                           </Button>
+                          {documents.some(doc => doc.category === 'cover_letter') && (
+                            <Button 
+                              variant="outline"
+                              onClick={handleExportDocuments}
+                              disabled={exportMutation.isPending}
+                            >
+                              {exportMutation.isPending ? "Exporting..." : "Export"}
+                            </Button>
+                          )}
                           <Button onClick={() => setIsUploadDialogOpen(true)}>
                             Upload Document
                           </Button>
@@ -412,107 +514,7 @@ export default function ProjectDetailsPage() {
         projectId={projectId}
       />
       
-      {/* Submit Project Dialog */}
-      <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Submit Project</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to mark this project as ready for submission to the municipality?
-              This will change the project status and notify all stakeholders.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {!isReadyForSubmission && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Missing Requirements</AlertTitle>
-              <AlertDescription>
-                To submit this project, all documents must be approved and a cover letter must be generated.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsSubmitDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              disabled={!isReadyForSubmission || submitProjectMutation.isPending} 
-              onClick={async () => {
-                try {
-                  // Get all documents with content for ZIP creation
-                  const documentsWithContent = await Promise.all(
-                    documents.map(async (doc) => {
-                      const response = await fetch(`/api/documents/${doc.id}/content`, {
-                        credentials: 'include'
-                      });
-                      if (!response.ok) throw new Error('Failed to fetch document content');
-                      const fullDoc = await response.json();
-                      return fullDoc;
-                    })
-                  );
 
-                  // Find cover letter
-                  const coverLetterDoc = documentsWithContent.find(doc => 
-                    doc.category === 'cover_letter' || doc.fileName.toLowerCase().includes('cover')
-                  );
-
-                  if (!coverLetterDoc) {
-                    toast({
-                      title: "Cover Letter Required",
-                      description: "Please generate a cover letter before submitting.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-
-                  // Create submission ZIP
-                  const zipSuccess = await createSubmissionZipNative(
-                    atob(coverLetterDoc.fileContent), // Decode cover letter content
-                    documentsWithContent
-                      .filter(doc => doc.category !== 'cover_letter')
-                      .map(doc => ({
-                        fileName: doc.fileName,
-                        fileContent: doc.fileContent,
-                        category: doc.category
-                      })),
-                    project.name
-                  );
-
-                  if (zipSuccess) {
-                    toast({
-                      title: "Submission Package Created",
-                      description: "Your submission package has been saved successfully.",
-                    });
-                    // Also update project status
-                    submitProjectMutation.mutate();
-                  } else {
-                    toast({
-                      title: "Submission Error",
-                      description: "Failed to create submission package.",
-                      variant: "destructive",
-                    });
-                  }
-                } catch (error) {
-                  console.error('Error creating submission package:', error);
-                  toast({
-                    title: "Submission Error",
-                    description: "Failed to create submission package.",
-                    variant: "destructive",
-                  });
-                }
-              }}
-            >
-              {submitProjectMutation.isPending ? "Creating Package..." : "Submit to Authority"}
-              <Send className="ml-2 h-4 w-4" />
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
       {/* Generate Cover Letter Dialog */}
       <Dialog open={isCoverLetterDialogOpen} onOpenChange={setIsCoverLetterDialogOpen}>
