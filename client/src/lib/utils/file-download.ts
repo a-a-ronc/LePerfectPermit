@@ -26,14 +26,49 @@ export function isFileSystemAccessSupported(): boolean {
   return 'showSaveFilePicker' in window;
 }
 
-// Show file picker dialog for user to select save location
+// Native file picker implementation that mimics upload file picker behavior
 export async function saveFileWithPicker(
   fileName: string, 
   content: string | Uint8Array, 
   mimeType: string
 ): Promise<string | null> {
+  // Try native File System Access API first (works in Chromium browsers)
+  if ('showSaveFilePicker' in window) {
+    try {
+      const fileExtension = fileName.split('.').pop() || '';
+      const options: any = {
+        suggestedName: fileName,
+        types: [{
+          description: `${fileExtension.toUpperCase()} Files`,
+          accept: {
+            [mimeType]: [`.${fileExtension}`]
+          }
+        }]
+      };
+
+      const fileHandle = await (window as any).showSaveFilePicker(options);
+      const writable = await fileHandle.createWritable();
+      
+      if (typeof content === 'string') {
+        await writable.write(content);
+      } else {
+        await writable.write(content);
+      }
+      await writable.close();
+
+      // Show success notification
+      showDownloadNotification(fileName, 'Selected location');
+      return fileHandle.name;
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        return null; // User cancelled
+      }
+      console.log('Native file picker failed, using fallback:', error.message);
+    }
+  }
+
+  // Fallback: Show custom dialog that mimics file picker behavior
   return new Promise((resolve) => {
-    // Create file picker dialog
     const dialog = document.createElement('div');
     dialog.style.cssText = `
       position: fixed;
@@ -53,13 +88,13 @@ export async function saveFileWithPicker(
       background: white;
       border-radius: 12px;
       padding: 24px;
-      max-width: 500px;
+      max-width: 600px;
       width: 90%;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     `;
     
-    // Create file path input
+    // Create file browser-like interface
     const pathInput = document.createElement('input');
     pathInput.type = 'text';
     pathInput.value = fileName;
@@ -69,13 +104,26 @@ export async function saveFileWithPicker(
       border: 1px solid #ddd;
       border-radius: 8px;
       font-size: 14px;
-      margin: 16px 0;
+      margin: 12px 0;
       box-sizing: border-box;
+      font-family: monospace;
     `;
     
     modal.innerHTML = `
-      <h3 style="margin: 0 0 16px 0; color: #333;">Save File</h3>
-      <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">Choose filename (will be saved to Downloads folder):</p>
+      <div style="display: flex; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+        <div style="width: 20px; height: 20px; background: #007bff; border-radius: 3px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+          <span style="color: white; font-size: 12px; font-weight: bold;">📁</span>
+        </div>
+        <h3 style="margin: 0; color: #333; font-size: 16px;">Save File</h3>
+      </div>
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #e9ecef;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 14px; color: #6c757d; margin-right: 8px;">📂</span>
+          <span style="font-size: 13px; color: #495057; font-family: monospace;">Downloads/</span>
+        </div>
+        <div style="font-size: 12px; color: #6c757d;">Files will be saved to your Downloads folder</div>
+      </div>
+      <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #333; font-weight: 500;">File name:</label>
     `;
     
     modal.appendChild(pathInput);
@@ -85,31 +133,35 @@ export async function saveFileWithPicker(
       display: flex;
       gap: 12px;
       justify-content: flex-end;
-      margin-top: 16px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
     `;
     
     const cancelButton = document.createElement('button');
     cancelButton.textContent = 'Cancel';
     cancelButton.style.cssText = `
-      padding: 8px 16px;
-      background: #f5f5f5;
-      color: #333;
-      border: none;
+      padding: 10px 20px;
+      background: #f8f9fa;
+      color: #6c757d;
+      border: 1px solid #dee2e6;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 500;
     `;
     
     const saveButton = document.createElement('button');
-    saveButton.textContent = 'Download File';
+    saveButton.textContent = 'Save';
     saveButton.style.cssText = `
-      padding: 8px 16px;
+      padding: 10px 20px;
       background: #007bff;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 500;
     `;
     
     cancelButton.onclick = () => {
@@ -118,40 +170,9 @@ export async function saveFileWithPicker(
     };
     
     saveButton.onclick = () => {
-      const finalFileName = pathInput.value || fileName;
+      const finalFileName = pathInput.value.trim() || fileName;
       downloadFileTraditional(finalFileName, content, mimeType);
-      
-      // Show success notification
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #28a745;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        z-index: 10001;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 14px;
-        line-height: 1.4;
-      `;
-      notification.innerHTML = `
-        <strong>File Saved:</strong><br>
-        ${finalFileName}<br>
-        <small>Saved to Downloads folder</small>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-      }, 5000);
-      
+      showDownloadNotification(finalFileName, 'Downloads folder');
       document.body.removeChild(dialog);
       resolve(finalFileName);
     };
@@ -162,13 +183,49 @@ export async function saveFileWithPicker(
     dialog.appendChild(modal);
     document.body.appendChild(dialog);
     
-    // Focus the input and select the filename part
+    // Focus and select filename without extension
     pathInput.focus();
     const lastDotIndex = pathInput.value.lastIndexOf('.');
     if (lastDotIndex > 0) {
       pathInput.setSelectionRange(0, lastDotIndex);
     }
   });
+}
+
+// Show download notification
+function showDownloadNotification(fileName: string, location: string) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    z-index: 10001;
+    max-width: 320px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  `;
+  notification.innerHTML = `
+    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+      <span style="margin-right: 8px;">✅</span>
+      <strong>File Downloaded</strong>
+    </div>
+    <div style="margin-bottom: 4px; word-break: break-all;">${fileName}</div>
+    <small style="opacity: 0.9;">Saved to: ${location}</small>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.parentNode.removeChild(notification);
+    }
+  }, 5000);
 }
 
 // Traditional download fallback

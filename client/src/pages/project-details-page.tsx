@@ -95,7 +95,7 @@ export default function ProjectDetailsPage() {
         throw new Error('Cover letter not found');
       }
 
-      // Create export package
+      // Create export package using the new ZIP creator
       return await createSubmissionZipNative(
         atob(coverLetterDoc.fileContent),
         documentsWithContent
@@ -137,7 +137,7 @@ export default function ProjectDetailsPage() {
   const handleSubmitToAuthority = () => {
     // Create email subject and body
     const subject = `${project.name}: High-Piled Storage Permit Submission`;
-    const body = `Dear ${project.jurisdiction || 'Building'} Building Department,
+    const body = `Dear ${project.jurisdiction ? project.jurisdiction + ' Building' : 'Building'} Department,
 
 Please find attached our permit submission for the following project:
 

@@ -27,8 +27,109 @@ export async function createSubmissionZipNative(
     // First, show file picker dialog for ZIP file location
     const zipFileName = `${sanitizedProjectName}_Documents.zip`;
     
+    // First try native file picker for ZIP destination
+    let useNativePicker = false;
+    let zipBlob: Blob | null = null;
+    
+    if ('showSaveFilePicker' in window) {
+      try {
+        // Create ZIP file first
+        const zip = new JSZip();
+        
+        // Sort documents by category order
+        const categoryOrder = [
+          'site_plan', 'facility_plan', 'egress_plan',
+          'special_inspection', 'structural_analysis', 
+          'fire_protection', 'other'
+        ];
+        
+        const sortedDocs = documents.sort((a, b) => {
+          const aIndex = categoryOrder.indexOf(a.category);
+          const bIndex = categoryOrder.indexOf(b.category);
+          
+          if (aIndex !== bIndex) {
+            return aIndex - bIndex;
+          }
+          
+          return a.fileName.localeCompare(b.fileName);
+        });
+        
+        // Add cover letter first
+        zip.file('00_Cover_Letter.txt', coverLetter);
+        
+        // Add each document with proper ordering
+        for (let i = 0; i < sortedDocs.length; i++) {
+          const doc = sortedDocs[i];
+          const prefix = String(i + 1).padStart(2, '0');
+          const fileName = `${prefix}_${doc.fileName}`;
+          const content = base64ToUint8Array(doc.fileContent);
+          zip.file(fileName, content);
+        }
+        
+        // Generate ZIP
+        zipBlob = await zip.generateAsync({
+          type: 'blob',
+          compression: 'DEFLATE',
+          compressionOptions: { level: 6 }
+        });
+        
+        // Try native save picker
+        const fileHandle = await (window as any).showSaveFilePicker({
+          suggestedName: zipFileName,
+          types: [{
+            description: 'ZIP Archive',
+            accept: { 'application/zip': ['.zip'] }
+          }]
+        });
+        
+        const writable = await fileHandle.createWritable();
+        await writable.write(zipBlob);
+        await writable.close();
+        
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #28a745;
+          color: white;
+          padding: 16px 20px;
+          border-radius: 8px;
+          z-index: 10001;
+          max-width: 320px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 14px;
+          line-height: 1.4;
+        `;
+        notification.innerHTML = `
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="margin-right: 8px;">📦</span>
+            <strong>Export Complete</strong>
+          </div>
+          <div style="margin-bottom: 4px;">${zipFileName}</div>
+          <small style="opacity: 0.9;">${documents.length + 1} files packaged</small>
+        `;
+        
+        document.body.appendChild(notification);
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 5000);
+        
+        return true;
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return false; // User cancelled
+        }
+        console.log('Native picker failed, using fallback:', error.message);
+      }
+    }
+    
+    // Fallback: Show confirmation dialog then download
     const shouldProceed = await new Promise<boolean>((resolve) => {
-      // Create file picker dialog
       const dialog = document.createElement('div');
       dialog.style.cssText = `
         position: fixed;
@@ -48,24 +149,31 @@ export async function createSubmissionZipNative(
         background: white;
         border-radius: 12px;
         padding: 24px;
-        max-width: 500px;
+        max-width: 600px;
         width: 90%;
         box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       `;
       
       modal.innerHTML = `
-        <h3 style="margin: 0 0 16px 0; color: #333;">Export Document Package</h3>
-        <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">Create compressed ZIP file containing ${documents.length + 1} documents:</p>
-        <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0;">
-          <strong>Package Contents:</strong><br>
-          • Cover Letter (00_Cover_Letter.txt)<br>
-          • ${documents.length} Project Documents<br>
-          <small style="color: #666;">Files will be organized by category with numbered prefixes</small>
+        <div style="display: flex; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+          <div style="width: 24px; height: 24px; background: #28a745; border-radius: 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 14px;">📦</span>
+          </div>
+          <h3 style="margin: 0; color: #333; font-size: 18px;">Export Document Package</h3>
         </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
-          <button id="cancel-export" style="padding: 8px 16px; background: #f5f5f5; color: #333; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Cancel</button>
-          <button id="create-zip" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Create ZIP Package</button>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #e9ecef;">
+          <div style="margin-bottom: 12px;"><strong style="color: #333;">Package Contents:</strong></div>
+          <div style="margin-bottom: 8px;">📄 Cover Letter (00_Cover_Letter.txt)</div>
+          <div style="margin-bottom: 8px;">📁 ${documents.length} Project Documents</div>
+          <div style="font-size: 12px; color: #666; margin-top: 12px;">Files will be organized by category with numbered prefixes</div>
+        </div>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 12px; border-radius: 6px; margin: 16px 0;">
+          <div style="font-size: 13px; color: #856404;">💾 File will be saved to your Downloads folder as: <strong>${zipFileName}</strong></div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee;">
+          <button id="cancel-export" style="padding: 10px 20px; background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Cancel</button>
+          <button id="create-zip" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Create ZIP Package</button>
         </div>
       `;
       
@@ -192,14 +300,50 @@ export async function createSubmissionZipNative(
     // Remove progress dialog
     document.body.removeChild(progressDialog);
     
-    // Use our file picker to save the ZIP
-    const savedPath = await saveFileWithPicker(
-      zipFileName,
-      zipContent,
-      'application/zip'
-    );
+    // Use traditional download for fallback
+    const url = URL.createObjectURL(zipBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = zipFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     
-    return savedPath !== null;
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      z-index: 10001;
+      max-width: 320px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+    `;
+    notification.innerHTML = `
+      <div style="display: flex; align-items: center; margin-bottom: 4px;">
+        <span style="margin-right: 8px;">📦</span>
+        <strong>Export Complete</strong>
+      </div>
+      <div style="margin-bottom: 4px;">${zipFileName}</div>
+      <small style="opacity: 0.9;">Saved to Downloads folder</small>
+    `;
+    
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 5000);
+    
+    return true;
   } catch (error) {
     console.error('Error creating ZIP package:', error);
     
