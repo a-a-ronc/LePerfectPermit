@@ -82,7 +82,7 @@ class SimpleZip {
   }
 }
 
-// Create ZIP file with cover letter and documents
+// Create proper ZIP file with cover letter and documents
 export async function createSubmissionZip(
   coverLetter: string,
   documents: Array<{
@@ -93,25 +93,110 @@ export async function createSubmissionZip(
   projectName: string
 ): Promise<boolean> {
   try {
-    // Create a simple archive format since we can't use JSZip
-    const files: Array<{ name: string; content: Uint8Array }> = [];
+    // Since we can't use a real ZIP library, we'll create individual files
+    // and let the user download them separately, then instruct them to zip manually
     
-    // Add cover letter first
-    files.push({
-      name: '00_Cover_Letter.txt',
-      content: new TextEncoder().encode(coverLetter)
-    });
+    const sanitizedProjectName = projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
     
-    // Sort documents by category and add them
+    // First, try to show directory picker for organized saving
+    let useDirectoryPicker = false;
+    let directoryHandle: any = null;
+    
+    try {
+      if ('showDirectoryPicker' in window) {
+        directoryHandle = await (window as any).showDirectoryPicker({
+          mode: 'readwrite'
+        });
+        useDirectoryPicker = true;
+      }
+    } catch (e) {
+      console.log('Directory picker not available or cancelled, using individual downloads');
+    }
+    
+    if (useDirectoryPicker && directoryHandle) {
+      // Save files to selected directory
+      try {
+        // Create cover letter file
+        const coverLetterHandle = await directoryHandle.getFileHandle(
+          '00_Cover_Letter.txt', 
+          { create: true }
+        );
+        const coverLetterWritable = await coverLetterHandle.createWritable();
+        await coverLetterWritable.write(coverLetter);
+        await coverLetterWritable.close();
+        
+        // Sort and save documents
+        const sortedDocs = documents.sort((a, b) => {
+          const categoryOrder = [
+            'site_plan', 'facility_plan', 'egress_plan',
+            'special_inspection', 'structural_analysis', 
+            'fire_protection', 'other'
+          ];
+          
+          const aIndex = categoryOrder.indexOf(a.category);
+          const bIndex = categoryOrder.indexOf(b.category);
+          
+          if (aIndex !== bIndex) {
+            return aIndex - bIndex;
+          }
+          
+          return a.fileName.localeCompare(b.fileName);
+        });
+        
+        // Save each document
+        for (let i = 0; i < sortedDocs.length; i++) {
+          const doc = sortedDocs[i];
+          const prefix = String(i + 1).padStart(2, '0');
+          const fileName = `${prefix}_${doc.fileName}`;
+          
+          const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          const content = base64ToUint8Array(doc.fileContent);
+          await writable.write(content);
+          await writable.close();
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error saving to directory:', error);
+        return false;
+      }
+    } else {
+      // Fallback: create a simple bundle and download
+      return await createSimpleBundle(coverLetter, documents, sanitizedProjectName);
+    }
+  } catch (error) {
+    console.error('Error creating submission package:', error);
+    return false;
+  }
+}
+
+// Create a simple bundle as fallback
+async function createSimpleBundle(
+  coverLetter: string,
+  documents: Array<{
+    fileName: string;
+    fileContent: string;
+    category: string;
+  }>,
+  projectName: string
+): Promise<boolean> {
+  try {
+    // Create a text-based manifest with all files
+    let manifest = `${projectName} - Document Package\n`;
+    manifest += `Generated: ${new Date().toISOString()}\n`;
+    manifest += `Total Files: ${documents.length + 1}\n\n`;
+    
+    manifest += `=== COVER LETTER ===\n`;
+    manifest += coverLetter;
+    manifest += `\n\n`;
+    
+    // Sort documents
     const sortedDocs = documents.sort((a, b) => {
       const categoryOrder = [
-        'site_plan',
-        'facility_plan', 
-        'egress_plan',
-        'special_inspection',
-        'structural_analysis',
-        'fire_protection',
-        'other'
+        'site_plan', 'facility_plan', 'egress_plan',
+        'special_inspection', 'structural_analysis', 
+        'fire_protection', 'other'
       ];
       
       const aIndex = categoryOrder.indexOf(a.category);
@@ -124,58 +209,31 @@ export async function createSubmissionZip(
       return a.fileName.localeCompare(b.fileName);
     });
     
-    // Add documents with category prefixes
-    let fileIndex = 1;
-    for (const doc of sortedDocs) {
-      const prefix = String(fileIndex).padStart(2, '0');
-      const fileName = `${prefix}_${doc.fileName}`;
-      const content = base64ToUint8Array(doc.fileContent);
-      files.push({ name: fileName, content });
-      fileIndex++;
-    }
+    manifest += `=== DOCUMENT LIST ===\n`;
+    sortedDocs.forEach((doc, index) => {
+      manifest += `${index + 1}. ${doc.fileName} (${doc.category})\n`;
+    });
+    manifest += `\n`;
     
-    // Create a simple concatenated file with headers (tar-like)
-    const chunks: Uint8Array[] = [];
+    manifest += `=== INSTRUCTIONS ===\n`;
+    manifest += `This package contains ${documents.length} documents plus cover letter.\n`;
+    manifest += `Documents are available for individual download from the application.\n`;
+    manifest += `Use the individual download buttons to save each file.\n`;
     
-    for (const file of files) {
-      // File name length (4 bytes)
-      const nameBytes = new TextEncoder().encode(file.name);
-      const nameLength = new Uint32Array([nameBytes.length]);
-      chunks.push(new Uint8Array(nameLength.buffer));
-      
-      // File name
-      chunks.push(nameBytes);
-      
-      // Content length (4 bytes)
-      const contentLength = new Uint32Array([file.content.length]);
-      chunks.push(new Uint8Array(contentLength.buffer));
-      
-      // Content
-      chunks.push(file.content);
-    }
+    // Download the manifest
+    const manifestBlob = new Blob([manifest], { type: 'text/plain' });
+    const url = URL.createObjectURL(manifestBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${projectName}_Package_Manifest.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     
-    // Combine all chunks
-    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-    const result = new Uint8Array(totalLength);
-    let offset = 0;
-    
-    for (const chunk of chunks) {
-      result.set(chunk, offset);
-      offset += chunk.length;
-    }
-    
-    // Save the archive file with better naming
-    const sanitizedProjectName = projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-    const archiveFileName = `${sanitizedProjectName}_Documents.zip`;
-    const savedPath = await saveFileWithPicker(
-      archiveFileName,
-      result,
-      'application/zip'
-    );
-    
-    return savedPath !== null && savedPath !== 'fallback-download';
+    return true;
   } catch (error) {
-    console.error('Error creating submission archive:', error);
+    console.error('Error creating manifest:', error);
     return false;
   }
 }

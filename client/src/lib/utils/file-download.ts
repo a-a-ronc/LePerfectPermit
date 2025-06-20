@@ -33,45 +33,45 @@ export async function saveFileWithPicker(
   mimeType: string
 ): Promise<string | null> {
   try {
-    // Check if the File System Access API is supported
-    if (!('showSaveFilePicker' in window)) {
-      console.log('File System Access API not supported, using traditional download');
-      downloadFileTraditional(fileName, content, mimeType);
-      return 'traditional-download';
-    }
+    // Always try the File System Access API first if available
+    if ('showSaveFilePicker' in window) {
+      try {
+        const options: any = {
+          suggestedName: fileName,
+          types: [{
+            description: 'Files',
+            accept: {
+              [mimeType]: [`.${fileName.split('.').pop()}`]
+            }
+          }]
+        };
 
-    const options: any = {
-      suggestedName: fileName,
-      types: [{
-        description: 'Files',
-        accept: {
-          [mimeType]: [`.${fileName.split('.').pop()}`]
+        const fileHandle = await (window as any).showSaveFilePicker(options);
+        const writable = await fileHandle.createWritable();
+        
+        if (typeof content === 'string') {
+          await writable.write(content);
+        } else {
+          await writable.write(content);
         }
-      }]
-    };
+        await writable.close();
 
-    // Show save file picker
-    const fileHandle = await (window as any).showSaveFilePicker(options);
-    const writable = await fileHandle.createWritable();
-    
-    if (typeof content === 'string') {
-      await writable.write(content);
-    } else {
-      await writable.write(content);
+        localStorage.setItem(LAST_DOWNLOAD_PATH_KEY, 'file-picker-used');
+        return fileHandle.name;
+      } catch (error) {
+        const err = error as Error;
+        if (err.name === 'AbortError') {
+          return null; // User cancelled
+        }
+        console.log('File picker failed, falling back to download:', err.message);
+      }
     }
-    await writable.close();
 
-    // Store the file path for next time (simplified approach)
-    localStorage.setItem(LAST_DOWNLOAD_PATH_KEY, 'file-picker-used');
-
-    return fileHandle.name;
-  } catch (error) {
-    const err = error as Error;
-    if (err.name === 'AbortError') {
-      return null; // User cancelled
-    }
-    console.error('Error saving file:', error);
     // Fallback to traditional download
+    downloadFileTraditional(fileName, content, mimeType);
+    return 'traditional-download';
+  } catch (error) {
+    console.error('Error in saveFileWithPicker:', error);
     downloadFileTraditional(fileName, content, mimeType);
     return 'fallback-download';
   }
