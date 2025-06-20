@@ -126,6 +126,8 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 19, 2025: Redesigned Submit to Authority workflow - button now always enabled and opens Outlook with pre-drafted email using project details for subject and body
 - June 19, 2025: Added Export button that appears after AI cover letter generation - creates organized document package with directory picker for organized file saving, falls back to manifest download when modern APIs unavailable
 - June 19, 2025: Fixed zip file creation issues in Replit environment - now uses directory picker to save organized files or provides manifest with download instructions
+- June 20, 2025: Implemented file picker dialogs for all downloads - users can now choose filename and save location for individual files and export packages, with proper progress indicators and success notifications
+- June 20, 2025: Updated Submit to Authority email to dynamically extract city name from project location for personalized greeting (e.g., "Dear West Valley City Building Department")
 
 ## Changelog
 

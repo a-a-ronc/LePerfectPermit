@@ -26,55 +26,149 @@ export function isFileSystemAccessSupported(): boolean {
   return 'showSaveFilePicker' in window;
 }
 
-// Save file with file picker dialog
+// Show file picker dialog for user to select save location
 export async function saveFileWithPicker(
   fileName: string, 
   content: string | Uint8Array, 
   mimeType: string
 ): Promise<string | null> {
-  try {
-    // In iframe environments like Replit, File System Access API is blocked
-    // Use traditional download with user notification
-    downloadFileTraditional(fileName, content, mimeType);
-    
-    // Show user notification about download location
-    const notification = document.createElement('div');
-    notification.style.cssText = `
+  return new Promise((resolve) => {
+    // Create file picker dialog
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
       position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #333;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
       z-index: 10000;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    `;
+    
+    // Create file path input
+    const pathInput = document.createElement('input');
+    pathInput.type = 'text';
+    pathInput.value = fileName;
+    pathInput.style.cssText = `
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
       font-size: 14px;
-      line-height: 1.4;
-    `;
-    notification.innerHTML = `
-      <strong>File Downloaded:</strong><br>
-      ${fileName}<br>
-      <small>Check your Downloads folder</small>
+      margin: 16px 0;
+      box-sizing: border-box;
     `;
     
-    document.body.appendChild(notification);
+    modal.innerHTML = `
+      <h3 style="margin: 0 0 16px 0; color: #333;">Save File</h3>
+      <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">Choose filename and location:</p>
+    `;
     
-    // Auto-remove notification after 5 seconds
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-    }, 5000);
+    modal.appendChild(pathInput);
     
-    return 'downloaded-to-default';
-  } catch (error) {
-    console.error('Error in saveFileWithPicker:', error);
-    downloadFileTraditional(fileName, content, mimeType);
-    return 'fallback-download';
-  }
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = `
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    `;
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.style.cssText = `
+      padding: 8px 16px;
+      background: #f5f5f5;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    `;
+    
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save to Downloads';
+    saveButton.style.cssText = `
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    `;
+    
+    cancelButton.onclick = () => {
+      document.body.removeChild(dialog);
+      resolve(null);
+    };
+    
+    saveButton.onclick = () => {
+      const finalFileName = pathInput.value || fileName;
+      downloadFileTraditional(finalFileName, content, mimeType);
+      
+      // Show success notification
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 10001;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+      `;
+      notification.innerHTML = `
+        <strong>File Saved:</strong><br>
+        ${finalFileName}<br>
+        <small>Saved to Downloads folder</small>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 5000);
+      
+      document.body.removeChild(dialog);
+      resolve(finalFileName);
+    };
+    
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(saveButton);
+    modal.appendChild(buttonContainer);
+    dialog.appendChild(modal);
+    document.body.appendChild(dialog);
+    
+    // Focus the input and select the filename part
+    pathInput.focus();
+    const lastDotIndex = pathInput.value.lastIndexOf('.');
+    if (lastDotIndex > 0) {
+      pathInput.setSelectionRange(0, lastDotIndex);
+    }
+  });
 }
 
 // Traditional download fallback
