@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("stakeholder"), // stakeholder or specialist
   defaultContactEmail: text("default_contact_email"),
   defaultContactPhone: text("default_contact_phone"),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
