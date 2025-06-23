@@ -133,6 +133,8 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 20, 2025: Enhanced file download dialogs with proper filename selection and download notifications
 - June 20, 2025: Improved file picker implementation with iframe detection and browser compatibility guidance
 - June 20, 2025: Added comprehensive fallback dialog system with user education about file system limitations
+- June 23, 2025: Implemented comprehensive stakeholder management system with multiple roles, document category assignments, task management, and notification system
+- June 23, 2025: Added forgot password functionality with email-based password reset flow using SendGrid integration
 
 ## Changelog
 
