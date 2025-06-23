@@ -237,25 +237,46 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: number): Promise<boolean> {
     try {
-      // First, delete all related data
-      // Delete all documents for this project
-      await db.delete(documents).where(eq(documents.projectId, id));
+      console.log(`Starting deletion of project ${id}`);
       
-      // Delete all commodities for this project
-      await db.delete(commodities).where(eq(commodities.projectId, id));
+      // First, delete all related data in correct order
+      console.log('Deleting stakeholder tasks...');
+      const tasksResult = await db
+        .delete(stakeholderTasks)
+        .where(eq(stakeholderTasks.projectId, id));
+      console.log('Stakeholder tasks deleted');
       
-      // Delete all stakeholder tasks for this project
-      await db.delete(stakeholderTasks).where(eq(stakeholderTasks.projectId, id));
+      console.log('Deleting project stakeholders...');
+      const stakeholdersResult = await db
+        .delete(projectStakeholders)
+        .where(eq(projectStakeholders.projectId, id));
+      console.log('Project stakeholders deleted');
       
-      // Delete all project stakeholders
-      await db.delete(projectStakeholders).where(eq(projectStakeholders.projectId, id));
+      console.log('Deleting activity logs...');
+      const logsResult = await db
+        .delete(activityLogs)
+        .where(eq(activityLogs.projectId, id));
+      console.log('Activity logs deleted');
       
-      // Delete all activity logs for this project
-      await db.delete(activityLogs).where(eq(activityLogs.projectId, id));
+      console.log('Deleting commodities...');
+      const commoditiesResult = await db
+        .delete(commodities)
+        .where(eq(commodities.projectId, id));
+      console.log('Commodities deleted');
       
-      // Finally, delete the project itself
-      const result = await db.delete(projects).where(eq(projects.id, id));
+      console.log('Deleting documents...');
+      const documentsResult = await db
+        .delete(documents)
+        .where(eq(documents.projectId, id));
+      console.log('Documents deleted');
       
+      console.log('Deleting project...');
+      const projectResult = await db
+        .delete(projects)
+        .where(eq(projects.id, id));
+      console.log('Project deleted');
+      
+      console.log(`Successfully deleted project ${id}`);
       return true;
     } catch (error) {
       console.error('Error deleting project:', error);
