@@ -22,6 +22,11 @@ import { getProjectStatusColor, getProjectStatusLabel } from "@/lib/utils/status
 import { calculateProjectDocumentProgress } from "@/lib/utils/document-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 type ProjectRow = {
   id: number;
