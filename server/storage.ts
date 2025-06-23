@@ -239,44 +239,54 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Starting deletion of project ${id}`);
       
-      // Get stakeholder IDs first
-      const stakeholderResult = await pool.query(
-        'SELECT id FROM project_stakeholders WHERE project_id = $1', 
-        [id]
-      );
-      const stakeholderIds = stakeholderResult.rows.map(row => row.id);
+      // Use Drizzle ORM for deletions instead of raw SQL to avoid Neon client issues
+      // Delete in dependency order
       
-      // Delete stakeholder tasks if any stakeholders exist
-      if (stakeholderIds.length > 0) {
-        await pool.query(
-          `DELETE FROM stakeholder_tasks WHERE stakeholder_id = ANY($1)`,
-          [stakeholderIds]
-        );
+      // First get project stakeholders to delete their tasks
+      const projectStakeholders = await db
+        .select({ id: projectStakeholders.id })
+        .from(projectStakeholders)
+        .where(eq(projectStakeholders.projectId, id));
+      
+      // Delete stakeholder tasks for each stakeholder
+      for (const stakeholder of projectStakeholders) {
+        await db
+          .delete(stakeholderTasks)
+          .where(eq(stakeholderTasks.stakeholderId, stakeholder.id));
       }
       console.log('Stakeholder tasks deleted');
       
       // Delete project stakeholders
-      await pool.query('DELETE FROM project_stakeholders WHERE project_id = $1', [id]);
+      await db
+        .delete(projectStakeholders)
+        .where(eq(projectStakeholders.projectId, id));
       console.log('Project stakeholders deleted');
       
       // Delete activity logs
-      await pool.query('DELETE FROM activity_logs WHERE project_id = $1', [id]);
+      await db
+        .delete(activityLogs)
+        .where(eq(activityLogs.projectId, id));
       console.log('Activity logs deleted');
       
       // Delete commodities
-      await pool.query('DELETE FROM commodities WHERE project_id = $1', [id]);
+      await db
+        .delete(commodities)
+        .where(eq(commodities.projectId, id));
       console.log('Commodities deleted');
       
       // Delete documents
-      await pool.query('DELETE FROM documents WHERE project_id = $1', [id]);
+      await db
+        .delete(documents)
+        .where(eq(documents.projectId, id));
       console.log('Documents deleted');
       
       // Finally delete the project
-      const result = await pool.query('DELETE FROM projects WHERE id = $1', [id]);
-      console.log('Project deleted');
+      const result = await db
+        .delete(projects)
+        .where(eq(projects.id, id));
       
       console.log(`Successfully deleted project ${id}`);
-      return result.rowCount > 0;
+      return true;
     } catch (error) {
       console.error('Error deleting project:', error);
       return false;
