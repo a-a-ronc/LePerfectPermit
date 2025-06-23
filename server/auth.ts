@@ -146,6 +146,86 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // Forgot password endpoint
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+
+      // Generate reset token
+      const crypto = await import('crypto');
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Save reset token to database
+      await storage.setPasswordResetToken(email, resetToken, resetExpires);
+
+      // Send email (requires SendGrid setup)
+      try {
+        const { sendPasswordResetEmail } = await import('./email');
+        const emailSent = await sendPasswordResetEmail(email, resetToken);
+        
+        if (!emailSent) {
+          console.warn('Failed to send password reset email - SendGrid may not be configured');
+        }
+      } catch (error) {
+        console.warn('Email service not configured:', error);
+      }
+
+      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ message: "An error occurred. Please try again later." });
+    }
+  });
+
+  // Reset password endpoint
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password, confirmPassword } = req.body;
+      
+      if (!token || !password || !confirmPassword) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      if (password !== confirmPassword) {
+        return res.status(400).json({ message: "Passwords do not match" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Find user by valid reset token
+      const user = await storage.getUserByResetToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(password);
+
+      // Update password and clear reset token
+      await storage.updateUserPassword(user.id, hashedPassword);
+      await storage.clearPasswordResetToken(user.id);
+
+      res.json({ message: "Password has been reset successfully. You can now log in with your new password." });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: "An error occurred. Please try again later." });
+    }
+  });
+
   app.get("/api/user", (req, res) => {
     console.log("GET /api/user called, isAuthenticated:", req.isAuthenticated());
     if (req.isAuthenticated()) {

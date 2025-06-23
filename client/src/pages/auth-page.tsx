@@ -251,6 +251,14 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                     {loginError}
                   </p>
                 )}
+                
+                <div className="text-center mt-3">
+                  <Link href="/forgot-password">
+                    <Button variant="ghost" className="text-sm text-primary hover:underline">
+                      Forgot your password?
+                    </Button>
+                  </Link>
+                </div>
               </form>
             </Form>
           </TabsContent>
