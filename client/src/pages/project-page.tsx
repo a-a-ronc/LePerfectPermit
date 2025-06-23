@@ -190,7 +190,8 @@ export default function ProjectPage() {
       status: project.status,
       documentsProgress: progress,
       deadline: project.deadline,
-      actions: project.id.toString()
+      actions: project.id.toString(),
+      createdBy: project.createdById
     };
   });
   
