@@ -260,14 +260,32 @@ function showDownloadNotification(fileName: string, location: string) {
     font-size: 14px;
     line-height: 1.4;
   `;
-  notification.innerHTML = `
-    <div style="display: flex; align-items: center; margin-bottom: 4px;">
-      <span style="margin-right: 8px;">✅</span>
-      <strong>File Downloaded</strong>
-    </div>
-    <div style="margin-bottom: 4px; word-break: break-all;">${fileName}</div>
-    <small style="opacity: 0.9;">Saved to: ${location}</small>
-  `;
+  
+  // Create elements safely using DOM methods instead of innerHTML
+  const headerDiv = document.createElement('div');
+  headerDiv.style.cssText = 'display: flex; align-items: center; margin-bottom: 4px;';
+  
+  const checkSpan = document.createElement('span');
+  checkSpan.style.marginRight = '8px';
+  checkSpan.textContent = '✅'; // Use textContent to prevent XSS
+  
+  const titleStrong = document.createElement('strong');
+  titleStrong.textContent = 'File Downloaded'; // Use textContent to prevent XSS
+  
+  headerDiv.appendChild(checkSpan);
+  headerDiv.appendChild(titleStrong);
+  
+  const fileNameDiv = document.createElement('div');
+  fileNameDiv.style.cssText = 'margin-bottom: 4px; word-break: break-all;';
+  fileNameDiv.textContent = fileName; // Use textContent to prevent XSS
+  
+  const locationSmall = document.createElement('small');
+  locationSmall.style.opacity = '0.9';
+  locationSmall.textContent = `Saved to: ${location}`; // Use textContent to prevent XSS
+  
+  notification.appendChild(headerDiv);
+  notification.appendChild(fileNameDiv);
+  notification.appendChild(locationSmall);
   
   document.body.appendChild(notification);
   
