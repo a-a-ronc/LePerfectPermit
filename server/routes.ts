@@ -340,8 +340,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const stakeholders = await storage.getProjectStakeholders(projectId);
-      res.json(stakeholders);
+      
+      // Get user details for each stakeholder
+      const stakeholdersWithUsers = await Promise.all(
+        stakeholders.map(async (stakeholder) => {
+          const user = await storage.getUser(stakeholder.userId);
+          return {
+            ...stakeholder,
+            user: user ? {
+              fullName: user.fullName,
+              email: user.email,
+              username: user.username
+            } : null
+          };
+        })
+      );
+      
+      res.json(stakeholdersWithUsers);
     } catch (error) {
+      console.error("Error getting stakeholders:", error);
       res.status(500).json({ message: "Failed to get stakeholders" });
     }
   });
@@ -362,18 +379,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user details for the log
       const user = await storage.getUser(req.body.userId);
       const userName = user ? user.fullName : "Unknown user";
+      const roleList = Array.isArray(stakeholder.roles) ? stakeholder.roles.join(', ') : 'stakeholder';
       
       // Log activity
       await storage.createActivityLog({
         projectId,
         userId: req.user!.id,
         activityType: "stakeholder_added",
-        description: `${userName} was added as a stakeholder with role ${stakeholder.role}`
+        description: `${userName} was added as a stakeholder with roles: ${roleList}`
       });
       
       res.status(201).json(stakeholder);
     } catch (error) {
+      console.error("Error creating stakeholder:", error);
       res.status(400).json({ message: "Invalid stakeholder data", error });
+    }
+  });
+
+  app.put("/api/stakeholders/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const id = parseInt(req.params.id);
+      const stakeholder = await storage.updateProjectStakeholder(id, req.body);
+      
+      if (!stakeholder) {
+        return res.status(404).json({ message: "Stakeholder not found" });
+      }
+      
+      res.json(stakeholder);
+    } catch (error) {
+      console.error("Error updating stakeholder:", error);
+      res.status(400).json({ message: "Invalid stakeholder update data", error });
+    }
+  });
+
+  app.delete("/api/stakeholders/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteProjectStakeholder(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Stakeholder not found" });
+      }
+      
+      res.json({ message: "Stakeholder removed successfully" });
+    } catch (error) {
+      console.error("Error deleting stakeholder:", error);
+      res.status(500).json({ message: "Failed to remove stakeholder" });
+    }
+  });
+
+  // Stakeholder tasks routes
+  app.get("/api/projects/:projectId/tasks", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const tasks = await storage.getProjectStakeholderTasks(projectId);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error getting stakeholder tasks:", error);
+      res.status(500).json({ message: "Failed to get stakeholder tasks" });
+    }
+  });
+
+  app.post("/api/stakeholders/:stakeholderId/tasks", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const stakeholderId = parseInt(req.params.stakeholderId);
+      const validatedData = insertStakeholderTaskSchema.parse({
+        ...req.body,
+        stakeholderId,
+        createdById: req.user!.id
+      });
+      
+      const task = await storage.createStakeholderTask(validatedData);
+      res.status(201).json(task);
+    } catch (error) {
+      console.error("Error creating stakeholder task:", error);
+      res.status(400).json({ message: "Invalid task data", error });
+    }
+  });
+
+  app.put("/api/tasks/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.updateStakeholderTask(id, req.body);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      res.json(task);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      res.status(400).json({ message: "Invalid task update data", error });
     }
   });
 

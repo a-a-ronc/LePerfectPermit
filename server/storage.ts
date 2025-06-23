@@ -3,6 +3,7 @@ import { projects, type Project, type InsertProject } from "@shared/schema";
 import { documents, type Document, type InsertDocument } from "@shared/schema";
 import { commodities, type Commodity, type InsertCommodity } from "@shared/schema";
 import { projectStakeholders, type ProjectStakeholder, type InsertProjectStakeholder } from "@shared/schema";
+import { stakeholderTasks, type StakeholderTask, type InsertStakeholderTask } from "@shared/schema";
 import { activityLogs, type ActivityLog, type InsertActivityLog } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -362,12 +363,60 @@ export class DatabaseStorage implements IStorage {
     // Create activity log for stakeholder assignment
     await this.createActivityLog({
       projectId: insertStakeholder.projectId,
-      userId: insertStakeholder.assignedById,
+      userId: insertStakeholder.addedById,
       activityType: "stakeholder_assigned",
       description: `${user?.fullName || "Stakeholder"} (${user?.email || "Unknown"}) assigned to the project`
     });
     
     return stakeholder;
+  }
+
+  async updateProjectStakeholder(id: number, data: Partial<ProjectStakeholder>): Promise<ProjectStakeholder | undefined> {
+    const [result] = await db.update(projectStakeholders)
+      .set(data)
+      .where(eq(projectStakeholders.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteProjectStakeholder(id: number): Promise<boolean> {
+    const result = await db.delete(projectStakeholders).where(eq(projectStakeholders.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getStakeholderTasks(stakeholderId: number): Promise<StakeholderTask[]> {
+    const result = await db.select().from(stakeholderTasks).where(eq(stakeholderTasks.stakeholderId, stakeholderId));
+    return result;
+  }
+
+  async getProjectStakeholderTasks(projectId: number): Promise<StakeholderTask[]> {
+    const result = await db.select({
+      task: stakeholderTasks,
+      stakeholder: projectStakeholders
+    })
+    .from(stakeholderTasks)
+    .innerJoin(projectStakeholders, eq(stakeholderTasks.stakeholderId, projectStakeholders.id))
+    .where(eq(projectStakeholders.projectId, projectId));
+    
+    return result.map(r => r.task);
+  }
+
+  async createStakeholderTask(insertTask: InsertStakeholderTask): Promise<StakeholderTask> {
+    const [result] = await db.insert(stakeholderTasks).values(insertTask).returning();
+    return result;
+  }
+
+  async updateStakeholderTask(id: number, data: Partial<StakeholderTask>): Promise<StakeholderTask | undefined> {
+    const [result] = await db.update(stakeholderTasks)
+      .set(data)
+      .where(eq(stakeholderTasks.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteStakeholderTask(id: number): Promise<boolean> {
+    const result = await db.delete(stakeholderTasks).where(eq(stakeholderTasks.id, id));
+    return result.rowCount > 0;
   }
   
   // Activity log methods
