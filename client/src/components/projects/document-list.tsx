@@ -33,6 +33,7 @@ import { DocumentViewDialog } from "./document-view-dialog";
 import { DocumentUploadDialog } from "./document-upload-dialog";
 import { getChecklistForCategory } from "@/lib/utils/checklist-data";
 import { downloadDocument } from "@/lib/utils/file-download";
+import { StakeholderAssignmentWidget } from "@/components/stakeholders/stakeholder-assignment-widget";
 import {
   Dialog,
   DialogContent,
@@ -346,7 +347,11 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                     )}
                   </div>
                 </div>
-                <div className="mt-3 md:mt-0">
+                <div className="mt-3 md:mt-0 flex gap-2">
+                  <StakeholderAssignmentWidget 
+                    projectId={projectId} 
+                    documentCategory={category}
+                  />
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -384,6 +389,10 @@ export function DocumentList({ documents, projectId, isLoading = false }: Docume
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${bg} ${text}`}>
                   {getDocumentStatusLabel(doc.status)}
                 </span>
+                <StakeholderAssignmentWidget 
+                  projectId={projectId} 
+                  documentCategory={doc.category}
+                />
                 <Button 
                   variant="ghost" 
                   size="sm"
