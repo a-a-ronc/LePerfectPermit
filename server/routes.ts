@@ -117,6 +117,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/projects/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      // Get project details before deletion for logging
+      const project = await storage.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Only allow project creators or specialists to delete projects
+      const user = req.user!;
+      if (user.role !== 'specialist' && project.createdById !== user.id) {
+        return res.status(403).json({ message: "You don't have permission to delete this project" });
+      }
+      
+      const success = await storage.deleteProject(projectId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete project" });
+      }
+      
+      res.json({ message: `Project "${project.name}" has been deleted successfully` });
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ message: "Failed to delete project", error });
+    }
+  });
+
   // Document routes
   app.get("/api/projects/:projectId/documents", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

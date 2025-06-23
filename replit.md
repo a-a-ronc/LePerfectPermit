@@ -135,6 +135,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 20, 2025: Added comprehensive fallback dialog system with user education about file system limitations
 - June 23, 2025: Implemented comprehensive stakeholder management system with multiple roles, document category assignments, task management, and notification system
 - June 23, 2025: Added forgot password functionality with email-based password reset flow using SendGrid integration
+- June 23, 2025: Implemented project deletion functionality with proper permission controls - specialists and project creators can delete projects with cascade delete for all related data
 
 ## Changelog
 

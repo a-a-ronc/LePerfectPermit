@@ -8,7 +8,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { 
   Plus, 
   Search,
-  Filter
+  Filter,
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 import { formatDate, formatDeadline } from "@/lib/utils/date-utils";
 import { getProjectStatusColor, getProjectStatusLabel } from "@/lib/utils/status-utils";
@@ -16,6 +18,8 @@ import { calculateProjectDocumentProgress } from "@/lib/utils/document-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -24,6 +28,7 @@ import { insertProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 // Create a custom form schema specifically for the client-side form
 const clientFormSchema = z.object({
@@ -51,6 +56,7 @@ type ProjectRow = {
   documentsProgress: number;
   deadline: string;
   actions: string;
+  createdBy: number;
 };
 
 export default function ProjectPage() {
@@ -254,11 +260,58 @@ export default function ProjectPage() {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <Link href={`/project/${row.original.id}`}>
-          <div className="text-primary hover:text-primary/80 cursor-pointer">View</div>
-        </Link>
-      ),
+      cell: ({ row }) => {
+        const project = row.original;
+        const canDelete = user && (user.role === 'specialist' || project.createdBy === user.id);
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Link href={`/project/${project.id}`}>
+              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                View
+              </Button>
+            </Link>
+            
+            {canDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Project
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{project.name}"? This action cannot be undone and will permanently remove all project data, documents, and stakeholder assignments.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProjectMutation.mutate(project.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                          disabled={deleteProjectMutation.isPending}
+                        >
+                          {deleteProjectMutation.isPending ? "Deleting..." : "Delete Project"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        );
+      },
     },
   ];
   

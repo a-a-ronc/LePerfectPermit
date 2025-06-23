@@ -13,7 +13,9 @@ import {
   Plus, 
   Search, 
   Filter,
-  ChevronRight
+  ChevronRight,
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 import { formatRelativeTime, formatDeadline } from "@/lib/utils/date-utils";
 import { getProjectStatusColor, getProjectStatusLabel } from "@/lib/utils/status-utils";
@@ -30,6 +32,7 @@ type ProjectRow = {
   documentsProgress: number;
   deadline: string;
   actions: string;
+  createdBy: number;
 };
 
 interface DashboardPageProps {
@@ -39,6 +42,29 @@ interface DashboardPageProps {
 export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
   const [, navigate] = useLocation();
   const [userData, setUserData] = useState<any>(null);
+  const { toast } = useToast();
+
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: number) => {
+      return await apiRequest('DELETE', `/api/projects/${projectId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects/documents"] });
+      toast({
+        title: "Project deleted",
+        description: "The project has been deleted successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete project",
+        variant: "destructive",
+      });
+    },
+  });
   
   // Fetch user data directly
   useEffect(() => {
@@ -115,7 +141,8 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
       status: project.status,
       documentsProgress: progress,
       deadline: project.deadline,
-      actions: project.id.toString()
+      actions: project.id.toString(),
+      createdBy: project.createdById
     };
   });
   
@@ -185,11 +212,58 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <Link href={`/project/${row.original.id}`}>
-          <div className="text-primary hover:text-primary/80 cursor-pointer">View</div>
-        </Link>
-      ),
+      cell: ({ row }) => {
+        const project = row.original;
+        const canDelete = userData && (userData.role === 'specialist' || project.createdBy === userData.id);
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Link href={`/project/${project.id}`}>
+              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                View
+              </Button>
+            </Link>
+            
+            {canDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Project
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{project.name}"? This action cannot be undone and will permanently remove all project data, documents, and stakeholder assignments.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProjectMutation.mutate(project.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                          disabled={deleteProjectMutation.isPending}
+                        >
+                          {deleteProjectMutation.isPending ? "Deleting..." : "Delete Project"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        );
+      },
     },
   ];
   

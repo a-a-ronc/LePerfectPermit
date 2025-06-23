@@ -34,6 +34,7 @@ export interface IStorage {
   getProject(id: number): Promise<Project | undefined>;
   createProject(project: InsertProject & { createdById: number }): Promise<Project>;
   updateProject(id: number, data: Partial<Project>): Promise<Project | undefined>;
+  deleteProject(id: number): Promise<boolean>;
   
   // Document methods
   getDocumentsByProject(projectId: number): Promise<Document[]>;
@@ -232,6 +233,34 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updatedProject;
+  }
+
+  async deleteProject(id: number): Promise<boolean> {
+    try {
+      // First, delete all related data
+      // Delete all documents for this project
+      await db.delete(documents).where(eq(documents.projectId, id));
+      
+      // Delete all commodities for this project
+      await db.delete(commodities).where(eq(commodities.projectId, id));
+      
+      // Delete all stakeholder tasks for this project
+      await db.delete(stakeholderTasks).where(eq(stakeholderTasks.projectId, id));
+      
+      // Delete all project stakeholders
+      await db.delete(projectStakeholders).where(eq(projectStakeholders.projectId, id));
+      
+      // Delete all activity logs for this project
+      await db.delete(activityLogs).where(eq(activityLogs.projectId, id));
+      
+      // Finally, delete the project itself
+      const result = await db.delete(projects).where(eq(projects.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      return false;
+    }
   }
   
   // Document methods
