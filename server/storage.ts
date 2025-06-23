@@ -43,6 +43,15 @@ export interface IStorage {
   // Project stakeholder methods
   getProjectStakeholders(projectId: number): Promise<ProjectStakeholder[]>;
   createProjectStakeholder(stakeholder: InsertProjectStakeholder): Promise<ProjectStakeholder>;
+  updateProjectStakeholder(id: number, data: Partial<ProjectStakeholder>): Promise<ProjectStakeholder | undefined>;
+  deleteProjectStakeholder(id: number): Promise<boolean>;
+  
+  // Stakeholder task methods
+  getStakeholderTasks(stakeholderId: number): Promise<StakeholderTask[]>;
+  getProjectStakeholderTasks(projectId: number): Promise<StakeholderTask[]>;
+  createStakeholderTask(task: InsertStakeholderTask): Promise<StakeholderTask>;
+  updateStakeholderTask(id: number, data: Partial<StakeholderTask>): Promise<StakeholderTask | undefined>;
+  deleteStakeholderTask(id: number): Promise<boolean>;
   
   // Activity log methods
   getActivityLogsByProject(projectId: number): Promise<ActivityLog[]>;

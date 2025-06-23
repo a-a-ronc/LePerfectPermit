@@ -100,15 +100,36 @@ export const projectStakeholders = pgTable("project_stakeholders", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull(),
   userId: integer("user_id").notNull(),
-  role: text("role").notNull(), // project_manager, facility_manager, engineer, etc.
-  assignedCategories: json("assigned_categories"), // Array of document categories
+  roles: text("roles").array().notNull().default([]), // Multiple roles support
+  assignedCategories: text("assigned_categories").array().notNull().default([]), // Document categories assigned
   addedById: integer("added_by_id").notNull(),
   addedAt: timestamp("added_at").defaultNow(),
+});
+
+// New table for stakeholder notifications and task descriptions
+export const stakeholderTasks = pgTable("stakeholder_tasks", {
+  id: serial("id").primaryKey(),
+  stakeholderId: integer("stakeholder_id").notNull().references(() => projectStakeholders.id, { onDelete: "cascade" }),
+  documentCategory: text("document_category").notNull(),
+  taskType: text("task_type").notNull(), // 'provide_document', 'review_document', 'approve_document'
+  description: text("description").notNull(),
+  status: text("status").notNull().default('pending'), // 'pending', 'in_progress', 'completed'
+  dueDate: timestamp("due_date"),
+  notificationSent: boolean("notification_sent").default(false),
+  createdById: integer("created_by_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 export const insertProjectStakeholderSchema = createInsertSchema(projectStakeholders).omit({
   id: true,
   addedAt: true
+});
+
+export const insertStakeholderTaskSchema = createInsertSchema(stakeholderTasks).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true
 });
 
 // Activity Log
@@ -141,6 +162,9 @@ export type InsertCommodity = z.infer<typeof insertCommoditiesSchema>;
 
 export type ProjectStakeholder = typeof projectStakeholders.$inferSelect;
 export type InsertProjectStakeholder = z.infer<typeof insertProjectStakeholderSchema>;
+
+export type StakeholderTask = typeof stakeholderTasks.$inferSelect;
+export type InsertStakeholderTask = z.infer<typeof insertStakeholderTaskSchema>;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
@@ -188,3 +212,28 @@ export const UserRole = {
 } as const;
 
 export type UserRoleType = typeof UserRole[keyof typeof UserRole];
+
+// Stakeholder roles enum
+export const StakeholderRole = {
+  PROJECT_MANAGER: 'project_manager',
+  FACILITY_MANAGER: 'facility_manager',
+  ENGINEER: 'engineer',
+  ARCHITECT: 'architect',
+  FIRE_SAFETY_CONSULTANT: 'fire_safety_consultant',
+  BUILDING_OWNER: 'building_owner',
+  CONTRACTOR: 'contractor',
+  REVIEWER: 'reviewer',
+  APPROVER: 'approver',
+} as const;
+
+export type StakeholderRoleType = typeof StakeholderRole[keyof typeof StakeholderRole];
+
+// Task types enum
+export const TaskType = {
+  PROVIDE_DOCUMENT: 'provide_document',
+  REVIEW_DOCUMENT: 'review_document',
+  APPROVE_DOCUMENT: 'approve_document',
+  COLLABORATE: 'collaborate',
+} as const;
+
+export type TaskTypeType = typeof TaskType[keyof typeof TaskType];
