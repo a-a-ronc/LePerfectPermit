@@ -105,14 +105,22 @@ export async function createSubmissionZipNative(
           font-size: 14px;
           line-height: 1.4;
         `;
-        notification.innerHTML = `
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="margin-right: 8px;">📦</span>
-            <strong>Export Complete</strong>
-          </div>
-          <div style="margin-bottom: 4px;">${zipFileName}</div>
-          <small style="opacity: 0.9;">${documents.length + 1} files packaged</small>
-        `;
+        // Create notification content safely
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'display: flex; align-items: center; margin-bottom: 4px;';
+        titleDiv.innerHTML = '<span style="margin-right: 8px;">📦</span><strong>Export Complete</strong>';
+        
+        const fileNameDiv = document.createElement('div');
+        fileNameDiv.style.cssText = 'margin-bottom: 4px;';
+        fileNameDiv.textContent = zipFileName; // Safe text content
+        
+        const countDiv = document.createElement('small');
+        countDiv.style.cssText = 'opacity: 0.9;';
+        countDiv.textContent = `${documents.length + 1} files packaged`;
+        
+        notification.appendChild(titleDiv);
+        notification.appendChild(fileNameDiv);
+        notification.appendChild(countDiv);
         
         document.body.appendChild(notification);
         setTimeout(() => {
@@ -336,14 +344,22 @@ export async function createSubmissionZipNative(
       font-size: 14px;
       line-height: 1.4;
     `;
-    notification.innerHTML = `
-      <div style="display: flex; align-items: center; margin-bottom: 4px;">
-        <span style="margin-right: 8px;">📦</span>
-        <strong>Export Complete</strong>
-      </div>
-      <div style="margin-bottom: 4px;">${zipFileName}</div>
-      <small style="opacity: 0.9;">Saved to Downloads folder</small>
-    `;
+    // Create notification content safely
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'display: flex; align-items: center; margin-bottom: 4px;';
+    titleDiv.innerHTML = '<span style="margin-right: 8px;">📦</span><strong>Export Complete</strong>';
+    
+    const fileNameDiv = document.createElement('div');
+    fileNameDiv.style.cssText = 'margin-bottom: 4px;';
+    fileNameDiv.textContent = zipFileName; // Safe text content
+    
+    const statusDiv = document.createElement('small');
+    statusDiv.style.cssText = 'opacity: 0.9;';
+    statusDiv.textContent = 'Saved to Downloads folder';
+    
+    notification.appendChild(titleDiv);
+    notification.appendChild(fileNameDiv);
+    notification.appendChild(statusDiv);
     
     document.body.appendChild(notification);
     setTimeout(() => {
