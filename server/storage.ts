@@ -123,6 +123,49 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user || undefined;
   }
+
+  async updateUserPassword(id: number, password: string): Promise<User | undefined> {
+    const [result] = await db.update(users)
+      .set({ password })
+      .where(eq(users.id, id))
+      .returning();
+    return result;
+  }
+
+  async setPasswordResetToken(email: string, token: string, expires: Date): Promise<User | undefined> {
+    const [result] = await db.update(users)
+      .set({ 
+        passwordResetToken: token,
+        passwordResetExpires: expires
+      })
+      .where(eq(users.email, email))
+      .returning();
+    return result;
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.passwordResetToken, token),
+          sql`${users.passwordResetExpires} > NOW()`
+        )
+      );
+    return user;
+  }
+
+  async clearPasswordResetToken(id: number): Promise<User | undefined> {
+    const [result] = await db.update(users)
+      .set({ 
+        passwordResetToken: null,
+        passwordResetExpires: null
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return result;
+  }
   
   // Project methods
   async getProjects(): Promise<Project[]> {

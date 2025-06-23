@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 
 // Pages
 import AuthPage from "@/pages/auth-page";
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 import DashboardPage from "@/pages/dashboard-page";
 import ProjectPage from "@/pages/project-page";
 import ProjectDetailsPage from "@/pages/project-details-page";
@@ -91,6 +93,12 @@ function App() {
             </Route>
             <Route path="/auth">
               <AuthPage onLoginSuccess={handleLogin} />
+            </Route>
+            <Route path="/forgot-password">
+              <ForgotPasswordPage />
+            </Route>
+            <Route path="/reset-password">
+              <ResetPasswordPage />
             </Route>
             
             {/* Use ProtectedRoute for authenticated routes */}
