@@ -140,6 +140,8 @@ export default function ProjectPage() {
         deadline: data.deadline ? new Date(data.deadline) : null,
       };
       
+      console.log("Submitting project data:", formattedData);
+      
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
@@ -148,6 +150,9 @@ export default function ProjectPage() {
         credentials: 'include',
         body: JSON.stringify(formattedData),
       });
+      
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorData = await response.json();
