@@ -355,26 +355,17 @@ export default function ProjectPage() {
             
             {user?.role === "specialist" && (
               <div>
-                <div
+                <button
+                  type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log("TEST: IMMEDIATE click intercepted");
                     setIsCreateDialogOpen(true);
                   }}
-                  style={{
-                    display: 'inline-block',
-                    padding: '8px 16px',
-                    backgroundColor: '#dc2626',
-                    color: 'white',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-2 md:mt-0"
                 >
-                  🚨 EMERGENCY TEST BUTTON 🚨
-                </div>
+                  <Plus className="mr-2 h-4 w-4" /> New Project
+                </button>
               </div>
             )}
           </div>
@@ -387,9 +378,10 @@ export default function ProjectPage() {
                 setIsCreateDialogOpen(open);
               }}
             >
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[500px]" aria-describedby="dialog-description">
                   <DialogHeader>
                     <DialogTitle>Create New Project</DialogTitle>
+                    <p id="dialog-description" className="text-sm text-gray-600">Fill in the project details below to create a new high-piled storage permit project.</p>
                   </DialogHeader>
                   
                   <Form {...form}>
