@@ -356,11 +356,10 @@ export default function ProjectPage() {
             {user?.role === "specialist" && (
               <>
                 <Button 
+                  type="button"
                   className="mt-2 md:mt-0"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log("New Project button clicked");
+                  onClick={() => {
+                    console.log("New Project button clicked - opening dialog");
                     setIsCreateDialogOpen(true);
                   }}
                 >
