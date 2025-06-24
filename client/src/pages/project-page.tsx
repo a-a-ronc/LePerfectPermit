@@ -527,7 +527,6 @@ export default function ProjectPage() {
                 </DialogContent>
             </Dialog>
           )}
-          </div>
           
           {/* Projects Table */}
           <Card>
