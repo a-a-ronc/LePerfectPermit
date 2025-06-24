@@ -38,7 +38,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/projects", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("POST /api/projects called, isAuthenticated:", req.isAuthenticated());
+    console.log("Session ID:", req.sessionID);
+    console.log("User in session:", req.user);
+    
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated for project creation");
+      return res.sendStatus(401);
+    }
     
     try {
       console.log("Project creation request body:", req.body);
