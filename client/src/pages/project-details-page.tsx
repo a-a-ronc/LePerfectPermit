@@ -9,6 +9,7 @@ import { DocumentList } from "@/components/projects/document-list";
 import { DocumentUploadDialog } from "@/components/projects/document-upload-dialog";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import { AddStakeholderDialog } from "@/components/stakeholders/add-stakeholder-dialog";
+import { TeamManagementPanel } from "@/components/stakeholders/team-management-panel";
 import { Button } from "@/components/ui/button";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -466,6 +467,10 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
                       />
                     </CardContent>
                   </Card>
+                </TabsContent>
+                
+                <TabsContent value="team" className="mt-6">
+                  <TeamManagementPanel projectId={projectId} />
                 </TabsContent>
                 
                 <TabsContent value="commodities" className="mt-6">
