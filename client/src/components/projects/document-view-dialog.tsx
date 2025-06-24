@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentViewDialogProps {
   isOpen: boolean;

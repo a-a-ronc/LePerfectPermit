@@ -139,6 +139,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 23, 2025: Fixed project deletion SQL syntax errors by switching from raw SQL queries to Drizzle ORM for proper Neon database compatibility
 - June 24, 2025: Fixed XSS vulnerability in zip-creator-native.ts by replacing unsafe innerHTML with safe DOM manipulation using textContent
 - June 24, 2025: Fixed "New Project" button 404 error - identified shadcn Button component issue, replaced with native HTML button element that successfully opens project creation dialog
+- June 24, 2025: Fixed missing useToast import in document-view-dialog component to resolve console errors during document viewing
 
 ## Changelog
 
