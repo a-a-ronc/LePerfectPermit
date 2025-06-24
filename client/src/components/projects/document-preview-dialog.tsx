@@ -450,48 +450,53 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                 )}
               </div>
               
-              <div className="p-3 bg-muted/20 border-t flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={onClose}
-                >
-                  Close
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={handleKeepInReview}
-                  disabled={reviewMutation.isPending}
-                  className="bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
-                >
-                  <Clock className="h-4 w-4 mr-1" />
-                  Keep in Review
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReject}
-                  disabled={reviewMutation.isPending}
-                  className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                >
-                  <ThumbsDown className="h-4 w-4 mr-1" />
-                  Reject
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={handleApprove}
-                  disabled={!checklistComplete || reviewMutation.isPending}
-                  className={`${
-                    checklistComplete 
-                      ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100" 
-                      : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                  }`}
-                >
-                  <ThumbsUp className="h-4 w-4 mr-1" />
-                  Approve
-                </Button>
+              <div className="p-4 bg-muted/20 border-t">
+                <div className="flex flex-col sm:flex-row justify-between gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onClose}
+                    className="sm:w-auto w-full"
+                  >
+                    Close
+                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleKeepInReview}
+                      disabled={reviewMutation.isPending}
+                      className="bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 sm:w-auto w-full"
+                    >
+                      <Clock className="h-4 w-4 mr-1" />
+                      Keep in Review
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReject}
+                      disabled={reviewMutation.isPending}
+                      className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 sm:w-auto w-full"
+                    >
+                      <ThumbsDown className="h-4 w-4 mr-1" />
+                      Reject
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleApprove}
+                      disabled={!checklistComplete || reviewMutation.isPending}
+                      className={`sm:w-auto w-full ${
+                        checklistComplete 
+                          ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100" 
+                          : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <ThumbsUp className="h-4 w-4 mr-1" />
+                      Approve
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
