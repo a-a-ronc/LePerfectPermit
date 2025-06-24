@@ -354,7 +354,7 @@ export default function ProjectPage() {
             </div>
             
             {user?.role === "specialist" && (
-              <>
+              <div>
                 <Button 
                   type="button"
                   className="mt-2 md:mt-0"
@@ -365,25 +365,30 @@ export default function ProjectPage() {
                     console.log("Current isCreateDialogOpen state:", isCreateDialogOpen);
                     setIsCreateDialogOpen(true);
                     console.log("Set isCreateDialogOpen to true");
+                    return false;
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" /> New Project
                 </Button>
-                
-                <Dialog 
-                  open={isCreateDialogOpen} 
-                  onOpenChange={(open) => {
-                    console.log("Dialog onOpenChange called with:", open);
-                    setIsCreateDialogOpen(open);
-                  }}
-                >
-                  <DialogContent className="sm:max-w-[500px]">
+              </div>
+            )}
+          </div>
+          
+          {user?.role === "specialist" && (
+            <Dialog 
+              open={isCreateDialogOpen} 
+              onOpenChange={(open) => {
+                console.log("Dialog onOpenChange called with:", open);
+                setIsCreateDialogOpen(open);
+              }}
+            >
+              <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Create New Project</DialogTitle>
                   </DialogHeader>
                   
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" onReset={(e) => e.preventDefault()}>
                       <FormField
                         control={form.control}
                         name="name"
@@ -520,9 +525,8 @@ export default function ProjectPage() {
                     </form>
                   </Form>
                 </DialogContent>
-                </Dialog>
-              </>
-            )}
+            </Dialog>
+          )}
           </div>
           
           {/* Projects Table */}
