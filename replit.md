@@ -141,6 +141,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 24, 2025: Fixed "New Project" button 404 error - identified shadcn Button component issue, replaced with native HTML button element that successfully opens project creation dialog
 - June 24, 2025: Fixed missing useToast import in document-view-dialog component to resolve console errors during document viewing
 - June 24, 2025: Fixed review dialog button container layout - expanded container and made buttons responsive to prevent overflow and ensure all three action buttons (Keep in Review, Reject, Approve) are properly visible
+- June 24, 2025: Increased review dialog width from max-w-5xl to max-w-6xl and simplified button layout to ensure all three action buttons display fully without truncation
 
 ## Changelog
 
