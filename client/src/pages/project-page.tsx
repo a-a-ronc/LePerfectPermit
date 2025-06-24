@@ -354,13 +354,21 @@ export default function ProjectPage() {
             </div>
             
             {user?.role === "specialist" && (
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="mt-2 md:mt-0">
-                    <Plus className="mr-2 h-4 w-4" /> New Project
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
+              <>
+                <Button 
+                  className="mt-2 md:mt-0"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("New Project button clicked");
+                    setIsCreateDialogOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> New Project
+                </Button>
+                
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Create New Project</DialogTitle>
                   </DialogHeader>
@@ -503,7 +511,8 @@ export default function ProjectPage() {
                     </form>
                   </Form>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </>
             )}
           </div>
           

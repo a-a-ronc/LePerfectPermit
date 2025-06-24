@@ -137,6 +137,8 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 23, 2025: Added forgot password functionality with email-based password reset flow using SendGrid integration
 - June 23, 2025: Implemented project deletion functionality with proper permission controls - specialists and project creators can delete projects with cascade delete for all related data
 - June 23, 2025: Fixed project deletion SQL syntax errors by switching from raw SQL queries to Drizzle ORM for proper Neon database compatibility
+- June 24, 2025: Fixed XSS vulnerability in zip-creator-native.ts by replacing unsafe innerHTML with safe DOM manipulation using textContent
+- June 24, 2025: Debugging "New Project" button 404 error - added explicit click handlers and session debugging to identify root cause
 
 ## Changelog
 
