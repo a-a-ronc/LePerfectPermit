@@ -451,19 +451,33 @@ export class DatabaseStorage implements IStorage {
   
   // Project stakeholder methods
   async getProjectStakeholders(projectId: number): Promise<ProjectStakeholder[]> {
-    return await db
+    const stakeholders = await db
       .select()
       .from(projectStakeholders)
       .where(eq(projectStakeholders.projectId, projectId));
+    
+    // Parse JSON strings back to arrays for client consumption
+    return stakeholders.map(stakeholder => ({
+      ...stakeholder,
+      assignedCategories: typeof stakeholder.assignedCategories === 'string' 
+        ? JSON.parse(stakeholder.assignedCategories) 
+        : stakeholder.assignedCategories || []
+    }));
   }
   
   async createProjectStakeholder(insertStakeholder: InsertProjectStakeholder): Promise<ProjectStakeholder> {
+    // Ensure assignedCategories is properly formatted as JSON
+    const formattedStakeholder = {
+      ...insertStakeholder,
+      assignedCategories: typeof insertStakeholder.assignedCategories === 'string' 
+        ? insertStakeholder.assignedCategories 
+        : JSON.stringify(insertStakeholder.assignedCategories || []),
+      addedAt: new Date()
+    };
+
     const [stakeholder] = await db
       .insert(projectStakeholders)
-      .values({
-        ...insertStakeholder,
-        addedAt: new Date()
-      })
+      .values(formattedStakeholder)
       .returning();
     
     // Get user information for the activity log

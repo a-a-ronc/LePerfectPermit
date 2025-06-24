@@ -103,7 +103,7 @@ export const projectStakeholders = pgTable("project_stakeholders", {
   projectId: integer("project_id").notNull(),
   userId: integer("user_id").notNull(),
   roles: text("roles").array().notNull().default([]), // Multiple roles support
-  assignedCategories: text("assigned_categories").array().notNull().default([]), // Document categories assigned
+  assignedCategories: json("assigned_categories").notNull().default([]), // Document categories assigned
   addedById: integer("added_by_id").notNull(),
   addedAt: timestamp("added_at").defaultNow(),
 });

@@ -102,7 +102,8 @@ export function AddStakeholderDialog({
       const formattedValues = {
         ...values,
         userId: parseInt(values.userId),
-        assignedCategories: values.assignedCategories || [],
+        roles: [values.role], // Convert single role to array
+        assignedCategories: JSON.stringify(values.assignedCategories || []), // Convert to JSON string
         projectId,
       };
       
@@ -178,40 +179,73 @@ export function AddStakeholderDialog({
                 name="userId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stakeholder</FormLabel>
-                    {availableUsers.length === 0 ? (
-                      <div className="text-sm text-gray-500 p-2 border rounded-md">
-                        All stakeholders are already assigned to this project.
+                    <FormLabel>Select Stakeholder</FormLabel>
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search stakeholders..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-9"
+                        />
                       </div>
-                    ) : (
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) => {
+                      <Select 
+                        onValueChange={(value) => {
+                          if (value === "create_new") {
+                            handleCreateNewStakeholder();
+                          } else {
                             field.onChange(value);
                             setSelectedUser(value);
-                          }}
-                        >
+                          }
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a stakeholder" />
+                            <SelectValue placeholder="Choose a stakeholder" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {availableUsers.map((user) => (
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="create_new" className="font-medium text-primary">
+                            <div className="flex items-center gap-2">
+                              <Plus className="h-4 w-4" />
+                              Create New Stakeholder
+                            </div>
+                          </SelectItem>
+                          {isLoadingUsers ? (
+                            <div className="p-2">
+                              <Skeleton className="h-4 w-full mb-2" />
+                              <Skeleton className="h-4 w-full" />
+                            </div>
+                          ) : availableUsers.length === 0 && searchTerm === "" ? (
+                            <div className="p-2 text-sm text-gray-500">
+                              No available stakeholders. Create stakeholder accounts first.
+                            </div>
+                          ) : availableUsers.length === 0 && searchTerm !== "" ? (
+                            <div className="p-2 text-sm text-gray-500">
+                              No stakeholders found matching "{searchTerm}"
+                            </div>
+                          ) : (
+                            availableUsers.map((user: any) => (
                               <SelectItem key={user.id} value={user.id.toString()}>
-                                <div className="flex items-center">
-                                  <Avatar className="h-6 w-6 mr-2">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
                                     <AvatarFallback className="text-xs">
-                                      {user.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                      {user.fullName.split(' ').map((n: string) => n[0]).join('')}
                                     </AvatarFallback>
                                   </Avatar>
-                                  {user.fullName}
+                                  <div>
+                                    <div className="text-sm font-medium">{user.fullName}</div>
+                                    <div className="text-xs text-gray-500">{user.email}</div>
+                                  </div>
                                 </div>
                               </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                    )}
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

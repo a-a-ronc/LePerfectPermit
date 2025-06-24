@@ -431,6 +431,7 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
               <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
                 <TabsList>
                   <TabsTrigger value="documents">Documents</TabsTrigger>
+                  <TabsTrigger value="team">Team</TabsTrigger>
                   <TabsTrigger value="commodities">Commodities Form</TabsTrigger>
                   <TabsTrigger value="activity">Activity Timeline</TabsTrigger>
                 </TabsList>
