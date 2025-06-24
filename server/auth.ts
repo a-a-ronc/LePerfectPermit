@@ -37,8 +37,9 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: false, // Disable secure cookies for Replit environment
-      httpOnly: true,
-      sameSite: 'lax'
+      httpOnly: false, // Allow JavaScript access for debugging
+      sameSite: 'lax',
+      path: '/' // Ensure cookie is available for all paths
     }
   };
 

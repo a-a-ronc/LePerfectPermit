@@ -358,15 +358,25 @@ export default function ProjectPage() {
                 <Button 
                   type="button"
                   className="mt-2 md:mt-0"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     console.log("New Project button clicked - opening dialog");
+                    console.log("Current isCreateDialogOpen state:", isCreateDialogOpen);
                     setIsCreateDialogOpen(true);
+                    console.log("Set isCreateDialogOpen to true");
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" /> New Project
                 </Button>
                 
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <Dialog 
+                  open={isCreateDialogOpen} 
+                  onOpenChange={(open) => {
+                    console.log("Dialog onOpenChange called with:", open);
+                    setIsCreateDialogOpen(open);
+                  }}
+                >
                   <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Create New Project</DialogTitle>
