@@ -31,16 +31,18 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "intralog-painlesspermit-secret-key-for-session-management",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Force session save on each request
+    saveUninitialized: true, // Save uninitialized sessions
     store: storage.sessionStore,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: false, // Disable secure cookies for Replit environment
       httpOnly: false, // Allow JavaScript access for debugging
       sameSite: 'lax',
-      path: '/' // Ensure cookie is available for all paths
-    }
+      path: '/', // Ensure cookie is available for all paths
+      domain: undefined // Let browser handle domain
+    },
+    name: 'connect.sid' // Explicit session cookie name
   };
 
   app.set("trust proxy", 1);
