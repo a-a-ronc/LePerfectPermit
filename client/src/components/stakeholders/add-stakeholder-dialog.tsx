@@ -32,7 +32,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { DocumentCategory } from "@shared/schema";
+import { CreateStakeholderDialog } from "./create-stakeholder-dialog";
+import { Search, Plus } from "lucide-react";
 
 // Define form schema
 const formSchema = z.object({
@@ -54,6 +57,8 @@ export function AddStakeholderDialog({
 }: AddStakeholderDialogProps) {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
   // Load users
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
@@ -73,8 +78,14 @@ export function AddStakeholderDialog({
   // Get IDs of users already assigned to this project
   const existingUserIds = existingStakeholders.map((s: any) => s.userId.toString());
   
-  // Filter out users already assigned to project
-  const availableUsers = stakeholderUsers.filter(user => !existingUserIds.includes(user.id.toString()));
+  // Filter out users already assigned to project and apply search filter
+  const availableUsers = stakeholderUsers
+    .filter(user => !existingUserIds.includes(user.id.toString()))
+    .filter(user => 
+      searchTerm === "" || 
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -119,6 +130,18 @@ export function AddStakeholderDialog({
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     addStakeholderMutation.mutate(values);
   };
+
+  const handleCreateNewStakeholder = () => {
+    setShowCreateDialog(true);
+  };
+
+  const handleStakeholderCreated = (newUser: any) => {
+    // Refresh users list and pre-select the new user
+    queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    setSelectedUser(newUser.id.toString());
+    form.setValue("userId", newUser.id.toString());
+    setShowCreateDialog(false);
+  };
   
   const documentCategories = [
     { id: DocumentCategory.SITE_PLAN, label: "Site Plan" },
@@ -131,11 +154,12 @@ export function AddStakeholderDialog({
   ];
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Stakeholder</DialogTitle>
-          <DialogDescription>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Stakeholder</DialogTitle>
+            <DialogDescription>
             Add a stakeholder to this project and assign document categories they should provide.
           </DialogDescription>
         </DialogHeader>
@@ -291,7 +315,14 @@ export function AddStakeholderDialog({
             </form>
           </Form>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <CreateStakeholderDialog
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onStakeholderCreated={handleStakeholderCreated}
+      />
+    </>
   );
 }
