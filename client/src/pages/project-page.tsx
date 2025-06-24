@@ -355,21 +355,26 @@ export default function ProjectPage() {
             
             {user?.role === "specialist" && (
               <div>
-                <Button 
-                  type="button"
-                  className="mt-2 md:mt-0"
+                <div
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log("New Project button clicked - opening dialog");
-                    console.log("Current isCreateDialogOpen state:", isCreateDialogOpen);
+                    console.log("TEST: IMMEDIATE click intercepted");
                     setIsCreateDialogOpen(true);
-                    console.log("Set isCreateDialogOpen to true");
-                    return false;
+                  }}
+                  style={{
+                    display: 'inline-block',
+                    padding: '8px 16px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
                   }}
                 >
-                  <Plus className="mr-2 h-4 w-4" /> New Project
-                </Button>
+                  🚨 EMERGENCY TEST BUTTON 🚨
+                </div>
               </div>
             )}
           </div>

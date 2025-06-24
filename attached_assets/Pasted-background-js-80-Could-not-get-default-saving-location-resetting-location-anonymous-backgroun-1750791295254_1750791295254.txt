@@ -1,0 +1,86 @@
+background.js:80  Could not get default saving location, resetting location.
+(anonymous) @ background.js:80
+2background.js:80  The item cache has not been initialized yet.
+(anonymous) @ background.js:80
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <919551957>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <1831789354>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <1664791471>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <2627579871>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <4076447908>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <1332499108>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+workspace_iframe.html:32  Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32  Unrecognized feature: 'battery'.
+workspace_iframe.html:32  Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32  Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32  Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32  Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32  Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32  Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32  Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32  Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32  Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32  Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32  Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32  Allow attribute will take precedence over 'allowpaymentrequest'.
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <1766752197>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <1161596137>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+injected.js:5  Caught error handling <hide-notification> message
+(anonymous) @ injected.js:5
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <1598961590>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <4057825392>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+2background.js:80  The item cache has not been initialized yet.
+(anonymous) @ background.js:80
+2background.js:80  URL for frame 372 tab 1744128891
+(anonymous) @ background.js:80
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <240539091>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <3016711986>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80  URL for frame 372 tab 1744128891
+(anonymous) @ background.js:80
+2background.js:80  The item cache has not been initialized yet.
+(anonymous) @ background.js:80
+3background.js:80  URL for frame 372 tab 1744128891
+(anonymous) @ background.js:80
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <867088684>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <4148634243>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80  Could not get default saving location, resetting location.
+(anonymous) @ background.js:80
+2background.js:80  The item cache has not been initialized yet.
+(anonymous) @ background.js:80
+background.js:80 💫 Looking for desktop app com.1password.1password
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <3834766190>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:80 💫 Looking for desktop app com.1password.1password7
+background.js:80 📤 Sending <NmRequestAccounts> message to native core <3309515296>
+background.js:80 Desktop app port disconnected. Error: Specified native messaging host not found.
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more

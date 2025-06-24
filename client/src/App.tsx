@@ -108,6 +108,9 @@ function App() {
             <Route path="/projects">
               <ProtectedRoute component={() => <ProjectPage />} />
             </Route>
+            <Route path="/projects/new">
+              <ProtectedRoute component={() => <ProjectPage />} />
+            </Route>
             <Route path="/project/:id">
               <ProtectedRoute component={() => <ProjectDetailsPage />} />
             </Route>
