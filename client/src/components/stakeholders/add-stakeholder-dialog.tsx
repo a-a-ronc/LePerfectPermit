@@ -86,6 +86,9 @@ export function AddStakeholderDialog({
       user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+  // Find the selected user's details
+  const selectedUserDetails = selectedUser ? availableUsers.find(user => user.id.toString() === selectedUser) : null;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -103,7 +106,7 @@ export function AddStakeholderDialog({
         ...values,
         userId: parseInt(values.userId),
         roles: [values.role], // Convert single role to array
-        assignedCategories: JSON.stringify(values.assignedCategories || []), // Convert to JSON string
+        assignedCategories: values.assignedCategories || [], // Keep as array, backend will handle JSON conversion
         projectId,
       };
       
@@ -112,11 +115,15 @@ export function AddStakeholderDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/stakeholders`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] });
       form.reset();
+      setSelectedUser(null);
+      setSearchTerm("");
       onClose();
+      
       toast({
         title: "Stakeholder Added",
-        description: "The stakeholder has been added to the project successfully.",
+        description: "The stakeholder has been successfully added to the project.",
       });
     },
     onError: () => {
@@ -137,10 +144,17 @@ export function AddStakeholderDialog({
   };
 
   const handleStakeholderCreated = (newUser: any) => {
-    // Refresh users list and pre-select the new user
+    // Force refresh users list and pre-select the new user
     queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-    setSelectedUser(newUser.id.toString());
-    form.setValue("userId", newUser.id.toString());
+    queryClient.refetchQueries({ queryKey: ["/api/users"] });
+    
+    // Wait for the query to refresh, then set the selected user
+    setTimeout(() => {
+      setSelectedUser(newUser.id.toString());
+      form.setValue("userId", newUser.id.toString());
+      setSearchTerm(""); // Clear search to show all users
+    }, 500); // Increased timeout to ensure refresh completes
+    
     setShowCreateDialog(false);
   };
   
@@ -250,6 +264,33 @@ export function AddStakeholderDialog({
                   </FormItem>
                 )}
               />
+
+              {/* Display selected stakeholder details */}
+              {selectedUserDetails && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm">Selected Stakeholder Details</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Name:</span>
+                      <div className="font-medium">{selectedUserDetails.fullName}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <div className="font-medium">{selectedUserDetails.email}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Current Role:</span>
+                      <div className="font-medium capitalize">{selectedUserDetails.role?.replace('_', ' ') || 'Stakeholder'}</div>
+                    </div>
+                    {selectedUserDetails.defaultContactPhone && (
+                      <div>
+                        <span className="text-muted-foreground">Phone:</span>
+                        <div className="font-medium">{selectedUserDetails.defaultContactPhone}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <FormField
                 control={form.control}

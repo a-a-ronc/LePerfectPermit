@@ -73,7 +73,7 @@ export function CreateStakeholderDialog({
         password: 'TempPass123!', // Temporary password - they should reset it
         fullName: `${values.firstName} ${values.lastName}`,
         email: values.email,
-        role: 'stakeholder',
+        role: values.role, // Use the selected role instead of hardcoded 'stakeholder'
         defaultContactEmail: values.email,
         defaultContactPhone: values.phoneNumber,
       };
@@ -82,7 +82,10 @@ export function CreateStakeholderDialog({
       return await res.json();
     },
     onSuccess: (user) => {
+      // Force a fresh fetch of users
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
+      
       form.reset();
       onStakeholderCreated(user);
       onClose();
