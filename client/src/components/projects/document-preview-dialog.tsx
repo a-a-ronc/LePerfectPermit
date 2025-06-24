@@ -246,7 +246,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+        <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -451,7 +451,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
               </div>
               
               <div className="p-4 bg-muted/20 border-t">
-                <div className="flex justify-between items-center gap-4 min-w-0">
+                <div className="flex justify-between items-center gap-6 w-full">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -459,7 +459,7 @@ export function DocumentPreviewDialog({ isOpen, onClose, document, projectId }: 
                   >
                     Close
                   </Button>
-                  <div className="flex gap-3 flex-shrink-0">
+                  <div className="flex gap-3 flex-wrap min-w-0">
                     <Button 
                       variant="outline"
                       size="sm"
