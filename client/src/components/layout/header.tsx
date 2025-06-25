@@ -2,8 +2,14 @@ import React from "react";
 import { Link } from "wouter";
 import { 
   BellIcon, 
-  SearchIcon 
+  SearchIcon,
+  ChevronRight,
+  User,
+  LogOut
 } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useAuth } from "@/hooks/use-auth";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +31,8 @@ interface HeaderProps {
 }
 
 export function Header({ breadcrumb = [] }: HeaderProps) {
+  const { user, logoutMutation } = useAuth();
+  
   return (
     <div className="bg-white p-4 shadow-sm flex items-center justify-between">
       <nav className="flex" aria-label="Breadcrumb">
