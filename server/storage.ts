@@ -571,7 +571,34 @@ export class DatabaseStorage implements IStorage {
     
     return log;
   }
+  
+  // Notification methods
+  async getNotificationsByUser(userId: number): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+  
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const [notification] = await db
+      .insert(notifications)
+      .values(insertNotification)
+      .returning();
+    
+    return notification;
+  }
+  
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    const [notification] = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    
+    return notification;
+  }
 }
 
-// Updated to use database storage instead of memory storage
 export const storage = new DatabaseStorage();

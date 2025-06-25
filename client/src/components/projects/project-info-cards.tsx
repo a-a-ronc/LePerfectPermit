@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +9,7 @@ import { DocumentCategory } from "@shared/schema";
 import { 
   calculateProjectDocumentProgress 
 } from "@/lib/utils/document-utils";
+import { AssignTaskDialog } from "@/components/stakeholders/assign-task-dialog";
 
 interface ProjectInfoCardsProps {
   project: any;
@@ -34,13 +35,6 @@ export function ProjectInfoCards({
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
-      <>
-        <AssignTaskDialog
-          isOpen={isAssignTaskOpen}
-          onClose={() => setIsAssignTaskOpen(false)}
-          projectId={project.id}
-          projectName={project.name}
-        />
       </>
     );
   }
@@ -194,17 +188,35 @@ export function ProjectInfoCards({
               )}
             </div>
             
-            <Button 
-              onClick={onAddStakeholder}
-              variant="outline" 
-              className="w-full mt-4 flex justify-center items-center"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Stakeholder
-            </Button>
+            <div className="flex gap-2 mt-4">
+              <Button 
+                onClick={onAddStakeholder}
+                variant="outline" 
+                className="flex-1 flex justify-center items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Stakeholder
+              </Button>
+              <Button 
+                onClick={() => setIsAssignTaskOpen(true)}
+                variant="outline" 
+                className="flex-1 flex justify-center items-center"
+                disabled={stakeholders.length === 0}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Assign Task
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      <AssignTaskDialog
+        isOpen={isAssignTaskOpen}
+        onClose={() => setIsAssignTaskOpen(false)}
+        projectId={project.id}
+        projectName={project.name}
+      />
     </>
   );
 }
