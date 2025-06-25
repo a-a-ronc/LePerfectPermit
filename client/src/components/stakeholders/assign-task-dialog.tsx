@@ -33,7 +33,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, User, Mail, Phone, Building } from "lucide-react";
+import { Search, User, Mail, Phone, Building, ChevronDown, Plus } from "lucide-react";
+import { CreateStakeholderDialog } from "./create-stakeholder-dialog";
+import { AddStakeholderDialog } from "./add-stakeholder-dialog";
 
 const assignTaskSchema = z.object({
   stakeholderId: z.string().min(1, "Stakeholder is required"),
@@ -57,6 +59,9 @@ export function AssignTaskDialog({
 }: AssignTaskDialogProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Load project stakeholders
   const { data: stakeholders = [], isLoading: isLoadingStakeholders } = useQuery({
@@ -125,14 +130,17 @@ export function AssignTaskDialog({
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tasks`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] });
       form.reset();
+      setSearchTerm("");
+      setIsDropdownOpen(false);
       onClose();
       
       toast({
         title: "Task Assigned",
-        description: "The task has been assigned and the stakeholder has been notified via email.",
+        description: "The task has been assigned and the stakeholder has been notified.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Task assignment error:", error);
       toast({
         title: "Failed to Assign Task",
         description: "There was an error assigning the task. Please try again.",
@@ -197,39 +205,95 @@ export function AssignTaskDialog({
                           className="pl-9"
                         />
                       </div>
-                      <Select 
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a stakeholder" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {availableStakeholders.length === 0 ? (
-                            <div className="p-2 text-sm text-gray-500">
-                              {searchTerm ? `No stakeholders found matching "${searchTerm}"` : "No stakeholders assigned to this project"}
+                      
+                      {/* Custom dropdown instead of Select */}
+                      <div className="relative">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-between"
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        >
+                          {field.value && availableStakeholders.find(s => s.id.toString() === field.value) ? (
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-5 w-5">
+                                <AvatarFallback className="text-xs">
+                                  {availableStakeholders.find(s => s.id.toString() === field.value)?.user?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{availableStakeholders.find(s => s.id.toString() === field.value)?.user?.fullName || 'Unknown User'}</span>
                             </div>
                           ) : (
-                            availableStakeholders.map((stakeholder: any) => (
-                              <SelectItem key={stakeholder.id} value={stakeholder.id.toString()}>
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6">
-                                    <AvatarFallback className="text-xs">
-                                      {stakeholder.user?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className="text-sm font-medium">{stakeholder.user?.fullName || 'Unknown User'}</div>
-                                    <div className="text-xs text-gray-500">{stakeholder.user?.email}</div>
-                                  </div>
-                                </div>
-                              </SelectItem>
-                            ))
+                            "Choose a stakeholder"
                           )}
-                        </SelectContent>
-                      </Select>
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                        
+                        {isDropdownOpen && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                            {availableStakeholders.length === 0 ? (
+                              <div className="p-3 space-y-2">
+                                <div className="text-sm text-gray-500">
+                                  {searchTerm ? `No stakeholders found matching "${searchTerm}"` : "No stakeholders assigned to this project"}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => {
+                                    setShowCreateDialog(true);
+                                    setIsDropdownOpen(false);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Create New Stakeholder
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                {availableStakeholders.map((stakeholder: any) => (
+                                  <div
+                                    key={stakeholder.id}
+                                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => {
+                                      field.onChange(stakeholder.id.toString());
+                                      setIsDropdownOpen(false);
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarFallback className="text-xs">
+                                          {stakeholder.user?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <div className="text-sm font-medium">{stakeholder.user?.fullName || 'Unknown User'}</div>
+                                        <div className="text-xs text-gray-500">{stakeholder.user?.email}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="border-t p-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => {
+                                      setShowCreateDialog(true);
+                                      setIsDropdownOpen(false);
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Create New Stakeholder
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -365,6 +429,23 @@ export function AssignTaskDialog({
             </form>
           </Form>
         )}
+
+        {/* Create New Stakeholder Dialog */}
+        <CreateStakeholderDialog
+          isOpen={showCreateDialog}
+          onClose={() => setShowCreateDialog(false)}
+          onStakeholderCreated={(user) => {
+            setShowCreateDialog(false);
+            setShowAddDialog(true);
+          }}
+        />
+
+        {/* Add Stakeholder to Project Dialog */}
+        <AddStakeholderDialog
+          isOpen={showAddDialog}
+          onClose={() => setShowAddDialog(false)}
+          projectId={projectId}
+        />
       </DialogContent>
     </Dialog>
   );
