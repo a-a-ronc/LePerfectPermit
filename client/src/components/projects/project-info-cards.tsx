@@ -16,6 +16,7 @@ interface ProjectInfoCardsProps {
   stakeholders: any[];
   isLoading?: boolean;
   onAddStakeholder: () => void;
+  onAssignTask?: () => void;
 }
 
 export function ProjectInfoCards({ 
@@ -23,14 +24,23 @@ export function ProjectInfoCards({
   documents, 
   stakeholders, 
   isLoading = false,
-  onAddStakeholder
+  onAddStakeholder,
+  onAssignTask
 }: ProjectInfoCardsProps) {
+  const [isAssignTaskOpen, setIsAssignTaskOpen] = useState(false);
   if (isLoading) {
     return (
       <>
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
+      <>
+        <AssignTaskDialog
+          isOpen={isAssignTaskOpen}
+          onClose={() => setIsAssignTaskOpen(false)}
+          projectId={project.id}
+          projectName={project.name}
+        />
       </>
     );
   }

@@ -5,6 +5,7 @@ import { commodities, type Commodity, type InsertCommodity } from "@shared/schem
 import { projectStakeholders, type ProjectStakeholder, type InsertProjectStakeholder } from "@shared/schema";
 import { stakeholderTasks, type StakeholderTask, type InsertStakeholderTask } from "@shared/schema";
 import { activityLogs, type ActivityLog, type InsertActivityLog } from "@shared/schema";
+import { notifications, type Notification, type InsertNotification } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
@@ -63,6 +64,11 @@ export interface IStorage {
   // Activity log methods
   getActivityLogsByProject(projectId: number): Promise<ActivityLog[]>;
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
+  
+  // Notification methods
+  getNotificationsByUser(userId: number): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<Notification | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
