@@ -31,6 +31,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Phone number formatting utility
+const formatPhoneNumber = (value: string): string => {
+  // Remove all non-digits
+  const digitsOnly = value.replace(/\D/g, '');
+  
+  // Limit to 10 digits
+  const limitedDigits = digitsOnly.slice(0, 10);
+  
+  // Format as (xxx) xxx-xxxx
+  if (limitedDigits.length >= 6) {
+    return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3, 6)}-${limitedDigits.slice(6)}`;
+  } else if (limitedDigits.length >= 3) {
+    return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3)}`;
+  } else if (limitedDigits.length > 0) {
+    return `(${limitedDigits}`;
+  }
+  
+  return '';
+};
+
 const createStakeholderSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
