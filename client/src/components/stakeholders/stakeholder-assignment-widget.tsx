@@ -150,29 +150,108 @@ export function StakeholderAssignmentWidget({
         <div className="space-y-4">
           <div>
             <Label htmlFor="stakeholder">Select Stakeholder</Label>
-            <Select value={selectedStakeholder} onValueChange={setSelectedStakeholder}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Choose a stakeholder" />
-              </SelectTrigger>
-              <SelectContent>
-                {relevantStakeholders.length === 0 ? (
-                  <div className="p-2 text-sm text-gray-500">
-                    No relevant stakeholders found. Add stakeholders with appropriate roles first.
-                  </div>
-                ) : (
-                  relevantStakeholders.map((stakeholder: any) => (
-                    <SelectItem key={stakeholder.id} value={stakeholder.id.toString()}>
-                      <div>
-                        <div className="font-medium">{stakeholder.user?.fullName}</div>
-                        <div className="text-xs text-gray-500">
-                          {stakeholder.roles?.join(', ') || 'Stakeholder'}
+            <div className="space-y-2 mt-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search stakeholders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              {/* Custom dropdown */}
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  {selectedStakeholder && relevantStakeholders.find(s => s.id.toString() === selectedStakeholder) ? (
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-5 w-5">
+                        <AvatarFallback className="text-xs">
+                          {relevantStakeholders.find(s => s.id.toString() === selectedStakeholder)?.user?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{relevantStakeholders.find(s => s.id.toString() === selectedStakeholder)?.user?.fullName || 'Unknown User'}</span>
+                    </div>
+                  ) : (
+                    "Choose a stakeholder"
+                  )}
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                    {relevantStakeholders.length === 0 ? (
+                      <div className="p-3 space-y-2">
+                        <div className="text-sm text-gray-500">
+                          {searchTerm ? `No stakeholders found matching "${searchTerm}"` : 
+                           stakeholders?.length === 0 ? "No stakeholders assigned to this project" : 
+                           "Start typing to search stakeholders"}
                         </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            setShowCreateDialog(true);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create New Stakeholder
+                        </Button>
                       </div>
-                    </SelectItem>
-                  ))
+                    ) : (
+                      <>
+                        {relevantStakeholders.map((stakeholder: any) => (
+                          <div
+                            key={stakeholder.id}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              setSelectedStakeholder(stakeholder.id.toString());
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="text-xs">
+                                  {stakeholder.user?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="text-sm font-medium">{stakeholder.user?.fullName || 'Unknown User'}</div>
+                                <div className="text-xs text-gray-500">{stakeholder.user?.email}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="border-t p-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                              setShowCreateDialog(true);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create New Stakeholder
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
-              </SelectContent>
-            </Select>
+              </div>
+            </div>
           </div>
 
           <div>

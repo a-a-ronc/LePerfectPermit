@@ -736,6 +736,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Task assignment endpoint
+  app.post("/api/tasks/assign", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { stakeholderId, taskType, description, documentCategory, projectId, projectName } = req.body;
+      const user = req.user as any;
+
+      console.log('Task assignment request:', { stakeholderId, taskType, description, projectId, projectName });
+
+      // Validate required fields
+      if (!stakeholderId || !taskType || !description || !projectId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Create the task
+      const task = await storage.createStakeholderTask({
+        stakeholderId: parseInt(stakeholderId),
+        documentCategory: documentCategory || taskType,
+        taskType,
+        description,
+        status: 'pending',
+        createdById: user.id,
+      });
+
+      console.log('Task created:', task);
+
+      // Get stakeholder details for notification
+      const stakeholders = await storage.getProjectStakeholders(projectId);
+      const targetStakeholder = stakeholders.find(s => s.id === parseInt(stakeholderId));
+      
+      if (targetStakeholder) {
+        const stakeholderUser = await storage.getUser(targetStakeholder.userId);
+        
+        if (stakeholderUser) {
+          console.log('Creating notification for user:', stakeholderUser.id);
+          
+          // Create in-app notification
+          await storage.createNotification({
+            userId: stakeholderUser.id,
+            type: 'task_assigned',
+            title: 'Task Assigned',
+            message: `You have been assigned a new task: ${description}`,
+            isRead: false,
+            metadata: {
+              projectId,
+              taskId: task.id,
+              taskType,
+              assignedBy: user.fullName,
+            }
+          });
+
+          // Send email notification (handle errors gracefully)
+          try {
+            const { sendEmail } = await import('./email');
+            console.log('Attempting to send email notification...');
+            
+            const emailResult = await sendEmail({
+              to: stakeholderUser.email,
+              from: user.defaultContactEmail || 'noreply@painlesspermit.com',
+              subject: `${projectName}: Task Assigned`,
+              text: `${stakeholderUser.fullName},
+
+${description}
+
+Assigned by: ${user.fullName}
+Project: ${projectName}
+Task Type: ${taskType}
+
+Please log into PainlessPermit to view more details.`,
+            });
+            
+            console.log('Email notification result:', emailResult);
+          } catch (emailError) {
+            console.warn('Email notification failed (expected without SENDGRID_API_KEY):', emailError.message);
+          }
+        }
+      }
+
+      // Create activity log
+      await storage.createActivityLog({
+        projectId,
+        userId: user.id,
+        activityType: 'task_assigned',
+        description: `Task assigned to stakeholder: ${description}`,
+      });
+
+      console.log('Task assignment completed successfully');
+      res.json(task);
+    } catch (error) {
+      console.error('Error assigning task:', error);
+      res.status(500).json({ error: "Failed to assign task", details: error.message });
+    }
+  });
+
+  // Notifications endpoint
+  app.get("/api/notifications/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = req.user as any;
+
+      if (user.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const notifications = await storage.getNotificationsByUser(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const notificationId = parseInt(req.params.id);
+      const notification = await storage.markNotificationAsRead(notificationId);
+      res.json(notification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
