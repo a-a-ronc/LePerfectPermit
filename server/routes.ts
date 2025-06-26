@@ -189,9 +189,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectDocuments = await storage.getDocumentsByProject(projectId);
       const categoryDocuments = projectDocuments.filter(doc => doc.category === category);
       
+      console.log(`Found ${categoryDocuments.length} documents in category "${category}" for project ${projectId}`);
+      
       res.json(categoryDocuments);
     } catch (error) {
+      console.error("Error fetching category documents:", error);
       res.status(500).json({ message: "Failed to get category documents" });
+    }
+  });
+
+  // Get all versions of a specific document
+  app.get("/api/documents/:id/versions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const documentId = parseInt(req.params.id);
+      const baseDocument = await storage.getDocument(documentId);
+      
+      if (!baseDocument) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Get all documents in the same project and category with the same filename
+      const projectDocuments = await storage.getDocumentsByProject(baseDocument.projectId);
+      const documentVersions = projectDocuments.filter(doc => 
+        doc.category === baseDocument.category && 
+        doc.fileName === baseDocument.fileName
+      );
+      
+      console.log(`Found ${documentVersions.length} versions of document "${baseDocument.fileName}"`);
+      
+      res.json(documentVersions);
+    } catch (error) {
+      console.error("Error fetching document versions:", error);
+      res.status(500).json({ message: "Failed to get document versions" });
     }
   });
 

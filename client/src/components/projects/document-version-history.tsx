@@ -40,9 +40,9 @@ export function DocumentVersionHistory({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
   
-  // Fetch all versions of this document
+  // Fetch all versions of this specific document (same filename in same category)
   const { data: allVersions = [], isLoading } = useQuery<Document[]>({
-    queryKey: [`/api/projects/${projectId}/documents/category/${document.category}`],
+    queryKey: [`/api/documents/${document.id}/versions`],
     enabled: isOpen,
   });
   
@@ -82,6 +82,7 @@ export function DocumentVersionHistory({
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents/category/${document.category}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/documents/${document.id}/versions`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] });
       
       // Clear selections and close dialog

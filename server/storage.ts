@@ -337,7 +337,8 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    // Find existing documents with the same category AND filename to determine version
+    // Find existing documents with the same category AND base filename to determine version
+    // This creates a proper version sequence for the same logical document
     const existingDocs = await db
       .select()
       .from(documents)
