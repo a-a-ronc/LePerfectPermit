@@ -3,19 +3,19 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite-bypass";
 
 const app = express();
-// Set very conservative size limits for document uploads (1MB to prevent memory issues)
+// Set generous size limits for document uploads (10GB for large files)
 app.use(express.json({ 
-  limit: '1mb'
+  limit: '10gb'
 }));
 app.use(express.urlencoded({ 
   extended: false, 
-  limit: '1mb'
+  limit: '10gb'
 }));
 
-// Set timeout for requests (5 minutes for large uploads)
+// Set timeout for requests (30 minutes for very large uploads)
 app.use((req, res, next) => {
-  req.setTimeout(300000); // 5 minutes
-  res.setTimeout(300000); // 5 minutes
+  req.setTimeout(1800000); // 30 minutes
+  res.setTimeout(1800000); // 30 minutes
   next();
 });
 

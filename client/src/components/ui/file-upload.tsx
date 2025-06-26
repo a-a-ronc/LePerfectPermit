@@ -24,7 +24,7 @@ export function FileUpload({
   acceptedFileTypes = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
   category,
   disabled = false,
-  maxSizeMB = 40,
+  maxSizeMB = 10240, // 10GB
   multiple = true
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
@@ -51,7 +51,8 @@ export function FileUpload({
       for (const file of fileList) {
         // Check file size
         if (file.size > maxSizeBytes) {
-          setError(`File "${file.name}" exceeds the ${maxSizeMB}MB limit. Please compress or reduce the file size.`);
+          const fileSizeGB = (file.size / (1024 * 1024 * 1024)).toFixed(2);
+          setError(`File "${file.name}" (${fileSizeGB}GB) exceeds the 10GB limit. Please use a smaller file.`);
           continue;
         }
         

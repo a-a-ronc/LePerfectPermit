@@ -144,6 +144,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 24, 2025: Increased review dialog width from max-w-5xl to max-w-6xl and simplified button layout to ensure all three action buttons display fully without truncation
 - June 25, 2025: Implemented comprehensive stakeholder task assignment system with searchable dropdown, email notifications (when SENDGRID_API_KEY available), and in-app notification bell with real-time updates
 - June 26, 2025: Fixed critical document upload issues - reduced file size limits to 1MB to prevent ERR_INSUFFICIENT_RESOURCES errors, fixed version numbering to start at v1 for new files (only increments for same filename), removed looping page reload, enhanced error handling for memory limits
+- June 26, 2025: Increased file upload capacity from 1MB to 10GB - updated server body parser limits, request timeouts (30 minutes), route validation, and client-side file upload components to handle large files up to 10GB
 
 ## Changelog
 

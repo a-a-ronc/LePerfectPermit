@@ -59,11 +59,11 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
       let errorMessage = "There was an error uploading your document. Please try again.";
       
       if (error.message.includes('413') || error.message.includes('too large') || error.message.includes('INSUFFICIENT_RESOURCES')) {
-        errorMessage = "File size too large. Please use a file smaller than 1MB.";
+        errorMessage = "File size too large. Please use a file smaller than 10GB.";
       } else if (error.message.includes('408') || error.message.includes('timeout')) {
         errorMessage = "Upload timeout. Please try with a smaller file or check your connection.";
       } else if (error.message.includes('aborted') || error.message.includes('ERR_INSUFFICIENT_RESOURCES') || error.message.includes('Failed to fetch')) {
-        errorMessage = "Upload failed due to file size or memory limits. Please use a file smaller than 1MB.";
+        errorMessage = "Upload failed. Please try again or use a smaller file.";
       }
       
       toast({
