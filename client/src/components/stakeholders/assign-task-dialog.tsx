@@ -106,7 +106,7 @@ export function AssignTaskDialog({
   const assignTaskMutation = useMutation({
     mutationFn: async (values: z.infer<typeof assignTaskSchema>) => {
       const taskData = {
-        stakeholderId: parseInt(values.stakeholderId),
+        userId: parseInt(values.stakeholderId), // Send user ID to server for lookup
         taskType: values.taskType,
         description: values.description,
         documentCategory: values.documentCategory || null,

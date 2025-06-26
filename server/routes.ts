@@ -876,19 +876,27 @@ Please log into PainlessPermit to view more details.`,
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      const { stakeholderId, taskType, description, documentCategory, projectId, projectName } = req.body;
+      const { userId, taskType, description, documentCategory, projectId, projectName } = req.body;
       const user = req.user as any;
 
-      console.log('Task assignment request:', { stakeholderId, taskType, description, projectId, projectName });
+      console.log('Task assignment request:', { userId, taskType, description, projectId, projectName });
 
       // Validate required fields
-      if (!stakeholderId || !taskType || !description || !projectId) {
+      if (!userId || !taskType || !description || !projectId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Create the task
+      // Find the project stakeholder ID for this user
+      const stakeholders = await storage.getProjectStakeholders(projectId);
+      const targetStakeholder = stakeholders.find(s => s.userId === parseInt(userId));
+      
+      if (!targetStakeholder) {
+        return res.status(400).json({ error: "User is not a stakeholder on this project" });
+      }
+
+      // Create the task using the correct stakeholder ID
       const task = await storage.createStakeholderTask({
-        stakeholderId: parseInt(stakeholderId),
+        stakeholderId: targetStakeholder.id,
         documentCategory: documentCategory || taskType,
         taskType,
         description,
@@ -898,41 +906,37 @@ Please log into PainlessPermit to view more details.`,
 
       console.log('Task created:', task);
 
-      // Get stakeholder details for notification
-      const stakeholders = await storage.getProjectStakeholders(projectId);
-      const targetStakeholder = stakeholders.find(s => s.id === parseInt(stakeholderId));
-      
-      if (targetStakeholder) {
-        const stakeholderUser = await storage.getUser(targetStakeholder.userId);
+      // Get stakeholder user details for notification  
+      const stakeholderUser = await storage.getUser(targetStakeholder.userId);
         
-        if (stakeholderUser) {
-          console.log('Creating notification for user:', stakeholderUser.id);
-          
-          // Create in-app notification
-          await storage.createNotification({
-            userId: stakeholderUser.id,
-            type: 'task_assigned',
-            title: 'Task Assigned',
-            message: `You have been assigned a new task: ${description}`,
-            isRead: false,
-            metadata: {
-              projectId,
-              taskId: task.id,
-              taskType,
-              assignedBy: user.fullName,
-            }
-          });
+      if (stakeholderUser) {
+        console.log('Creating notification for user:', stakeholderUser.id);
+        
+        // Create in-app notification
+        await storage.createNotification({
+          userId: stakeholderUser.id,
+          type: 'task_assigned',
+          title: 'Task Assigned',
+          message: `You have been assigned a new task: ${description}`,
+          isRead: false,
+          metadata: {
+            projectId,
+            taskId: task.id,
+            taskType,
+            assignedBy: user.fullName,
+          }
+        });
 
-          // Send email notification (handle errors gracefully)
-          try {
-            const { sendEmail } = await import('./email');
-            console.log('Attempting to send email notification...');
-            
-            const emailResult = await sendEmail({
-              to: stakeholderUser.email,
-              from: user.defaultContactEmail || 'noreply@painlesspermit.com',
-              subject: `${projectName}: Task Assigned`,
-              text: `${stakeholderUser.fullName},
+        // Send email notification (handle errors gracefully)
+        try {
+          const { sendEmail } = await import('./email');
+          console.log('Attempting to send email notification...');
+          
+          const emailResult = await sendEmail({
+            to: stakeholderUser.email,
+            from: user.defaultContactEmail || 'noreply@painlesspermit.com',
+            subject: `${projectName}: Task Assigned`,
+            text: `${stakeholderUser.fullName},
 
 ${description}
 
@@ -941,12 +945,11 @@ Project: ${projectName}
 Task Type: ${taskType}
 
 Please log into PainlessPermit to view more details.`,
-            });
-            
-            console.log('Email notification result:', emailResult);
-          } catch (emailError: any) {
-            console.warn('Email notification failed (expected without SENDGRID_API_KEY):', emailError?.message || 'Unknown error');
-          }
+          });
+          
+          console.log('Email notification result:', emailResult);
+        } catch (emailError: any) {
+          console.warn('Email notification failed (expected without SENDGRID_API_KEY):', emailError?.message || 'Unknown error');
         }
       }
 
