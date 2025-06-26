@@ -233,7 +233,7 @@ export class DatabaseStorage implements IStorage {
     if (data.status && data.status !== currentProject.status) {
       await this.createActivityLog({
         projectId: id,
-        userId: data.updatedById || currentProject.createdById,
+        userId: currentProject.createdById, // Use project creator as default since updatedById isn't in schema
         activityType: "status_update",
         description: `Project status changed from "${currentProject.status}" to "${data.status}"`
       });
@@ -530,7 +530,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProjectStakeholder(id: number): Promise<boolean> {
     const result = await db.delete(projectStakeholders).where(eq(projectStakeholders.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async getStakeholderTasks(stakeholderId: number): Promise<StakeholderTask[]> {
@@ -565,7 +565,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteStakeholderTask(id: number): Promise<boolean> {
     const result = await db.delete(stakeholderTasks).where(eq(stakeholderTasks.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
   
   // Activity log methods
