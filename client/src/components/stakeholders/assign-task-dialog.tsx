@@ -63,39 +63,30 @@ export function AssignTaskDialog({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  // Load project stakeholders
-  const { data: stakeholders = [], isLoading: isLoadingStakeholders } = useQuery({
-    queryKey: [`/api/projects/${projectId}/stakeholders`],
-    enabled: projectId > 0 && isOpen,
-  });
-
-  // Load user details
+  // Load ALL users who can be stakeholders
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ["/api/users"],
     enabled: isOpen,
+    staleTime: 0,
+    gcTime: 0,
   });
 
-  // Create a map of user details
-  const userMap = users.reduce((acc: any, user: any) => {
-    acc[user.id] = user;
-    return acc;
-  }, {});
-
-  // Combine stakeholder data with user details and apply search filter
-  const availableStakeholders = stakeholders
-    .map((stakeholder: any) => ({
-      ...stakeholder,
-      user: userMap[stakeholder.userId] || {},
-    }))
-    .filter((stakeholder: any) => 
-      searchTerm === "" || 
-      stakeholder.user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      stakeholder.user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter for stakeholder-eligible users and apply search filter
+  const availableStakeholders = (users as any[])
+    .filter((user: any) => 
+      user.role === "stakeholder" || user.role === "engineer" || user.role === "architect" || user.role === "project_manager"
     )
-    .sort((a: any, b: any) => {
-      // Sort by most recently added (assuming higher IDs are more recent)
-      return b.id - a.id;
-    });
+    .filter((user: any) => 
+      searchTerm === "" || 
+      (user.fullName && user.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .map((user: any) => ({
+      id: user.id,
+      userId: user.id,
+      user: user,
+    }))
+    .sort((a: any, b: any) => (a.user.fullName || '').localeCompare(b.user.fullName || ''));
 
   const form = useForm<z.infer<typeof assignTaskSchema>>({
     resolver: zodResolver(assignTaskSchema),
@@ -109,7 +100,7 @@ export function AssignTaskDialog({
 
   const selectedStakeholderId = form.watch("stakeholderId");
   const selectedStakeholder = availableStakeholders.find(
-    (s: any) => s.id.toString() === selectedStakeholderId
+    (s: any) => s.userId.toString() === selectedStakeholderId
   );
 
   const assignTaskMutation = useMutation({
