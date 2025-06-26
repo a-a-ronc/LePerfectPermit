@@ -66,7 +66,7 @@ export function AddStakeholderDialog({
     enabled: isOpen,
   });
   
-  // Filter stakeholder users - include all users that can be stakeholders
+  // Filter stakeholder users - include all users that can be stakeholders, exclude admins and specialists
   const stakeholderUsers = (users as any[]).filter((user: any) => 
     user.role === "stakeholder" || user.role === "engineer" || user.role === "architect"
   );
@@ -78,7 +78,7 @@ export function AddStakeholderDialog({
   });
   
   // Get IDs of users already assigned to this project
-  const existingUserIds = (existingStakeholders as any[]).map((s: any) => s.userId?.toString());
+  const existingUserIds = (existingStakeholders as any[]).map((s: any) => s.userId?.toString()).filter(Boolean);
   
   // Filter out users already assigned to project and apply search filter
   const availableUsers = stakeholderUsers
@@ -87,7 +87,8 @@ export function AddStakeholderDialog({
       searchTerm === "" || 
       (user.fullName && user.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    )
+    .sort((a: any, b: any) => (a.fullName || '').localeCompare(b.fullName || ''));
 
   // Find the selected user's details
   const selectedUserDetails = selectedUser ? availableUsers.find((user: any) => user.id.toString() === selectedUser) : null;
@@ -248,12 +249,13 @@ export function AddStakeholderDialog({
                                 <div className="flex items-center gap-2">
                                   <Avatar className="h-6 w-6">
                                     <AvatarFallback className="text-xs">
-                                      {user.fullName.split(' ').map((n: string) => n[0]).join('')}
+                                      {user.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                                     </AvatarFallback>
                                   </Avatar>
                                   <div>
-                                    <div className="text-sm font-medium">{user.fullName}</div>
+                                    <div className="text-sm font-medium">{user.fullName || 'Unknown User'}</div>
                                     <div className="text-xs text-gray-500">{user.email}</div>
+                                    <div className="text-xs text-gray-400 capitalize">{user.role?.replace('_', ' ')}</div>
                                   </div>
                                 </div>
                               </SelectItem>
