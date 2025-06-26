@@ -66,9 +66,9 @@ export function AddStakeholderDialog({
     enabled: isOpen,
   });
   
-  // Filter stakeholder users - include all users that can be stakeholders, exclude admins and specialists
+  // Filter stakeholder users - include all users that can be stakeholders, exclude only admin and specialist roles
   const stakeholderUsers = (users as any[]).filter((user: any) => 
-    user.role === "stakeholder" || user.role === "engineer" || user.role === "architect"
+    user.role === "stakeholder" || user.role === "engineer" || user.role === "architect" || user.role === "project_manager"
   );
   
   // Load existing project stakeholders to avoid duplicates
@@ -237,7 +237,7 @@ export function AddStakeholderDialog({
                             </div>
                           ) : availableUsers.length === 0 && searchTerm === "" ? (
                             <div className="p-2 text-sm text-gray-500">
-                              No available stakeholders. Create stakeholder accounts first.
+                              No available users found. All users may already be assigned to this project.
                             </div>
                           ) : availableUsers.length === 0 && searchTerm !== "" ? (
                             <div className="p-2 text-sm text-gray-500">
