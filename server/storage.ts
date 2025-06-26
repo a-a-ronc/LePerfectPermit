@@ -50,6 +50,7 @@ export interface IStorage {
   
   // Project stakeholder methods
   getProjectStakeholders(projectId: number): Promise<ProjectStakeholder[]>;
+  getProjectStakeholder(id: number): Promise<ProjectStakeholder | undefined>;
   createProjectStakeholder(stakeholder: InsertProjectStakeholder): Promise<ProjectStakeholder>;
   updateProjectStakeholder(id: number, data: Partial<ProjectStakeholder>): Promise<ProjectStakeholder | undefined>;
   deleteProjectStakeholder(id: number): Promise<boolean>;
@@ -471,6 +472,20 @@ export class DatabaseStorage implements IStorage {
         ? JSON.parse(stakeholder.assignedCategories) 
         : stakeholder.assignedCategories || []
     }));
+  }
+
+  async getProjectStakeholder(id: number): Promise<ProjectStakeholder | undefined> {
+    const [result] = await db.select().from(projectStakeholders).where(eq(projectStakeholders.id, id));
+    
+    if (!result) return undefined;
+    
+    // Parse assignedCategories as JSON
+    return {
+      ...result,
+      assignedCategories: typeof result.assignedCategories === 'string' 
+        ? JSON.parse(result.assignedCategories) 
+        : result.assignedCategories || []
+    };
   }
   
   async createProjectStakeholder(insertStakeholder: InsertProjectStakeholder): Promise<ProjectStakeholder> {
