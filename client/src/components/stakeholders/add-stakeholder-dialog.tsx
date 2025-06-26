@@ -60,10 +60,12 @@ export function AddStakeholderDialog({
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   
-  // Load users
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+  // Load users with aggressive cache invalidation
+  const { data: users = [], isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
     queryKey: ["/api/users"],
     enabled: isOpen,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache
   });
   
   // Filter stakeholder users - include all users that can be stakeholders, exclude only admin and specialist roles
@@ -80,9 +82,6 @@ export function AddStakeholderDialog({
   // Get IDs of users already assigned to this project
   const existingUserIds = (existingStakeholders as any[]).map((s: any) => s.userId?.toString()).filter(Boolean);
   
-  console.log('Debug - All stakeholder users:', stakeholderUsers);
-  console.log('Debug - Existing user IDs:', existingUserIds);
-  
   // Filter out users already assigned to project and apply search filter
   const availableUsers = stakeholderUsers
     .filter((user: any) => !existingUserIds.includes(user.id?.toString()))
@@ -92,8 +91,6 @@ export function AddStakeholderDialog({
       (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a: any, b: any) => (a.fullName || '').localeCompare(b.fullName || ''));
-  
-  console.log('Debug - Available users:', availableUsers);
 
   // Find the selected user's details
   const selectedUserDetails = selectedUser ? availableUsers.find((user: any) => user.id.toString() === selectedUser) : null;
@@ -124,6 +121,8 @@ export function AddStakeholderDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/stakeholders`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      refetchUsers(); // Immediate refresh
       form.reset();
       setSelectedUser(null);
       setSearchTerm("");
@@ -150,20 +149,30 @@ export function AddStakeholderDialog({
   const handleCreateNewStakeholder = () => {
     setShowCreateDialog(true);
   };
+  
+  // Effect to refresh users when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      refetchUsers();
+    }
+  }, [isOpen, refetchUsers]);
 
   const handleStakeholderCreated = (newUser: any) => {
-    // Force refresh users list and pre-select the new user
+    // Force immediate refresh of user list
     queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-    queryClient.refetchQueries({ queryKey: ["/api/users"] });
+    refetchUsers();
     
-    // Wait for the query to refresh, then set the selected user
-    setTimeout(() => {
-      setSelectedUser(newUser.id.toString());
-      form.setValue("userId", newUser.id.toString());
-      setSearchTerm(""); // Clear search to show all users
-    }, 500); // Increased timeout to ensure refresh completes
+    // Pre-select the new user immediately
+    setSelectedUser(newUser.id.toString());
+    form.setValue("userId", newUser.id.toString());
+    setSearchTerm(""); // Clear search to show all users
     
     setShowCreateDialog(false);
+    
+    toast({
+      title: "Stakeholder Created",
+      description: `${newUser.fullName} has been created and selected for assignment.`,
+    });
   };
   
   const documentCategories = [
