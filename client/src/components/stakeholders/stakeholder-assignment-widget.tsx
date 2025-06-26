@@ -52,11 +52,15 @@ export function StakeholderAssignmentWidget({
   // Fetch stakeholders for this project
   const { data: stakeholders = [] } = useQuery({
     queryKey: [`/api/projects/${projectId}/stakeholders`],
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Load all users for creating stakeholder dropdown
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Create user map for easy lookup
