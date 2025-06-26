@@ -66,8 +66,10 @@ export function AddStakeholderDialog({
     enabled: isOpen,
   });
   
-  // Filter stakeholder users
-  const stakeholderUsers = users.filter(user => user.role === "stakeholder");
+  // Filter stakeholder users - include all users that can be stakeholders
+  const stakeholderUsers = (users as any[]).filter((user: any) => 
+    user.role === "stakeholder" || user.role === "engineer" || user.role === "architect"
+  );
   
   // Load existing project stakeholders to avoid duplicates
   const { data: existingStakeholders = [], isLoading: isLoadingStakeholders } = useQuery({
@@ -76,15 +78,15 @@ export function AddStakeholderDialog({
   });
   
   // Get IDs of users already assigned to this project
-  const existingUserIds = existingStakeholders.map((s: any) => s.userId.toString());
+  const existingUserIds = (existingStakeholders as any[]).map((s: any) => s.userId?.toString());
   
   // Filter out users already assigned to project and apply search filter
   const availableUsers = stakeholderUsers
-    .filter(user => !existingUserIds.includes(user.id.toString()))
-    .filter(user => 
+    .filter((user: any) => !existingUserIds.includes(user.id?.toString()))
+    .filter((user: any) => 
       searchTerm === "" || 
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (user.fullName && user.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
   // Find the selected user's details
