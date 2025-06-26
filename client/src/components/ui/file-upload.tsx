@@ -51,7 +51,7 @@ export function FileUpload({
       for (const file of fileList) {
         // Check file size
         if (file.size > maxSizeBytes) {
-          setError(`File "${file.name}" exceeds the ${maxSizeMB}MB limit.`);
+          setError(`File "${file.name}" exceeds the ${maxSizeMB}MB limit. Please compress or reduce the file size.`);
           continue;
         }
         
@@ -180,7 +180,7 @@ export function FileUpload({
           multiple={multiple}
         />
         <p className="text-xs text-muted-foreground">
-          Max file size: {maxSizeMB}MB. For best results, keep files under 5MB. Accepted file types: {acceptedFileTypes}
+          Max file size: {maxSizeMB}MB. For best results, keep files under 500KB. Accepted file types: {acceptedFileTypes}
         </p>
       </div>
       

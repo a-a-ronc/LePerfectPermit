@@ -221,9 +221,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.projectId);
       
       // Check file size before processing
-      if (req.body.fileSize && req.body.fileSize > 8 * 1024 * 1024) { // 8MB limit
+      if (req.body.fileSize && req.body.fileSize > 1024 * 1024) { // 1MB limit
         return res.status(413).json({ 
-          message: "File size too large. Maximum allowed size is 8MB." 
+          message: "File size too large. Maximum allowed size is 1MB." 
         });
       }
       
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (error.message.includes('aborted')) {
           res.status(408).json({ message: "Upload timeout. Please try with a smaller file." });
         } else if (error.message.includes('too large')) {
-          res.status(413).json({ message: "File size too large. Maximum allowed size is 8MB." });
+          res.status(413).json({ message: "File size too large. Maximum allowed size is 1MB." });
         } else {
           res.status(400).json({ message: "Upload failed. Please try again with a smaller file.", error: error.message });
         }
