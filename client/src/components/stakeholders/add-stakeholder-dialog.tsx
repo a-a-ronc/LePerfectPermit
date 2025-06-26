@@ -88,7 +88,7 @@ export function AddStakeholderDialog({
     );
 
   // Find the selected user's details
-  const selectedUserDetails = selectedUser ? availableUsers.find(user => user.id.toString() === selectedUser) : null;
+  const selectedUserDetails = selectedUser ? availableUsers.find((user: any) => user.id.toString() === selectedUser) : null;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

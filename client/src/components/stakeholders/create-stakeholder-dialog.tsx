@@ -39,9 +39,9 @@ const formatPhoneNumber = (value: string): string => {
   // Limit to 10 digits
   const limitedDigits = digitsOnly.slice(0, 10);
   
-  // Format as (xxx) xxx-xxxx
+  // Format as (xxx) xxx - xxxx
   if (limitedDigits.length >= 6) {
-    return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3, 6)}-${limitedDigits.slice(6)}`;
+    return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3, 6)} - ${limitedDigits.slice(6)}`;
   } else if (limitedDigits.length >= 3) {
     return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3)}`;
   } else if (limitedDigits.length > 0) {
@@ -196,7 +196,16 @@ export function CreateStakeholderDialog({
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="(555) 123-4567" {...field} />
+                    <Input
+                      type="tel"
+                      placeholder="(xxx) xxx-xxxx"
+                      value={field.value}
+                      onChange={(e) => {
+                        const formatted = formatPhoneNumber(e.target.value);
+                        field.onChange(formatted);
+                      }}
+                      maxLength={17}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
