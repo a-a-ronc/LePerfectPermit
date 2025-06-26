@@ -80,6 +80,9 @@ export function AddStakeholderDialog({
   // Get IDs of users already assigned to this project
   const existingUserIds = (existingStakeholders as any[]).map((s: any) => s.userId?.toString()).filter(Boolean);
   
+  console.log('Debug - All stakeholder users:', stakeholderUsers);
+  console.log('Debug - Existing user IDs:', existingUserIds);
+  
   // Filter out users already assigned to project and apply search filter
   const availableUsers = stakeholderUsers
     .filter((user: any) => !existingUserIds.includes(user.id?.toString()))
@@ -89,6 +92,8 @@ export function AddStakeholderDialog({
       (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a: any, b: any) => (a.fullName || '').localeCompare(b.fullName || ''));
+  
+  console.log('Debug - Available users:', availableUsers);
 
   // Find the selected user's details
   const selectedUserDetails = selectedUser ? availableUsers.find((user: any) => user.id.toString() === selectedUser) : null;
