@@ -234,7 +234,9 @@ export function AssignTaskDialog({
                             {availableStakeholders.length === 0 ? (
                               <div className="p-3 space-y-2">
                                 <div className="text-sm text-gray-500">
-                                  {searchTerm ? `No stakeholders found matching "${searchTerm}"` : "No stakeholders assigned to this project"}
+                                  {searchTerm ? `No stakeholders found matching "${searchTerm}"` : 
+                                   stakeholders?.length === 0 ? "No stakeholders assigned to this project" : 
+                                   "Start typing to search stakeholders"}
                                 </div>
                                 <Button
                                   type="button"
