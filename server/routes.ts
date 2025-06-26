@@ -809,8 +809,8 @@ Please log into PainlessPermit to view more details.`,
             });
             
             console.log('Email notification result:', emailResult);
-          } catch (emailError) {
-            console.warn('Email notification failed (expected without SENDGRID_API_KEY):', emailError.message);
+          } catch (emailError: any) {
+            console.warn('Email notification failed (expected without SENDGRID_API_KEY):', emailError?.message || 'Unknown error');
           }
         }
       }
@@ -825,9 +825,9 @@ Please log into PainlessPermit to view more details.`,
 
       console.log('Task assignment completed successfully');
       res.json(task);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error assigning task:', error);
-      res.status(500).json({ error: "Failed to assign task", details: error.message });
+      res.status(500).json({ error: "Failed to assign task", details: error?.message || 'Unknown error' });
     }
   });
 
