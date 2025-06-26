@@ -252,9 +252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.projectId);
       
       // Check file size before processing
-      if (req.body.fileSize && req.body.fileSize > 10 * 1024 * 1024 * 1024) { // 10GB limit
+      if (req.body.fileSize && req.body.fileSize > 50 * 1024 * 1024) { // 50MB limit
         return res.status(413).json({ 
-          message: "File size too large. Maximum allowed size is 10GB." 
+          message: "File size too large. Maximum allowed size is 50MB." 
         });
       }
       

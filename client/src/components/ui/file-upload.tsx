@@ -24,7 +24,7 @@ export function FileUpload({
   acceptedFileTypes = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
   category,
   disabled = false,
-  maxSizeMB = 10240, // 10GB
+  maxSizeMB = 50, // 50MB - realistic database limit
   multiple = true
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
@@ -51,8 +51,8 @@ export function FileUpload({
       for (const file of fileList) {
         // Check file size
         if (file.size > maxSizeBytes) {
-          const fileSizeGB = (file.size / (1024 * 1024 * 1024)).toFixed(2);
-          setError(`File "${file.name}" (${fileSizeGB}GB) exceeds the 10GB limit. Please use a smaller file.`);
+          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          setError(`File "${file.name}" (${fileSizeMB}MB) exceeds the 50MB limit. Please use a smaller file.`);
           continue;
         }
         
@@ -123,6 +123,7 @@ export function FileUpload({
       return true; // Successfully uploaded file
     } catch (err) {
       setError(`Error uploading "${currentFile.name}": ${err instanceof Error ? err.message : String(err)}`);
+      setLoading(false); // Stop the upload loop on error
       return false; // Failed to upload
     }
   }, [files, currentFileIndex, convertToBase64, onFileSelect, selectedCategory, category]);
@@ -145,12 +146,20 @@ export function FileUpload({
     
     try {
       // Process files one by one
-      let hasMore = true;
-      while (hasMore) {
-        hasMore = await uploadCurrentFile();
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const base64 = await convertToBase64(file);
+          await onFileSelect(file, base64, selectedCategory || category || "");
+          setUploadedCount(prev => prev + 1);
+        } catch (err) {
+          setError(`Error uploading "${file.name}": ${err instanceof Error ? err.message : String(err)}`);
+          setLoading(false);
+          return; // Stop upload process on first error
+        }
       }
       
-      // Clear files list after successful upload
+      // Clear files list after successful upload of all files
       setFiles([]);
       onFilesChange?.([]);
       
@@ -160,7 +169,7 @@ export function FileUpload({
     } finally {
       setLoading(false);
     }
-  }, [files, uploadCurrentFile, selectedCategory, category]);
+  }, [files, convertToBase64, onFileSelect, selectedCategory, category, onFilesChange]);
   
   return (
     <div className="space-y-4">
@@ -181,7 +190,7 @@ export function FileUpload({
           multiple={multiple}
         />
         <p className="text-xs text-muted-foreground">
-          Max file size: {maxSizeMB}MB. For best results, keep files under 500KB. Accepted file types: {acceptedFileTypes}
+          Max file size: {maxSizeMB}MB. For best results, keep files under 10MB. Accepted file types: {acceptedFileTypes}
         </p>
       </div>
       

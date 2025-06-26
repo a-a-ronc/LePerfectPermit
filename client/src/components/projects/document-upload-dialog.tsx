@@ -137,7 +137,7 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
             onFilesChange={handleFilesChange}
             acceptedFileTypes=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
             disabled={isUploading || uploadMutation.isPending}
-            maxSizeMB={10240} // 10GB for large files
+            maxSizeMB={50} // 50MB for database compatibility
             category={category} // Pass the pre-selected category
           />
         </div>
