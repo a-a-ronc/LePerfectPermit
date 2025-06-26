@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Select,
   SelectContent,
@@ -22,7 +24,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatDocumentCategory } from "@/lib/utils/document-utils";
 import { TaskType } from "@shared/schema";
-import { UserPlus, FileText, Send } from "lucide-react";
+import { UserPlus, FileText, Send, Search, Plus, ChevronDown } from "lucide-react";
+import { CreateStakeholderDialog } from "./create-stakeholder-dialog";
+import { AddStakeholderDialog } from "./add-stakeholder-dialog";
 
 interface StakeholderAssignmentWidgetProps {
   projectId: number;
@@ -40,11 +44,48 @@ export function StakeholderAssignmentWidget({
   const [selectedStakeholder, setSelectedStakeholder] = useState<string>('');
   const [taskType, setTaskType] = useState<string>('');
   const [description, setDescription] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Fetch stakeholders for this project
   const { data: stakeholders = [] } = useQuery({
     queryKey: [`/api/projects/${projectId}/stakeholders`],
   });
+
+  // Load all users for creating stakeholder dropdown
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+  });
+
+  // Create user map for easy lookup
+  const userMap = (users as any[]).reduce((acc: any, user: any) => {
+    acc[user.id] = user;
+    return acc;
+  }, {});
+
+  // Combine stakeholder data with user details and apply search filter
+  const relevantStakeholders = (stakeholders as any[])
+    .map((stakeholder: any) => ({
+      ...stakeholder,
+      user: userMap[stakeholder.userId] || {},
+    }))
+    .filter((stakeholder: any) => {
+      // Apply search filter
+      if (searchTerm.trim()) {
+        const fullName = stakeholder.user.fullName?.toLowerCase() || '';
+        const email = stakeholder.user.email?.toLowerCase() || '';
+        const searchLower = searchTerm.toLowerCase();
+        
+        if (!fullName.includes(searchLower) && !email.includes(searchLower)) {
+          return false;
+        }
+      }
+
+      // Apply role filter if needed - for now, include all stakeholders
+      return true;
+    });
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -123,13 +164,7 @@ export function StakeholderAssignmentWidget({
     }
   };
 
-  // Filter stakeholders that have this category assigned or have relevant roles
-  const relevantStakeholders = stakeholders.filter((stakeholder: any) => 
-    stakeholder.assignedCategories?.includes(documentCategory) ||
-    stakeholder.roles?.some((role: string) => 
-      ['reviewer', 'approver', 'engineer', 'architect'].includes(role)
-    )
-  );
+
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -190,7 +225,7 @@ export function StakeholderAssignmentWidget({
                       <div className="p-3 space-y-2">
                         <div className="text-sm text-gray-500">
                           {searchTerm ? `No stakeholders found matching "${searchTerm}"` : 
-                           stakeholders?.length === 0 ? "No stakeholders assigned to this project" : 
+                           (stakeholders as any[])?.length === 0 ? "No stakeholders assigned to this project" : 
                            "Start typing to search stakeholders"}
                         </div>
                         <Button
@@ -303,6 +338,23 @@ export function StakeholderAssignmentWidget({
             </Button>
           </div>
         </div>
+
+        {/* Create New Stakeholder Dialog */}
+        <CreateStakeholderDialog
+          isOpen={showCreateDialog}
+          onClose={() => setShowCreateDialog(false)}
+          onStakeholderCreated={(user) => {
+            setShowCreateDialog(false);
+            setShowAddDialog(true);
+          }}
+        />
+
+        {/* Add Stakeholder to Project Dialog */}
+        <AddStakeholderDialog
+          isOpen={showAddDialog}
+          onClose={() => setShowAddDialog(false)}
+          projectId={projectId}
+        />
       </DialogContent>
     </Dialog>
   );
