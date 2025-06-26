@@ -172,7 +172,7 @@ export function AssignTaskDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoadingStakeholders || isLoadingUsers ? (
+        {isLoadingUsers ? (
           <div className="space-y-4">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-32 w-full" />
@@ -321,19 +321,13 @@ export function AssignTaskDialog({
                         </div>
                       </div>
                     )}
-                    {selectedStakeholder.assignedCategories && selectedStakeholder.assignedCategories.length > 0 && (
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Assigned Categories:</span>
-                        <div className="font-medium flex items-center gap-1">
-                          <Building className="h-3 w-3" />
-                          {selectedStakeholder.assignedCategories.map((cat: string) => 
-                            cat.split('_').map((word: string) => 
-                              word.charAt(0).toUpperCase() + word.slice(1)
-                            ).join(' ')
-                          ).join(', ')}
-                        </div>
+                    <div>
+                      <span className="text-muted-foreground">Role:</span>
+                      <div className="font-medium flex items-center gap-1">
+                        <Building className="h-3 w-3" />
+                        {selectedStakeholder.user?.role?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               )}
