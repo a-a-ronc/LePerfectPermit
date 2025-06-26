@@ -337,14 +337,15 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    // Find existing documents with the same category to determine version
+    // Find existing documents with the same category AND filename to determine version
     const existingDocs = await db
       .select()
       .from(documents)
       .where(
         and(
           eq(documents.projectId, insertDocument.projectId),
-          eq(documents.category, insertDocument.category)
+          eq(documents.category, insertDocument.category),
+          eq(documents.fileName, insertDocument.fileName)
         )
       );
     

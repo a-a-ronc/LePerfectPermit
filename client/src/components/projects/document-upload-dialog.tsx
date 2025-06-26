@@ -52,21 +52,18 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
         description: "Your document has been uploaded successfully and is pending review.",
       });
       
-      // Force page reload to ensure everything is up-to-date
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500); // Delay to allow toast to be visible
+      // No page reload needed - query invalidation handles updates
     },
     onError: (error: Error) => {
       console.error('Document upload error:', error);
       let errorMessage = "There was an error uploading your document. Please try again.";
       
-      if (error.message.includes('413') || error.message.includes('too large')) {
-        errorMessage = "File size too large. Please use a file smaller than 15MB.";
+      if (error.message.includes('413') || error.message.includes('too large') || error.message.includes('INSUFFICIENT_RESOURCES')) {
+        errorMessage = "File size too large. Please use a file smaller than 8MB.";
       } else if (error.message.includes('408') || error.message.includes('timeout')) {
         errorMessage = "Upload timeout. Please try with a smaller file or check your connection.";
-      } else if (error.message.includes('aborted')) {
-        errorMessage = "Upload was interrupted. Please try again with a smaller file.";
+      } else if (error.message.includes('aborted') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
+        errorMessage = "Upload failed due to file size. Please use a file smaller than 8MB.";
       }
       
       toast({
@@ -140,7 +137,7 @@ export function DocumentUploadDialog({ isOpen, onClose, projectId, category }: D
             onFilesChange={handleFilesChange}
             acceptedFileTypes=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
             disabled={isUploading || uploadMutation.isPending}
-            maxSizeMB={15} // Reduced to prevent timeout issues
+            maxSizeMB={8} // Reduced to prevent timeout and memory issues
             category={category} // Pass the pre-selected category
           />
         </div>

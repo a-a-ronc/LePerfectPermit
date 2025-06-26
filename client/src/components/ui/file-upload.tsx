@@ -180,7 +180,7 @@ export function FileUpload({
           multiple={multiple}
         />
         <p className="text-xs text-muted-foreground">
-          Max file size: {maxSizeMB}MB. For best results, keep files under 10MB. Accepted file types: {acceptedFileTypes}
+          Max file size: {maxSizeMB}MB. For best results, keep files under 5MB. Accepted file types: {acceptedFileTypes}
         </p>
       </div>
       
