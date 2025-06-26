@@ -77,24 +77,31 @@ export function DocumentVersionHistory({
       await Promise.all(promises);
     },
     onSuccess: () => {
+      const deletedCount = selectedVersionIds.length;
+      
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/documents/category/${document.category}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/activities`] });
       
-      toast({
-        title: "Documents Deleted",
-        description: `Successfully deleted ${selectedVersionIds.length} document version${selectedVersionIds.length > 1 ? 's' : ''}.`,
-      });
-      
+      // Clear selections and close dialog
       setSelectedVersionIds([]);
       setDeleteDialogOpen(false);
       
-      // Close the version history dialog if all versions were deleted
-      const remainingVersions = sortedVersions.filter(v => !selectedVersionIds.includes(v.id));
-      if (remainingVersions.length === 0) {
-        onClose();
-      }
+      // Show success toast with clear confirmation
+      toast({
+        title: "Documents Deleted Successfully",
+        description: `✓ Permanently deleted ${deletedCount} document version${deletedCount > 1 ? 's' : ''}. The version history has been updated.`,
+        duration: 5000, // Show longer for clear confirmation
+      });
+      
+      // Check if all versions were deleted after a brief delay to allow queries to update
+      setTimeout(() => {
+        const remainingVersions = sortedVersions.filter(v => !selectedVersionIds.includes(v.id));
+        if (remainingVersions.length === 0) {
+          onClose();
+        }
+      }, 100);
     },
     onError: (error: any) => {
       console.error('Delete versions error:', error);
@@ -113,6 +120,16 @@ export function DocumentVersionHistory({
   
   const handleDeleteSelected = () => {
     setDeleteDialogOpen(true);
+  };
+  
+  const handleSelectAll = () => {
+    if (selectedVersionIds.length === sortedVersions.length) {
+      // If all are selected, deselect all
+      setSelectedVersionIds([]);
+    } else {
+      // Select all versions
+      setSelectedVersionIds(sortedVersions.map(v => v.id));
+    }
   };
   
   const confirmDelete = () => {
@@ -152,10 +169,20 @@ export function DocumentVersionHistory({
             
             <TabsContent value="delete" className="flex-grow overflow-auto p-1">
               <div className="mb-4 p-3 bg-red-50 rounded-lg">
-                <p className="text-sm text-red-700 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Select one or more versions to permanently delete. This action cannot be undone.
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-red-700 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Select one or more versions to permanently delete. This action cannot be undone.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="ml-4 border-red-200 text-red-700 hover:bg-red-100"
+                  >
+                    {selectedVersionIds.length === sortedVersions.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
@@ -255,8 +282,13 @@ export function DocumentVersionHistory({
             <div className="flex items-center gap-2">
               {selectedVersionIds.length > 0 && (
                 <Badge variant="secondary">
-                  {selectedVersionIds.length} selected
+                  {selectedVersionIds.length} of {sortedVersions.length} selected
                 </Badge>
+              )}
+              {mode === 'delete' && sortedVersions.length > 0 && (
+                <span className="text-sm text-gray-500">
+                  {sortedVersions.length} total version{sortedVersions.length > 1 ? 's' : ''}
+                </span>
               )}
             </div>
             <div className="flex gap-2">
@@ -275,7 +307,7 @@ export function DocumentVersionHistory({
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Selected ({selectedVersionIds.length})
+                  {deleteMutation.isPending ? "Deleting..." : `Delete Selected (${selectedVersionIds.length})`}
                 </Button>
               )}
             </div>
@@ -295,23 +327,31 @@ export function DocumentVersionHistory({
           </DialogHeader>
           
           <div className="py-4">
-            <div className="bg-red-50 p-3 rounded-lg">
-              <p className="text-sm text-red-700">
-                The following versions will be permanently deleted:
-              </p>
-              <ul className="mt-2 text-sm text-red-600">
-                {selectedVersionIds.map(id => {
-                  const version = sortedVersions.find(v => v.id === id);
-                  return version ? (
-                    <li key={id} className="flex items-center gap-2">
-                      • Version {version.version} - {version.fileName} 
-                      <Badge variant="outline" className="text-xs">
-                        {formatDateTime(version.uploadedAt)}
-                      </Badge>
-                    </li>
-                  ) : null;
-                })}
-              </ul>
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <p className="font-medium text-red-700">
+                  The following {selectedVersionIds.length} version{selectedVersionIds.length > 1 ? 's' : ''} will be permanently deleted:
+                </p>
+              </div>
+              <div className="max-h-32 overflow-y-auto">
+                <ul className="space-y-1 text-sm text-red-600">
+                  {selectedVersionIds.map(id => {
+                    const version = sortedVersions.find(v => v.id === id);
+                    return version ? (
+                      <li key={id} className="flex items-center justify-between gap-2 p-2 bg-white/50 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">v{version.version}</span>
+                          <span>{version.fileName}</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {formatDateTime(version.uploadedAt)}
+                        </Badge>
+                      </li>
+                    ) : null;
+                  })}
+                </ul>
+              </div>
             </div>
           </div>
           
@@ -327,8 +367,19 @@ export function DocumentVersionHistory({
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Forever"}
+              {deleteMutation.isPending ? (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting {selectedVersionIds.length} version{selectedVersionIds.length > 1 ? 's' : ''}...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Permanently Delete {selectedVersionIds.length} Version{selectedVersionIds.length > 1 ? 's' : ''}
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
