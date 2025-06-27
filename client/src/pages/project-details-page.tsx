@@ -48,13 +48,7 @@ export default function ProjectDetailsPage() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isStakeholderDialogOpen, setIsStakeholderDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
-  const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
-  const [isEnhancedStakeholderDialogOpen, setIsEnhancedStakeholderDialogOpen] = useState(false);
-  const [isAssignTaskDialogOpen, setIsAssignTaskDialogOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [selectedStakeholder, setSelectedStakeholder] = useState(null);
+
   const [isCoverLetterDialogOpen, setIsCoverLetterDialogOpen] = useState(false);
   
   // Form state with localStorage persistence
