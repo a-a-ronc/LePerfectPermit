@@ -89,10 +89,11 @@ function App() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <div className="app">
-          <Switch>
+    <ThemeProvider defaultTheme="light" storageKey="painlesspermit-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppLayout>
+            <Switch>
             <Route path="/">
               <LandingPage />
             </Route>
@@ -138,10 +139,11 @@ function App() {
               <NotFound />
             </Route>
           </Switch>
-        </div>
+        </AppLayout>
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
