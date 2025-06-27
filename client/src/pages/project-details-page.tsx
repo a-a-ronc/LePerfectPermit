@@ -48,6 +48,13 @@ export default function ProjectDetailsPage() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isStakeholderDialogOpen, setIsStakeholderDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+  const [isEnhancedStakeholderDialogOpen, setIsEnhancedStakeholderDialogOpen] = useState(false);
+  const [isAssignTaskDialogOpen, setIsAssignTaskDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [selectedStakeholder, setSelectedStakeholder] = useState(null);
   const [isCoverLetterDialogOpen, setIsCoverLetterDialogOpen] = useState(false);
   
   // Form state with localStorage persistence
@@ -499,21 +506,19 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
         
         {/* Upload Document Dialog */}
         <DocumentUploadDialog 
-        isOpen={isUploadDialogOpen}
-        onClose={() => setIsUploadDialogOpen(false)}
-        projectId={projectId}
-      />
+          isOpen={isUploadDialogOpen}
+          onClose={() => setIsUploadDialogOpen(false)}
+          projectId={projectId}
+        />
+        
+        {/* Add Stakeholder Dialog */}
+        <AddStakeholderDialog
+          isOpen={isStakeholderDialogOpen}
+          onClose={() => setIsStakeholderDialogOpen(false)}
+          projectId={projectId}
+        />
       
-      {/* Add Stakeholder Dialog */}
-      <AddStakeholderDialog
-        isOpen={isStakeholderDialogOpen}
-        onClose={() => setIsStakeholderDialogOpen(false)}
-        projectId={projectId}
-      />
-      
-
-      
-      {/* Generate Cover Letter Dialog */}
+        {/* Generate Cover Letter Dialog */}
       <Dialog open={isCoverLetterDialogOpen} onOpenChange={setIsCoverLetterDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -641,7 +646,6 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 }
