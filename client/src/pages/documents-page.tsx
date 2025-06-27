@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Sidebar } from "@/components/layout/sidebar";
+
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -175,16 +175,13 @@ export default function DocumentsPage() {
   ];
   
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar />
+    <div className="min-h-screen">
+      <Header breadcrumb={[
+        { label: "Dashboard", href: "/" },
+        { label: "Documents" }
+      ]} />
       
-      <div className="flex-grow overflow-hidden">
-        <Header breadcrumb={[
-          { label: "Dashboard", href: "/" },
-          { label: "Documents" }
-        ]} />
-        
-        <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
+      <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           <div className="mb-6 flex flex-wrap justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-secondary">Document Management</h1>
@@ -292,6 +289,5 @@ export default function DocumentsPage() {
           </Card>
         </div>
       </div>
-    </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
-import { Sidebar } from "@/components/layout/sidebar";
+
 import { Header } from "@/components/layout/header";
 import { ProjectDetailsHeader } from "@/components/projects/project-details-header";
 import { ProjectInfoCards } from "@/components/projects/project-info-cards";
@@ -314,15 +314,13 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
 
   if (!isLoading && !project) {
     return (
-      <div className="min-h-screen flex flex-col md:flex-row">
-        <Sidebar />
-        <div className="flex-grow overflow-hidden">
-          <Header breadcrumb={[
-            { label: "Dashboard", href: "/" },
-            { label: "Projects", href: "/projects" },
-            { label: "Project Not Found" }
-          ]} />
-          <div className="p-6">
+      <div className="min-h-screen">
+        <Header breadcrumb={[
+          { label: "Dashboard", href: "/" },
+          { label: "Projects", href: "/projects" },
+          { label: "Project Not Found" }
+        ]} />
+        <div className="p-6">
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Project Not Found</AlertTitle>

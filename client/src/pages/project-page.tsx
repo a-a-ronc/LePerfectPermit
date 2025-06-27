@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Sidebar } from "@/components/layout/sidebar";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
@@ -348,12 +348,9 @@ export default function ProjectPage() {
   ];
   
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar />
-      
-      <div className="flex-grow overflow-hidden">
-        {/* Top Navigation Bar */}
-        <div className="bg-white p-4 shadow-sm flex items-center justify-between">
+    <div className="min-h-screen">
+      {/* Top Navigation Bar */}
+      <div className="bg-white p-4 shadow-sm flex items-center justify-between">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2">
               <li>
@@ -369,10 +366,10 @@ export default function ProjectPage() {
               </li>
             </ol>
           </nav>
-        </div>
-        
-        {/* Main Content */}
-        <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
+      </div>
+      
+      {/* Main Content */}
+      <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           <div className="mb-6 flex flex-wrap justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-secondary">Projects</h1>
@@ -580,6 +577,5 @@ export default function ProjectPage() {
           </Card>
         </div>
       </div>
-    </div>
   );
 }
