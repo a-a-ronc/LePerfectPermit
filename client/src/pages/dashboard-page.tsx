@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Sidebar } from "@/components/layout/sidebar";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
@@ -332,12 +332,9 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
   };
   
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar />
-      
-      <div className="flex-grow overflow-hidden">
-        {/* Top Navigation Bar */}
-        <div className="bg-white p-4 shadow-sm flex items-center justify-between">
+    <div className="min-h-screen">
+      {/* Top Navigation Bar */}
+      <div className="bg-white p-4 shadow-sm flex items-center justify-between">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2">
               <li>
@@ -360,10 +357,10 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
               </button>
             </div>
           </div>
-        </div>
-        
-        {/* Main Content */}
-        <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
+      </div>
+      
+      {/* Main Content */}
+      <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-secondary">Permit Specialist Dashboard</h1>
             <p className="text-gray-500">Welcome back, {userData?.fullName || userData?.username || 'User'}. Here's an overview of your permit projects.</p>
@@ -637,6 +634,5 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
           </div>
         </div>
       </div>
-    </div>
   );
 }
