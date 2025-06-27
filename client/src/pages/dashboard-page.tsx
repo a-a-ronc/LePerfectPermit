@@ -27,6 +27,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 
 type ProjectRow = {
   id: number;
@@ -308,15 +309,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
     enabled: projects.length > 0,
   });
 
-  // Get recent activities for display
-  const recentActivities = allActivities.slice(0, 4).map(activity => ({
-    id: activity.id,
-    type: activity.activityType,
-    project: activity.projectName,
-    description: activity.description,
-    timestamp: new Date(activity.createdAt),
-    user: activity.user?.fullName || "Unknown User"
-  }));
+
   
   // Get upcoming deadlines
   const upcomingDeadlines = projects
@@ -324,22 +317,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
     .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
     .slice(0, 3);
   
-  const activityTypeIcons = {
-    document_uploaded: <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-      <FileText className="h-5 w-5 text-white" />
-    </span>,
-    document_approved: <span className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
-      <CheckCircle2 className="h-5 w-5 text-white" />
-    </span>,
-    document_rejected: <span className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center ring-8 ring-white">
-      <AlertTriangle className="h-5 w-5 text-white" />
-    </span>,
-    stakeholder_added: <span className="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center ring-8 ring-white">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    </span>
-  };
+
   
   return (
     <div className="min-h-screen">
@@ -519,41 +497,20 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
                     <h2 className="text-lg font-semibold">Recent Activity</h2>
                   </div>
                   <div className="p-4">
-                    <div className="flow-root">
-                      <ul className="-mb-8">
-                        {recentActivities.map((activity, index) => (
-                          <li key={activity.id}>
-                            <div className="relative pb-8">
-                              {index < recentActivities.length - 1 && (
-                                <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                              )}
-                              <div className="relative flex space-x-3">
-                                <div>
-                                  {activityTypeIcons[activity.type as keyof typeof activityTypeIcons]}
-                                </div>
-                                <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                  <div>
-                                    <p className="text-sm text-gray-500">
-                                      {activity.description} for <span className="font-medium text-gray-900">{activity.project}</span>
-                                    </p>
-                                  </div>
-                                  <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                                    <time dateTime={activity.timestamp.toISOString()}>
-                                      {formatRelativeTime(activity.timestamp)}
-                                    </time>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="mt-6">
-                      <Button variant="outline" className="w-full">
-                        View all activity
-                      </Button>
-                    </div>
+                    <ActivityTimeline 
+                      activities={allActivities.map(activity => ({
+                        id: activity.id,
+                        projectId: activity.projectId,
+                        userId: activity.userId,
+                        activityType: activity.activityType,
+                        description: `${activity.description} for ${activity.projectName}`,
+                        createdAt: activity.createdAt,
+                        user: activity.user
+                      }))}
+                      limit={4}
+                      showViewAllButton={true}
+                      isLoading={isLoadingActivities}
+                    />
                   </div>
                 </CardContent>
               </Card>
