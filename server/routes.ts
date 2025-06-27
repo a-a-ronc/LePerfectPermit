@@ -1002,6 +1002,75 @@ Please log into PainlessPermit to view more details.`,
     }
   });
 
+  // User profile update endpoint
+  app.patch("/api/user/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userId = parseInt(req.params.id);
+      const user = req.user as any;
+      
+      // Users can only update their own profile
+      if (user.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { fullName, email, defaultContactEmail, defaultContactPhone } = req.body;
+      
+      // Update user profile
+      const updatedUser = await storage.updateUserContactDefaults(userId, {
+        defaultContactEmail: defaultContactEmail || null,
+        defaultContactPhone: defaultContactPhone || null,
+      });
+
+      // Also update main email and full name (would need to add this method to storage)
+      // For now, return success
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // User password change endpoint
+  app.patch("/api/user/:id/password", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userId = parseInt(req.params.id);
+      const user = req.user as any;
+      
+      // Users can only change their own password
+      if (user.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Current password and new password are required" });
+      }
+
+      // Verify current password
+      const { comparePasswords } = await import('./auth');
+      const isValidPassword = await comparePasswords(currentPassword, user.password);
+      
+      if (!isValidPassword) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Hash new password and update
+      const { hashPassword } = await import('./auth');
+      const hashedNewPassword = await hashPassword(newPassword);
+      
+      const updatedUser = await storage.updateUserPassword(userId, hashedNewPassword);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -12,13 +12,13 @@ declare global {
   }
 }
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   // Using bcrypt for password hashing with 10 rounds
   const saltRounds = 10;
   return bcrypt.hash(password, saltRounds);
 }
 
-async function comparePasswords(supplied: string, stored: string) {
+export async function comparePasswords(supplied: string, stored: string) {
   try {
     // Using bcrypt to compare passwords
     return await bcrypt.compare(supplied, stored);

@@ -13,6 +13,8 @@ import ProjectDetailsPage from "@/pages/project-details-page";
 import DocumentsPage from "@/pages/documents-page";
 import StakeholderPage from "@/pages/stakeholder-page";
 import SettingsPage from "@/pages/settings-page";
+import ReviewsPage from "@/pages/reviews-page";
+import ReportsPage from "@/pages/reports-page";
 import NotFound from "@/pages/not-found";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -123,6 +125,12 @@ function App() {
             </Route>
             <Route path="/settings">
               <ProtectedRoute component={() => <SettingsPage />} />
+            </Route>
+            <Route path="/reviews">
+              <ProtectedRoute component={() => <ReviewsPage />} />
+            </Route>
+            <Route path="/reports">
+              <ProtectedRoute component={() => <ReportsPage />} />
             </Route>
             <Route>
               <NotFound />
