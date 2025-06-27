@@ -149,6 +149,7 @@ PainlessPermit™ is a comprehensive web application designed to streamline the 
 - June 26, 2025: Fixed stakeholder task assignment system - resolved missing schema imports, implemented proper stakeholder notification creation, added email notifications with SendGrid integration, enhanced error handling, and ensured notifications appear on user dashboard with email matching to login credentials
 - June 26, 2025: Implemented comprehensive navigation system - created working stakeholders page with detailed user information and search functionality, settings page with profile and password management, reviews page for document approval workflow, and reports page with analytics and project metrics, fixed all sidebar navigation links to provide complete application functionality
 - June 27, 2025: Fixed critical navigation and authentication issues - dashboard button now correctly redirects to /dashboard instead of /, logout redirects to /auth instead of /, dashboard activity container now shows real activity data from all projects instead of mock data, all authenticated pages properly protected with ProtectedRoute component to ensure user authentication is required
+- June 27, 2025: Fixed dark mode functionality - added proper dark mode classes to sidebar, dashboard, and all UI components so the entire application now switches themes consistently when dark mode toggle is clicked, including background colors, text colors, borders, and hover states
 
 ## Changelog
 
