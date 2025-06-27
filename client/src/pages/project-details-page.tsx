@@ -332,7 +332,6 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
               Go Back to Projects
             </Button>
           </div>
-        </div>
       </div>
     );
   }
@@ -397,17 +396,14 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar />
+    <div className="min-h-screen">
+      <Header breadcrumb={[
+        { label: "Dashboard", href: "/" },
+        { label: "Projects", href: "/projects" },
+        { label: isLoading ? "Loading..." : project.name }
+      ]} />
       
-      <div className="flex-grow overflow-hidden">
-        <Header breadcrumb={[
-          { label: "Dashboard", href: "/" },
-          { label: "Projects", href: "/projects" },
-          { label: isLoading ? "Loading..." : project.name }
-        ]} />
-        
-        <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
+      <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           {isLoading ? (
             <ProjectDetailsSkeleton />
           ) : (
@@ -500,10 +496,9 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
             </>
           )}
         </div>
-      </div>
-      
-      {/* Upload Document Dialog */}
-      <DocumentUploadDialog 
+        
+        {/* Upload Document Dialog */}
+        <DocumentUploadDialog 
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
         projectId={projectId}
@@ -646,6 +641,7 @@ ${user?.defaultContactPhone || '(714) 697-6431'}`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
