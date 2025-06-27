@@ -22,6 +22,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "./lib/queryClient";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { AppLayout } from "@/components/layout/app-layout";
 
 // Landing Page
 function LandingPage() {

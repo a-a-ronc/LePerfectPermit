@@ -32,11 +32,11 @@ function SidebarLink({ href, icon, children, active }: SidebarLinkProps) {
           "flex items-center px-3 py-2 rounded-md font-medium text-sm transition-colors cursor-pointer",
           active 
             ? "bg-primary/10 text-primary" 
-            : "text-secondary hover:bg-gray-100"
+            : "text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
         )}
       >
         {React.cloneElement(icon as React.ReactElement, {
-          className: "h-5 w-5 mr-3"
+          className: "h-5 w-5 mr-3 text-black dark:text-white"
         })}
         {children}
       </div>
