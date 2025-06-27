@@ -1,266 +1,265 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StakeholderList } from "@/components/stakeholders/stakeholder-list";
-import { PlusCircle, Users } from "lucide-react";
-import { ColumnDef } from "@tanstack/react-table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-type StakeholderRow = {
-  id: number;
-  userId: number;
-  fullName: string;
-  email: string;
-  role: string;
-  projects: { id: number; name: string }[];
-};
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { User, Mail, Phone, Building, Calendar, CheckCircle, Clock, AlertTriangle, Search, Eye } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 
 export default function StakeholderPage() {
-  const [user, setUser] = useState<any>(null);
-  
-  // Fetch user data
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user', {
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    
-    fetchUser();
-  }, []);
-  const [activeTab, setActiveTab] = useState("stakeholders");
-  
-  // Only permit specialists should be able to view this page
-  if (user?.role !== "specialist") {
+  const { user } = useAuth();
+  const [selectedStakeholder, setSelectedStakeholder] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Load all users who can be stakeholders
+  const { data: allUsers = [], isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["/api/users"],
+    staleTime: 30000,
+  });
+
+  // Filter stakeholders based on search term
+  const stakeholders = (allUsers as any[]).filter((stakeholder: any) => 
+    stakeholder.role !== 'admin' && (
+      stakeholder.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      stakeholder.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      stakeholder.username?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'specialist': return 'default';
+      case 'engineer': return 'secondary';
+      case 'architect': return 'outline';
+      case 'project_manager': return 'destructive';
+      case 'stakeholder': return 'secondary';
+      default: return 'outline';
+    }
+  };
+
+  const formatRole = (role: string) => {
+    return role.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  if (isLoadingUsers) {
     return (
-      <div className="min-h-screen flex flex-col md:flex-row">
-        <Sidebar />
-        <div className="flex-grow overflow-hidden">
-          <Header breadcrumb={[
-            { label: "Dashboard", href: "/" },
-            { label: "Stakeholders" }
-          ]} />
-          <div className="p-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
-                  <p className="text-gray-500 mb-4">
-                    Only permit specialists can access the stakeholder management page.
-                  </p>
-                  <Button asChild>
-                    <Link href="/">Go to Dashboard</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
         </div>
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
-  
-  // Load all users
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ["/api/users"],
-    enabled: user?.role === "specialist",
-  });
-  
-  // Load all projects
-  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
-    queryKey: ["/api/projects"],
-    enabled: user?.role === "specialist",
-  });
-  
-  // Function to get stakeholders with projects
-  const fetchStakeholders = async () => {
-    const stakeholders: StakeholderRow[] = [];
-    const stakeholderMap = new Map<number, StakeholderRow>();
-    
-    // First get all users with stakeholder role
-    const stakeholderUsers = users.filter(u => u.role === "stakeholder");
-    
-    // Initialize stakeholder map
-    stakeholderUsers.forEach(u => {
-      stakeholderMap.set(u.id, {
-        id: u.id,
-        userId: u.id,
-        fullName: u.fullName,
-        email: u.email,
-        role: "stakeholder",
-        projects: [],
-      });
-    });
-    
-    // For each project, fetch stakeholders
-    for (const project of projects) {
-      const res = await fetch(`/api/projects/${project.id}/stakeholders`, {
-        credentials: "include",
-      });
-      
-      if (res.ok) {
-        const projectStakeholders = await res.json();
-        
-        // Add project to each stakeholder's projects
-        projectStakeholders.forEach((stake: any) => {
-          const userId = stake.userId;
-          
-          // If stakeholder already exists in map, add project
-          if (stakeholderMap.has(userId)) {
-            const stakeholder = stakeholderMap.get(userId)!;
-            stakeholder.projects.push({
-              id: project.id,
-              name: project.name,
-            });
-          }
-        });
-      }
-    }
-    
-    // Convert map to array
-    stakeholderMap.forEach(stakeholder => {
-      stakeholders.push(stakeholder);
-    });
-    
-    return stakeholders;
-  };
-  
-  // Load stakeholders
-  const { data: stakeholders = [], isLoading: isLoadingStakeholders } = useQuery({
-    queryKey: ["/api/stakeholders"],
-    queryFn: fetchStakeholders,
-    enabled: user?.role === "specialist" && users.length > 0 && projects.length > 0,
-  });
-  
-  const isLoading = isLoadingUsers || isLoadingProjects || isLoadingStakeholders;
-  
-  const columns: ColumnDef<StakeholderRow>[] = [
-    {
-      accessorKey: "fullName",
-      header: "Stakeholder",
-      cell: ({ row }) => (
-        <div className="flex items-center">
-          <Avatar className="h-8 w-8 mr-2">
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {row.original.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-medium">{row.original.fullName}</div>
-            <div className="text-sm text-gray-500">{row.original.email}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "projects",
-      header: "Associated Projects",
-      cell: ({ row }) => {
-        const projects = row.original.projects;
-        return (
-          <div>
-            {projects.length === 0 ? (
-              <span className="text-gray-500">No projects</span>
-            ) : projects.length <= 2 ? (
-              projects.map((project, i) => (
-                <div key={project.id}>
-                  <Link href={`/project/${project.id}`}>
-                    <a className="text-primary hover:underline">{project.name}</a>
-                  </Link>
-                </div>
-              ))
-            ) : (
-              <div>
-                <Link href={`/project/${projects[0].id}`}>
-                  <a className="text-primary hover:underline">{projects[0].name}</a>
-                </Link>
-                <div className="text-sm text-gray-500">
-                  + {projects.length - 1} more projects
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/stakeholders/${row.original.id}`}>
-              View Details
-            </Link>
-          </Button>
-        </div>
-      ),
-    },
-  ];
-  
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar />
-      
-      <div className="flex-grow overflow-hidden">
-        <Header breadcrumb={[
-          { label: "Dashboard", href: "/" },
-          { label: "Stakeholders" }
-        ]} />
-        
-        <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
-          <div className="mb-6 flex flex-wrap justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-secondary">Stakeholder Management</h1>
-              <p className="text-gray-500">Manage project stakeholders and their access.</p>
-            </div>
-          </div>
-          
-          <Card>
-            <CardContent className="p-0">
-              {isLoading ? (
-                <div className="p-8">
-                  <div className="space-y-4">
-                    {Array(5).fill(0).map((_, i) => (
-                      <div key={i} className="flex items-center space-x-4">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                        <Skeleton className="h-8 w-40 ml-auto" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <DataTable 
-                  columns={columns} 
-                  data={stakeholders} 
-                  searchColumn="fullName"
-                  searchPlaceholder="Search stakeholders..."
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Stakeholders</h1>
+        <p className="text-muted-foreground">
+          Manage and view all stakeholders across projects
+        </p>
       </div>
+
+      {/* Search Bar */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Search Stakeholders
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, or username..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stakeholders Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Stakeholders ({stakeholders.length})</CardTitle>
+          <CardDescription>
+            Click on any stakeholder to view detailed information
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stakeholders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      {searchTerm ? `No stakeholders found matching "${searchTerm}"` : 'No stakeholders found'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  stakeholders.map((stakeholder: any) => (
+                    <TableRow key={stakeholder.id} className="cursor-pointer hover:bg-muted/50">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{stakeholder.fullName || stakeholder.username}</div>
+                            <div className="text-sm text-muted-foreground">@{stakeholder.username}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getRoleBadgeVariant(stakeholder.role)}>
+                          {formatRole(stakeholder.role)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{stakeholder.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{stakeholder.defaultContactPhone || 'Not provided'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedStakeholder(stakeholder)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stakeholder Details Dialog */}
+      {selectedStakeholder && (
+        <Dialog open={!!selectedStakeholder} onOpenChange={() => setSelectedStakeholder(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-lg font-semibold">{selectedStakeholder.fullName || selectedStakeholder.username}</div>
+                  <div className="text-sm text-muted-foreground">@{selectedStakeholder.username}</div>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Contact Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Email</label>
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{selectedStakeholder.email}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{selectedStakeholder.defaultContactPhone || 'Not provided'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Role</label>
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        <Building className="h-4 w-4 text-muted-foreground" />
+                        <Badge variant={getRoleBadgeVariant(selectedStakeholder.role)}>
+                          {formatRole(selectedStakeholder.role)}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">
+                          {selectedStakeholder.createdAt ? format(new Date(selectedStakeholder.createdAt), 'MMM dd, yyyy') : 'Unknown'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Additional Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Additional Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Default Contact Email</label>
+                      <div className="p-2 bg-muted rounded-md text-sm">
+                        {selectedStakeholder.defaultContactEmail || 'Not set'}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Account Status</label>
+                      <div className="p-2 bg-muted rounded-md">
+                        <Badge variant="secondary">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import ProjectPage from "@/pages/project-page";
 import ProjectDetailsPage from "@/pages/project-details-page";
 import DocumentsPage from "@/pages/documents-page";
 import StakeholderPage from "@/pages/stakeholder-page";
+import SettingsPage from "@/pages/settings-page";
 import NotFound from "@/pages/not-found";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -119,6 +120,9 @@ function App() {
             </Route>
             <Route path="/stakeholders">
               <ProtectedRoute component={() => <StakeholderPage />} />
+            </Route>
+            <Route path="/settings">
+              <ProtectedRoute component={() => <SettingsPage />} />
             </Route>
             <Route>
               <NotFound />
