@@ -104,7 +104,7 @@ export function Sidebar({ className }: SidebarProps) {
   // If mobile and not expanded, only show the minimal sidebar
   if (isMobile && !expanded) {
     return (
-      <div className={cn("bg-white shadow-md w-full p-4 flex items-center justify-between", className)}>
+      <div className={cn("bg-white dark:bg-gray-900 shadow-md w-full p-4 flex items-center justify-between", className)}>
         <Logo size="sm" />
         <Button variant="ghost" size="icon" onClick={toggleSidebar}>
           <LayoutGrid className="h-6 w-6" />
@@ -115,13 +115,13 @@ export function Sidebar({ className }: SidebarProps) {
   
   return (
     <div className={cn(
-      "bg-white shadow-md flex flex-col",
+      "bg-white dark:bg-gray-900 shadow-md flex flex-col",
       isMobile 
         ? "fixed inset-0 z-50 w-full h-full overflow-auto" 
         : "w-64 min-h-screen",
       className
     )}>
-      <div className="p-4 flex items-center justify-between border-b">
+      <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
         <Logo size="md" />
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={toggleSidebar}>
@@ -154,14 +154,14 @@ export function Sidebar({ className }: SidebarProps) {
           </>
         )}
         
-        <div className="pt-4 mt-4 border-t border-gray-200">
+        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
           <SidebarLink href="/settings" icon={<Settings />} active={location === "/settings"}>
             Settings
           </SidebarLink>
         </div>
       </nav>
       
-      <div className="p-4 border-t border-gray-200 mt-auto">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
         <div className="flex items-center">
           <Avatar>
             <AvatarFallback className="bg-primary/10 text-primary">
@@ -169,13 +169,13 @@ export function Sidebar({ className }: SidebarProps) {
             </AvatarFallback>
           </Avatar>
           <div className="ml-3">
-            <p className="text-sm font-medium">{userData.fullName || userData.username}</p>
-            <p className="text-xs text-gray-500 capitalize">{userData.role}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{userData.fullName || userData.username}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{userData.role}</p>
           </div>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="ml-auto text-gray-400 hover:text-gray-600"
+            className="ml-auto text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />
