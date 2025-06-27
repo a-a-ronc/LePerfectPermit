@@ -88,9 +88,9 @@ export function Sidebar({ className }: SidebarProps) {
       });
       
       if (response.ok) {
-        // Clear user data and redirect to home
+        // Clear user data and redirect to auth page
         setUserData(null);
-        navigate('/');
+        navigate('/auth');
       }
     } catch (error) {
       console.error('Error logging out:', error);
@@ -131,7 +131,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
       
       <nav className="p-4 space-y-1 flex-grow">
-        <SidebarLink href="/" icon={<LayoutGrid />} active={location === "/"}>
+        <SidebarLink href="/dashboard" icon={<LayoutGrid />} active={location === "/dashboard"}>
           Dashboard
         </SidebarLink>
         <SidebarLink href="/projects" icon={<Folder />} active={location === "/projects" || location.startsWith("/project/")}>

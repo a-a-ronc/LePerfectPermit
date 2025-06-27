@@ -272,41 +272,51 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
     },
   ];
   
-  // Get recent activities (using mock data for now)
-  const recentActivities = [
-    {
-      id: 1,
-      type: "document_uploaded",
-      project: "CityView Distribution Center",
-      description: "Document Site Plan was uploaded",
-      timestamp: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-      user: "Michael Wilson"
+  // Fetch real activity data from all projects
+  const { data: allActivities = [], isLoading: isLoadingActivities } = useQuery({
+    queryKey: ["/api/activities/all"],
+    queryFn: async () => {
+      const allActivities: any[] = [];
+      
+      // For each project, fetch its activities
+      for (const project of projects) {
+        try {
+          const res = await fetch(`/api/projects/${project.id}/activities`, {
+            credentials: "include",
+          });
+          
+          if (res.ok) {
+            const activities = await res.json();
+            // Add project info to each activity
+            const activitiesWithProject = activities.map((activity: any) => ({
+              ...activity,
+              projectName: project.name,
+              projectId: project.id
+            }));
+            allActivities.push(...activitiesWithProject);
+          }
+        } catch (error) {
+          console.error(`Error fetching activities for project ${project.id}:`, error);
+        }
+      }
+      
+      // Sort by creation date (newest first) and return top 10
+      return allActivities
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10);
     },
-    {
-      id: 2,
-      type: "document_approved",
-      project: "Harbor Logistics Complex",
-      description: "Document Egress Plan was approved",
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-      user: "Sarah Thompson"
-    },
-    {
-      id: 3,
-      type: "document_rejected",
-      project: "Northern Distribution Hub",
-      description: "Document Structural Plans was rejected",
-      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-      user: "Sarah Thompson"
-    },
-    {
-      id: 4,
-      type: "stakeholder_added",
-      project: "CityView Distribution Center",
-      description: "New stakeholder Robert Chen was added",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      user: "Sarah Thompson"
-    }
-  ];
+    enabled: projects.length > 0,
+  });
+
+  // Get recent activities for display
+  const recentActivities = allActivities.slice(0, 4).map(activity => ({
+    id: activity.id,
+    type: activity.activityType,
+    project: activity.projectName,
+    description: activity.description,
+    timestamp: new Date(activity.createdAt),
+    user: activity.user?.fullName || "Unknown User"
+  }));
   
   // Get upcoming deadlines
   const upcomingDeadlines = projects
