@@ -102,3 +102,7 @@ High Level Architecture
 - No production secrets in the repo. Use environment variables in deployment.
 
 - For customer deployments: SSO/OIDC and row-level isolation are planned.
+
+**License**
+
+MIT for the scaffold and general code; certain jurisdiction rule content may be proprietary.
