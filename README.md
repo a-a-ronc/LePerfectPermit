@@ -72,7 +72,7 @@ Create .env in the repo root
     # terminal B (client)
     npm run dev:client
 
-High Level Architecture
+**High Level Architecture**
    ```bash
    LePerfectPermit/
 ├─ client/           # React app (Vite + Tailwind)
