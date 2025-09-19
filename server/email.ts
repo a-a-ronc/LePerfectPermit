@@ -27,7 +27,7 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     await mailService.send({
       to: params.to,
-      from: params.from || 'noreply@painlesspermit.com',
+      from: params.from || 'noreply@replit.com', // Use verified Replit domain
       subject: params.subject,
       text: params.text,
       html: params.html,
@@ -36,6 +36,9 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('SendGrid email error:', error);
+    if (error.response && error.response.body && error.response.body.errors) {
+      console.error('SendGrid error details:', JSON.stringify(error.response.body.errors, null, 2));
+    }
     return false;
   }
 }
@@ -136,7 +139,7 @@ The PainlessPermit™ Team
 
   return await sendEmail({
     to: email,
-    from: 'noreply@painlesspermit.com',
+    from: 'noreply@replit.com', // Use verified Replit domain
     subject,
     text,
     html
