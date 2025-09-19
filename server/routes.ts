@@ -224,6 +224,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search API endpoint
+  app.get("/api/search", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const searchQuery = req.query.searchValue as string;
+      const user = req.user!;
+      
+      if (!searchQuery || searchQuery.length < 3) {
+        return res.json([]);
+      }
+      
+      const searchTerm = searchQuery.toLowerCase();
+      const results = [];
+      
+      // Search projects (with role-based filtering)
+      const projects = await storage.getProjects();
+      let userProjects = projects;
+      
+      // Filter projects based on user role
+      if (user.role === 'stakeholder') {
+        // Stakeholders only see projects they're associated with
+        const userStakeholders = [];
+        for (const project of projects) {
+          const stakeholders = await storage.getProjectStakeholders(project.id);
+          if (stakeholders.some(stakeholder => stakeholder.userId === user.id)) {
+            userStakeholders.push(project);
+          }
+        }
+        userProjects = userStakeholders;
+      }
+      
+      // Filter projects by search term
+      const matchingProjects = userProjects.filter(project => 
+        project.name.toLowerCase().includes(searchTerm) ||
+        project.clientName.toLowerCase().includes(searchTerm) ||
+        project.facilityAddress.toLowerCase().includes(searchTerm)
+      );
+      
+      results.push(...matchingProjects.map(project => ({
+        id: project.id,
+        name: project.name,
+        clientName: project.clientName,
+        type: 'project'
+      })));
+      
+      // Search documents in user's accessible projects
+      for (const project of userProjects) {
+        const documents = await storage.getDocumentsByProject(project.id);
+        const matchingDocuments = documents.filter(doc =>
+          doc.filename.toLowerCase().includes(searchTerm) ||
+          doc.category.toLowerCase().includes(searchTerm)
+        );
+        
+        results.push(...matchingDocuments.map(doc => ({
+          id: doc.id,
+          filename: doc.filename,
+          category: doc.category,
+          projectId: doc.projectId,
+          type: 'document'
+        })));
+      }
+      
+      // Search users (only specialists can see all users, stakeholders see limited results)
+      if (user.role === 'specialist') {
+        const users = await storage.getUsers();
+        const matchingUsers = users.filter(u =>
+          u.fullName.toLowerCase().includes(searchTerm) ||
+          u.email.toLowerCase().includes(searchTerm) ||
+          u.username.toLowerCase().includes(searchTerm)
+        );
+        
+        results.push(...matchingUsers.map(u => ({
+          id: u.id,
+          fullName: u.fullName,
+          email: u.email,
+          role: u.role,
+          type: 'user'
+        })));
+      }
+      
+      // Limit results and sort by relevance
+      const limitedResults = results.slice(0, 20);
+      
+      res.json(limitedResults);
+    } catch (error) {
+      console.error("Search error:", error);
+      res.status(500).json({ message: "Search failed" });
+    }
+  });
+
   // Document routes
   app.get("/api/projects/:projectId/documents", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

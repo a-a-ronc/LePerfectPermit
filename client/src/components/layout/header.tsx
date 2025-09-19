@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { 
-  BellIcon, 
   SearchIcon,
   ChevronRight,
   User,
@@ -20,6 +19,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useQuery } from "@tanstack/react-query";
 
 interface BreadcrumbItem {
   label: string;
@@ -56,80 +59,103 @@ export function Header({ breadcrumb = [] }: HeaderProps) {
         </ol>
       </nav>
       <div className="flex items-center space-x-4">
-        <NotificationsDropdown />
-        <Button variant="ghost" size="icon" aria-label="Search">
-          <SearchIcon className="h-5 w-5 text-gray-500" />
-        </Button>
+        <NotificationBell />
+        <SearchComponent />
       </div>
     </div>
   );
 }
 
-function NotificationsDropdown() {
-  // In a real app, these would come from an API
-  const notifications = [
-    {
-      id: 1,
-      title: "Document Ready for Review",
-      description: "Site Plan for CityView Distribution Center requires review",
-      time: "1 hour ago",
-      unread: true
-    },
-    {
-      id: 2,
-      title: "New Stakeholder Added",
-      description: "Robert Chen was added to Harbor Logistics Complex",
-      time: "2 hours ago",
-      unread: true
-    },
-    {
-      id: 3,
-      title: "Project Deadline Approaching",
-      description: "Northern Distribution Hub is due in 3 days",
-      time: "yesterday",
-      unread: false
-    }
-  ];
+function SearchComponent() {
+  const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
   
-  const unreadCount = notifications.filter(n => n.unread).length;
-  
+  // Search across projects, documents, and users
+  const { data: searchResults = [], isLoading } = useQuery({
+    queryKey: ['/api/search', searchValue],
+    enabled: searchValue.length > 2,
+    staleTime: 5000,
+  });
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <div className="relative">
-            <BellIcon className="h-5 w-5 text-gray-500" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 rounded-full h-4 w-4 flex items-center justify-center text-xs text-white">
-                {unreadCount}
-              </span>
-            )}
-          </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Search">
+          <SearchIcon className="h-5 w-5 text-gray-500" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <div className="max-h-96 overflow-auto">
-          <DropdownMenuGroup>
-            {notifications.map(notification => (
-              <DropdownMenuItem key={notification.id} className="py-2 px-4 focus:bg-gray-100">
-                <div className={`${notification.unread ? 'font-medium' : ''}`}>
-                  <div className="text-sm">{notification.title}</div>
-                  <div className="text-xs text-gray-500 mt-1">{notification.description}</div>
-                  <div className="text-xs text-gray-400 mt-1">{notification.time}</div>
-                </div>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuGroup>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="justify-center py-2 focus:bg-gray-100">
-          <Link href="/notifications">
-            <div className="w-full text-center text-primary text-sm cursor-pointer">View all notifications</div>
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <Command>
+          <CommandInput 
+            placeholder="Search projects, documents..." 
+            value={searchValue}
+            onValueChange={setSearchValue}
+          />
+          <CommandList>
+            <CommandEmpty>
+              {searchValue.length <= 2 ? 'Type at least 3 characters to search' : 'No results found'}
+            </CommandEmpty>
+            {searchResults && searchResults.length > 0 && (
+              <>
+                {searchResults.filter((item: any) => item.type === 'project').length > 0 && (
+                  <CommandGroup heading="Projects">
+                    {searchResults.filter((item: any) => item.type === 'project').map((project: any) => (
+                      <CommandItem
+                        key={`project-${project.id}`}
+                        onSelect={() => {
+                          window.location.href = `/projects/${project.id}`;
+                          setOpen(false);
+                        }}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{project.name}</span>
+                          <span className="text-sm text-muted-foreground">{project.clientName}</span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                {searchResults.filter((item: any) => item.type === 'document').length > 0 && (
+                  <CommandGroup heading="Documents">
+                    {searchResults.filter((item: any) => item.type === 'document').map((document: any) => (
+                      <CommandItem
+                        key={`document-${document.id}`}
+                        onSelect={() => {
+                          window.location.href = `/projects/${document.projectId}?document=${document.id}`;
+                          setOpen(false);
+                        }}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{document.filename}</span>
+                          <span className="text-sm text-muted-foreground">{document.category}</span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                {searchResults.filter((item: any) => item.type === 'user').length > 0 && (
+                  <CommandGroup heading="Users">
+                    {searchResults.filter((item: any) => item.type === 'user').map((user: any) => (
+                      <CommandItem
+                        key={`user-${user.id}`}
+                        onSelect={() => {
+                          window.location.href = `/stakeholders?user=${user.id}`;
+                          setOpen(false);
+                        }}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{user.fullName}</span>
+                          <span className="text-sm text-muted-foreground">{user.email}</span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
