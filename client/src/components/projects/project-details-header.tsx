@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Edit, Send, HelpCircle } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { EditProjectDialog } from "./edit-project-dialog";
 
 /**
  * Project Status Progression:
@@ -33,6 +34,8 @@ interface ProjectDetailsHeaderProps {
 }
 
 export function ProjectDetailsHeader({ project, documentProgress, onSubmit }: ProjectDetailsHeaderProps) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
   const { bg, text } = getProjectStatusColor(project.status);
   const isSubmittable = documentProgress === 100 && 
                          project.status !== ProjectStatus.READY_FOR_SUBMISSION && 
@@ -68,7 +71,12 @@ export function ProjectDetailsHeader({ project, documentProgress, onSubmit }: Pr
         <p className="text-gray-500">Permit #{project.permitNumber} - {project.jurisdiction}</p>
       </div>
       <div className="mt-4 sm:mt-0 flex space-x-3">
-        <Button variant="outline" className="flex items-center">
+        <Button 
+          variant="outline" 
+          className="flex items-center" 
+          onClick={() => setIsEditDialogOpen(true)}
+          data-testid="button-edit-project"
+        >
           <Edit className="h-4 w-4 mr-1" />
           Edit
         </Button>
@@ -80,6 +88,12 @@ export function ProjectDetailsHeader({ project, documentProgress, onSubmit }: Pr
           Submit to Authority
         </Button>
       </div>
+      
+      <EditProjectDialog
+        project={project}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </div>
   );
 }

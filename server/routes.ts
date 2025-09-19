@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { z } from "zod";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { generateCoverLetterWithAI } from "./openai";
@@ -113,7 +114,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const projectId = parseInt(req.params.id);
-      const project = await storage.updateProject(projectId, req.body);
+      
+      // Get project to verify it exists and check permissions
+      const existingProject = await storage.getProject(projectId);
+      if (!existingProject) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Only allow project creators or specialists to edit projects
+      const user = req.user!;
+      if (user.role !== 'specialist' && existingProject.createdById !== user.id) {
+        return res.status(403).json({ message: "You don't have permission to edit this project" });
+      }
+      
+      // Validate and whitelist allowed fields
+      const updateProjectSchema = z.object({
+        name: z.string().min(1).optional(),
+        clientName: z.string().min(1).optional(),
+        facilityAddress: z.string().min(1).optional(),
+        jurisdiction: z.string().min(1).optional(),
+        jurisdictionAddress: z.string().optional(),
+        contactEmail: z.string().email().optional().or(z.literal("")),
+        contactPhone: z.string().optional(),
+        permitNumber: z.string().optional(),
+        zipCode: z.string().optional(),
+        status: z.string().optional() // Only allow status updates for specialists
+      }).refine((data) => {
+        // Only specialists can update status
+        if (data.status !== undefined && user.role !== 'specialist') {
+          return false;
+        }
+        return true;
+      }, { message: "Only specialists can update project status" });
+      
+      const validatedData = updateProjectSchema.parse(req.body);
+      
+      const project = await storage.updateProject(projectId, validatedData);
       
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
@@ -122,14 +158,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log activity
       await storage.createActivityLog({
         projectId: project.id,
-        userId: req.user!.id,
+        userId: user.id,
         activityType: "project_updated",
         description: `Project "${project.name}" was updated`
       });
       
       res.json(project);
     } catch (error) {
-      res.status(400).json({ message: "Failed to update project", error });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error("Error updating project:", error);
+      res.status(500).json({ message: "Failed to update project" });
     }
   });
 
