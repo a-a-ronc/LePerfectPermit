@@ -27,7 +27,7 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     await mailService.send({
       to: params.to,
-      from: params.from || 'noreply@replit.com', // Use verified Replit domain
+      from: params.from || 'info@intralog.io', // Use verified domain
       subject: params.subject,
       text: params.text,
       html: params.html,
@@ -139,7 +139,7 @@ The PainlessPermit™ Team
 
   return await sendEmail({
     to: email,
-    from: 'noreply@replit.com', // Use verified Replit domain
+    from: 'info@intralog.io', // Use verified domain
     subject,
     text,
     html
