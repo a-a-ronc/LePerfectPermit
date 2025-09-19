@@ -246,54 +246,76 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Starting deletion of project ${id}`);
       
-      // Since the Neon client has issues, we'll do a workaround by temporarily disabling 
-      // cascade deletion and just delete the main project-related data
+      // Delete all related data first, then the project
+      // Using proper Drizzle ORM syntax for better compatibility
       
-      // Try to delete documents first
+      // Delete documents
       try {
-        await db.delete(documents).where(sql`project_id = ${id}`);
-        console.log('Documents deleted');
+        await db.delete(documents).where(eq(documents.projectId, id));
+        console.log('Documents deleted successfully');
       } catch (e) {
-        console.log('No documents to delete or error:', e);
+        console.log('Error deleting documents:', e);
       }
       
-      // Try to delete commodities
+      // Delete commodities
       try {
-        await db.delete(commodities).where(sql`project_id = ${id}`);
-        console.log('Commodities deleted');
+        await db.delete(commodities).where(eq(commodities.projectId, id));
+        console.log('Commodities deleted successfully');
       } catch (e) {
-        console.log('No commodities to delete or error:', e);
+        console.log('Error deleting commodities:', e);
       }
       
-      // Try to delete activity logs
+      // Delete activity logs
       try {
-        await db.delete(activityLogs).where(sql`project_id = ${id}`);
-        console.log('Activity logs deleted');
+        await db.delete(activityLogs).where(eq(activityLogs.projectId, id));
+        console.log('Activity logs deleted successfully');
       } catch (e) {
-        console.log('No activity logs to delete or error:', e);
+        console.log('Error deleting activity logs:', e);
       }
       
-      // Try to delete project stakeholders (this will leave orphaned tasks for now)
+      // Delete project stakeholders
       try {
-        await db.delete(projectStakeholders).where(sql`project_id = ${id}`);
-        console.log('Project stakeholders deleted');
+        await db.delete(projectStakeholders).where(eq(projectStakeholders.projectId, id));
+        console.log('Project stakeholders deleted successfully');
       } catch (e) {
-        console.log('No project stakeholders to delete or error:', e);
+        console.log('Error deleting project stakeholders:', e);
+      }
+      
+      // Delete stakeholder tasks (need to find tasks for stakeholders of this project)
+      try {
+        const projectStakeholderIds = await db
+          .select({ id: projectStakeholders.id })
+          .from(projectStakeholders)
+          .where(eq(projectStakeholders.projectId, id));
+        
+        if (projectStakeholderIds.length > 0) {
+          const stakeholderIds = projectStakeholderIds.map(s => s.id);
+          for (const stakeholderId of stakeholderIds) {
+            await db.delete(stakeholderTasks).where(eq(stakeholderTasks.stakeholderId, stakeholderId));
+          }
+        }
+        console.log('Stakeholder tasks deleted successfully');
+      } catch (e) {
+        console.log('Error deleting stakeholder tasks:', e);
+      }
+      
+      // Delete notifications for this project (stored in metadata)
+      try {
+        // For now, we'll skip this complex deletion since notifications metadata is JSON
+        // In a production system, this would need a more sophisticated approach
+        console.log('Notification deletion skipped (complex JSON metadata query)');
+      } catch (e) {
+        console.log('Error deleting notifications:', e);
       }
       
       // Finally delete the project
-      try {
-        await db.delete(projects).where(sql`id = ${id}`);
-        console.log('Project deleted successfully');
-        return true;
-      } catch (e) {
-        console.log('Error deleting project:', e);
-        return false;
-      }
+      const result = await db.delete(projects).where(eq(projects.id, id));
+      console.log(`Project ${id} deleted successfully`);
+      return true;
       
     } catch (error) {
       console.error('Error deleting project:', error);
-      return false;
+      throw error;
     }
   }
   
