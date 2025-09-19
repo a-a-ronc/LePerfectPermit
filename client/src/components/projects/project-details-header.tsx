@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Edit, Send, HelpCircle } from "lucide-react";
+import { Edit, Send, HelpCircle, MessageCircle } from "lucide-react";
 import { getProjectStatusColor, getProjectStatusLabel } from "@/lib/utils/status-utils";
 import { Project, ProjectStatus } from "@shared/schema";
 import {
@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { EditProjectDialog } from "./edit-project-dialog";
+import { MessageDialog } from "@/components/messaging/message-dialog";
 
 /**
  * Project Status Progression:
@@ -71,6 +72,16 @@ export function ProjectDetailsHeader({ project, documentProgress, onSubmit }: Pr
         <p className="text-gray-500">Permit #{project.permitNumber} - {project.jurisdiction}</p>
       </div>
       <div className="mt-4 sm:mt-0 flex space-x-3">
+        <MessageDialog 
+          projectId={project.id}
+          projectName={project.name}
+          trigger={
+            <Button variant="outline" className="flex items-center" data-testid="button-project-messages">
+              <MessageCircle className="h-4 w-4 mr-1" />
+              Messages
+            </Button>
+          }
+        />
         <Button 
           variant="outline" 
           className="flex items-center" 

@@ -12,7 +12,8 @@ import {
   insertProjectStakeholderSchema,
   insertActivityLogSchema,
   insertStakeholderTaskSchema,
-  insertNotificationSchema
+  insertNotificationSchema,
+  insertMessageSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1162,6 +1163,145 @@ Please log into PainlessPermit to view more details.`,
     } catch (error) {
       console.error('Error marking notification as read:', error);
       res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Helper function to check project access
+  async function checkProjectAccess(user: any, projectId: number): Promise<boolean> {
+    if (user.role === 'specialist') {
+      // Specialists have access to all projects
+      return true;
+    }
+    
+    // Stakeholders only have access to projects they're associated with
+    const stakeholders = await storage.getProjectStakeholders(projectId);
+    return stakeholders.some(stakeholder => stakeholder.userId === user.id);
+  }
+
+  // Messages endpoints
+  app.get("/api/projects/:projectId/messages", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const user = req.user as any;
+      
+      // Check if user has access to this project
+      const hasAccess = await checkProjectAccess(user, projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
+      }
+      
+      const messages = await storage.getMessagesByProject(projectId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching project messages:', error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/messages", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const user = req.user as any;
+      
+      // Check if user has access to this project
+      const hasAccess = await checkProjectAccess(user, projectId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "You don't have access to this project" });
+      }
+      
+      // Validate message data with Zod
+      const validatedData = insertMessageSchema.parse({
+        ...req.body,
+        projectId,
+        senderId: user.id,
+        isRead: false,
+        parentMessageId: req.body.parentMessageId || null
+      });
+      
+      // Verify recipient exists and has access to this project
+      const recipient = await storage.getUser(validatedData.recipientId);
+      if (!recipient) {
+        return res.status(400).json({ error: "Recipient not found" });
+      }
+      
+      const recipientHasAccess = await checkProjectAccess(recipient, projectId);
+      if (!recipientHasAccess) {
+        return res.status(400).json({ error: "Recipient doesn't have access to this project" });
+      }
+      
+      const message = await storage.createMessage(validatedData);
+
+      // Create notification for recipient
+      await storage.createNotification({
+        userId: validatedData.recipientId,
+        type: 'message_received',
+        title: 'New Message',
+        message: `New message from ${user.fullName}: ${validatedData.subject}`,
+        isRead: false,
+        metadata: {
+          projectId,
+          messageId: message.id,
+          senderId: user.id,
+          senderName: user.fullName
+        }
+      });
+
+      res.status(201).json(message);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid message data", details: error.errors });
+      }
+      console.error('Error creating message:', error);
+      res.status(500).json({ error: "Failed to create message" });
+    }
+  });
+
+  app.get("/api/messages/user/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = req.user as any;
+      
+      if (user.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const messages = await storage.getUserMessages(userId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching user messages:', error);
+      res.status(500).json({ error: "Failed to fetch user messages" });
+    }
+  });
+
+  app.patch("/api/messages/:messageId/read", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const user = req.user as any;
+      
+      // Get the message to verify permissions
+      const message = await storage.getMessage(messageId);
+      if (!message) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      
+      // Only the message recipient can mark it as read
+      if (message.recipientId !== user.id) {
+        return res.status(403).json({ error: "You can only mark your own messages as read" });
+      }
+      
+      const updatedMessage = await storage.markMessageAsRead(messageId);
+      res.json(updatedMessage);
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      res.status(500).json({ error: "Failed to mark message as read" });
     }
   });
 

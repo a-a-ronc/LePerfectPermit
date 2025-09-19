@@ -75,6 +75,7 @@ export interface IStorage {
   // Message methods
   getMessagesByProject(projectId: number): Promise<any[]>;
   getMessagesBetweenUsers(senderId: number, recipientId: number, projectId: number): Promise<any[]>;
+  getMessage(id: number): Promise<any | undefined>;
   createMessage(message: any): Promise<any>;
   markMessageAsRead(messageId: number): Promise<any>;
   getUserMessages(userId: number): Promise<any[]>;
@@ -706,6 +707,26 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(messages.createdAt);
+  }
+
+  async getMessage(id: number): Promise<any | undefined> {
+    const [message] = await db
+      .select({
+        id: messages.id,
+        projectId: messages.projectId,
+        senderId: messages.senderId,
+        recipientId: messages.recipientId,
+        subject: messages.subject,
+        content: messages.content,
+        messageType: messages.messageType,
+        isRead: messages.isRead,
+        parentMessageId: messages.parentMessageId,
+        createdAt: messages.createdAt
+      })
+      .from(messages)
+      .where(eq(messages.id, id));
+    
+    return message;
   }
 
   async createMessage(message: any): Promise<any> {
