@@ -71,22 +71,44 @@ export function AssignTaskDialog({
     gcTime: 0,
   });
 
-  // Filter for stakeholder-eligible users and apply search filter
+  // Load project details to get client company
+  const { data: project } = useQuery({
+    queryKey: [`/api/projects/${projectId}`],
+    enabled: isOpen,
+  });
+
+  // Enhanced filtering: specialists OR stakeholders from the project's client company
   const availableStakeholders = (users as any[])
-    .filter((user: any) => 
-      user.role === "stakeholder" || user.role === "engineer" || user.role === "architect" || user.role === "project_manager"
-    )
+    .filter((user: any) => {
+      // Always include specialists - they can work on any project
+      if (user.role === "specialist") {
+        return true;
+      }
+      
+      // For stakeholders, only include those from the same company as the project
+      if (user.role === "stakeholder" && project?.clientName && user.company) {
+        return user.company.toLowerCase() === project.clientName.toLowerCase();
+      }
+      
+      return false;
+    })
     .filter((user: any) => 
       searchTerm === "" || 
       (user.fullName && user.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.company && user.company.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .map((user: any) => ({
       id: user.id,
       userId: user.id,
       user: user,
     }))
-    .sort((a: any, b: any) => (a.user.fullName || '').localeCompare(b.user.fullName || ''));
+    .sort((a: any, b: any) => {
+      // Sort specialists first, then by name
+      if (a.user.role === "specialist" && b.user.role !== "specialist") return -1;
+      if (a.user.role !== "specialist" && b.user.role === "specialist") return 1;
+      return (a.user.fullName || '').localeCompare(b.user.fullName || '');
+    });
 
   const form = useForm<z.infer<typeof assignTaskSchema>>({
     resolver: zodResolver(assignTaskSchema),

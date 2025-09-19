@@ -24,17 +24,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      // Add error logging to help diagnose the issue
-      console.log("Getting projects for user:", req.user?.id);
+      const user = req.user!;
+      console.log("Getting projects for user:", user.id, "with role:", user.role);
       
-      const projects = await storage.getProjects();
+      const allProjects = await storage.getProjects();
+      let userProjects = allProjects;
       
-      // Log success for debugging
-      console.log(`Successfully retrieved ${projects.length} projects`);
+      // Implement role-based access control
+      if (user.role === 'stakeholder') {
+        // Stakeholders only see projects they're associated with
+        const userAccessibleProjects = [];
+        
+        for (const project of allProjects) {
+          const stakeholders = await storage.getProjectStakeholders(project.id);
+          if (stakeholders.some(stakeholder => stakeholder.userId === user.id)) {
+            userAccessibleProjects.push(project);
+          }
+        }
+        
+        userProjects = userAccessibleProjects;
+        console.log(`Stakeholder ${user.username} has access to ${userProjects.length} out of ${allProjects.length} projects`);
+      } else {
+        console.log(`Specialist ${user.username} has access to all ${allProjects.length} projects`);
+      }
       
-      res.json(projects);
+      res.json(userProjects);
     } catch (error) {
-      // Log the exact error for debugging
       console.error("Error retrieving projects:", error);
       res.status(500).json({ message: "Failed to get projects" });
     }

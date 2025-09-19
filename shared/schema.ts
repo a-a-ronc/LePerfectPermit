@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   email: text("email").notNull(),
   role: text("role").notNull().default("stakeholder"), // stakeholder or specialist
+  company: text("company"), // Company name for stakeholders (null for specialists)
   defaultContactEmail: text("default_contact_email"),
   defaultContactPhone: text("default_contact_phone"),
   passwordResetToken: text("password_reset_token"),
@@ -20,6 +21,13 @@ export const users = pgTable("users", {
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true
+});
+
+// Session Schema (for express-session with connect-pg-simple)
+export const session = pgTable("session", {
+  sid: text("sid").primaryKey(), // varchar in DB but text is compatible
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(), // match timestamp(6) in DB
 });
 
 // Project Schema
