@@ -30,6 +30,25 @@ export const session = pgTable("session", {
   expire: timestamp("expire", { precision: 6 }).notNull(), // match timestamp(6) in DB
 });
 
+// Messages Schema (for internal communication)
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  senderId: integer("sender_id").notNull(),
+  recipientId: integer("recipient_id"), // null for broadcast to all project stakeholders
+  subject: text("subject").notNull(),
+  content: text("content").notNull(),
+  messageType: text("message_type").notNull().default("general"), // general, task_update, document_request, etc.
+  isRead: boolean("is_read").notNull().default(false),
+  parentMessageId: integer("parent_message_id"), // for replies
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true
+});
+
 // Project Schema
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),

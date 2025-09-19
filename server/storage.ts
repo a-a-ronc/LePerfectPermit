@@ -6,11 +6,12 @@ import { projectStakeholders, type ProjectStakeholder, type InsertProjectStakeho
 import { stakeholderTasks, type StakeholderTask, type InsertStakeholderTask } from "@shared/schema";
 import { activityLogs, type ActivityLog, type InsertActivityLog } from "@shared/schema";
 import { notifications, type Notification, type InsertNotification } from "@shared/schema";
+import { messages } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql } from "drizzle-orm";
 import { pool } from "./db";
 
 // Define the storage interface
@@ -70,6 +71,13 @@ export interface IStorage {
   getNotificationsByUser(userId: number): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  
+  // Message methods
+  getMessagesByProject(projectId: number): Promise<any[]>;
+  getMessagesBetweenUsers(senderId: number, recipientId: number, projectId: number): Promise<any[]>;
+  createMessage(message: any): Promise<any>;
+  markMessageAsRead(messageId: number): Promise<any>;
+  getUserMessages(userId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -637,6 +645,117 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return notification;
+  }
+
+  // Message methods
+  async getMessagesByProject(projectId: number): Promise<any[]> {
+    return await db
+      .select({
+        id: messages.id,
+        projectId: messages.projectId,
+        senderId: messages.senderId,
+        recipientId: messages.recipientId,
+        subject: messages.subject,
+        content: messages.content,
+        messageType: messages.messageType,
+        isRead: messages.isRead,
+        parentMessageId: messages.parentMessageId,
+        createdAt: messages.createdAt,
+        sender: {
+          id: users.id,
+          fullName: users.fullName,
+          email: users.email,
+          role: users.role
+        }
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(eq(messages.projectId, projectId))
+      .orderBy(desc(messages.createdAt));
+  }
+
+  async getMessagesBetweenUsers(senderId: number, recipientId: number, projectId: number): Promise<any[]> {
+    return await db
+      .select({
+        id: messages.id,
+        projectId: messages.projectId,
+        senderId: messages.senderId,
+        recipientId: messages.recipientId,
+        subject: messages.subject,
+        content: messages.content,
+        messageType: messages.messageType,
+        isRead: messages.isRead,
+        parentMessageId: messages.parentMessageId,
+        createdAt: messages.createdAt,
+        sender: {
+          id: users.id,
+          fullName: users.fullName,
+          email: users.email,
+          role: users.role
+        }
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(
+        and(
+          eq(messages.projectId, projectId),
+          or(
+            and(eq(messages.senderId, senderId), eq(messages.recipientId, recipientId)),
+            and(eq(messages.senderId, recipientId), eq(messages.recipientId, senderId))
+          )
+        )
+      )
+      .orderBy(messages.createdAt);
+  }
+
+  async createMessage(message: any): Promise<any> {
+    const [createdMessage] = await db
+      .insert(messages)
+      .values(message)
+      .returning();
+    
+    return createdMessage;
+  }
+
+  async markMessageAsRead(messageId: number): Promise<any> {
+    const [message] = await db
+      .update(messages)
+      .set({ isRead: true })
+      .where(eq(messages.id, messageId))
+      .returning();
+    
+    return message;
+  }
+
+  async getUserMessages(userId: number): Promise<any[]> {
+    return await db
+      .select({
+        id: messages.id,
+        projectId: messages.projectId,
+        senderId: messages.senderId,
+        recipientId: messages.recipientId,
+        subject: messages.subject,
+        content: messages.content,
+        messageType: messages.messageType,
+        isRead: messages.isRead,
+        parentMessageId: messages.parentMessageId,
+        createdAt: messages.createdAt,
+        sender: {
+          id: users.id,
+          fullName: users.fullName,
+          email: users.email,
+          role: users.role
+        }
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(
+        or(
+          eq(messages.senderId, userId),
+          eq(messages.recipientId, userId)
+        )
+      )
+      .orderBy(desc(messages.createdAt));
   }
 }
 
