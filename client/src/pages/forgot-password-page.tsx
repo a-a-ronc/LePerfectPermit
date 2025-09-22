@@ -50,11 +50,11 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <Logo size="lg" className="mx-auto" />
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
               Check Your Email
             </h2>
           </div>
@@ -65,17 +65,17 @@ export default function ForgotPasswordPage() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
               
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Email Sent Successfully
               </h3>
               
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 If an account with that email exists, we've sent you a password reset link. 
                 Please check your email and follow the instructions to reset your password.
               </p>
 
               <div className="space-y-3">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   Didn't receive the email? Check your spam folder or try again in a few minutes.
                 </p>
                 
@@ -104,14 +104,14 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Logo size="lg" className="mx-auto" />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
             Forgot Password
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Enter your email address and we'll send you a password reset link
           </p>
         </div>
@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
           </CardContent>
         </Card>
 
-        <div className="text-center text-xs text-gray-500">
+        <div className="text-center text-xs text-gray-500 dark:text-gray-400">
           <p>
             Remember your password?{' '}
             <Link href="/auth" className="text-primary hover:underline">
