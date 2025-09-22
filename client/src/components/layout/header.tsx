@@ -6,7 +6,6 @@ import {
   User,
   LogOut
 } from "lucide-react";
-import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -59,7 +58,6 @@ export function Header({ breadcrumb = [] }: HeaderProps) {
         </ol>
       </nav>
       <div className="flex items-center space-x-4">
-        <NotificationBell />
         <SearchComponent />
       </div>
     </div>
