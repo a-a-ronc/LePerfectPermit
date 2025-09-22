@@ -70,7 +70,13 @@ export default function DocumentsPage() {
           // Get uploader name
           const uploaderRes = fetch(`/api/users/${doc.uploadedById}`, {
             credentials: "include",
-          }).then(res => res.ok ? res.json() : { fullName: "Unknown" });
+          }).then(res => {
+            if (res.ok) {
+              return res.json();
+            } else {
+              return { fullName: "Unknown" };
+            }
+          }).catch(() => ({ fullName: "Unknown" }));
           
           allDocuments.push({
             ...doc,

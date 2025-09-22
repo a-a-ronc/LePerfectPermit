@@ -38,7 +38,7 @@ export function NotificationBell() {
 
   // Load user notifications
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: [`/api/notifications/${user?.id}`],
+    queryKey: ['/api/notifications', user?.id],
     enabled: !!user?.id,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
@@ -52,7 +52,7 @@ export function NotificationBell() {
     },
     onSuccess: () => {
       // Invalidate and refetch notifications
-      queryClient.invalidateQueries({ queryKey: [`/api/notifications/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications', user?.id] });
     }
   });
 
