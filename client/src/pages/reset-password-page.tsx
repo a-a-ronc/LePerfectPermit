@@ -78,10 +78,10 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Invalid Reset Link</h2>
-          <p className="text-gray-600 mb-4">This password reset link is invalid or has expired.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Invalid Reset Link</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">This password reset link is invalid or has expired.</p>
           <Link href="/forgot-password">
             <Button>Request New Reset Link</Button>
           </Link>
@@ -92,11 +92,11 @@ export default function ResetPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <Logo size="lg" className="mx-auto" />
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
               Password Reset Successful
             </h2>
           </div>
@@ -107,11 +107,11 @@ export default function ResetPasswordPage() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
               
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Password Updated Successfully
               </h3>
               
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Your password has been reset successfully. You can now log in with your new password.
               </p>
 
@@ -128,14 +128,14 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Logo size="lg" className="mx-auto" />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
             Reset Your Password
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Enter your new password below
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function ResetPasswordPage() {
                 </Alert>
               )}
 
-              <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+              <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded">
                 <p className="font-medium mb-1">Password requirements:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>At least 6 characters long</li>
