@@ -572,6 +572,5 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
             </div>
           </div>
         </div>
-      </div>
   );
 }
