@@ -24,8 +24,45 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   };
 
-  if (!user) {
+  // Only render without layout for unauthenticated pages
+  const unauthenticatedPaths = ['/', '/auth', '/forgot-password', '/reset-password'];
+  const currentPath = window.location.pathname;
+  
+  if (!user && unauthenticatedPaths.includes(currentPath)) {
     return <>{children}</>;
+  }
+  
+  // For authenticated pages, always show the layout (even if user is still loading)
+  if (!user) {
+    // Show loading state with layout structure
+    return (
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        {/* Sidebar */}
+        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+          <Sidebar />
+        </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Header */}
+          <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1" />
+              <div className="flex items-center space-x-4">
+                <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              </div>
+            </div>
+          </header>
+          
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
+            {children}
+          </main>
+        </div>
+      </div>
+    );
   }
 
   return (
