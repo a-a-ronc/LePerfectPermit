@@ -160,16 +160,16 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-lightgrey py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
         <div className="text-center">
           <div className="flex justify-center">
             <Logo size="lg" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-secondary">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
             {activeTab === "login" ? "Sign in to your account" : "Create a new account"}
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Streamlined High-Piled Storage Permit Management
           </p>
         </div>
