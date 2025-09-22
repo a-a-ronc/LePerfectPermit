@@ -342,7 +342,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
       {/* Main Content */}
       <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-secondary dark:text-white">Permit Specialist Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Permit Specialist Dashboard</h1>
             <p className="text-gray-500 dark:text-gray-400">Welcome back, {userData?.fullName || userData?.username || 'User'}. Here's an overview of your permit projects.</p>
           </div>
           

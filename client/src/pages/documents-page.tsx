@@ -184,7 +184,7 @@ export default function DocumentsPage() {
       <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
           <div className="mb-6 flex flex-wrap justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-secondary">Document Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Document Management</h1>
               <p className="text-gray-500">View and manage all documents across all projects.</p>
             </div>
           </div>
