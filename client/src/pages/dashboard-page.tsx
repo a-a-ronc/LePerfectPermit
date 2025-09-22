@@ -320,27 +320,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
 
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Top Navigation Bar */}
-      <div className="bg-white dark:bg-gray-800 p-4 shadow-sm flex items-center justify-between">
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="flex items-center space-x-2">
-              <li>
-                <span className="text-gray-500 dark:text-gray-400">Dashboard</span>
-              </li>
-            </ol>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none" aria-label="Search">
-                <Search className="h-6 w-6" />
-              </button>
-            </div>
-          </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="p-6 overflow-auto h-[calc(100vh-64px)]">
+      <div className="p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Permit Specialist Dashboard</h1>
             <p className="text-gray-500 dark:text-gray-400">Welcome back, {userData?.fullName || userData?.username || 'User'}. Here's an overview of your permit projects.</p>

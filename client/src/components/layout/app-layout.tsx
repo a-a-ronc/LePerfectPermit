@@ -5,7 +5,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { LogOut, Search } from "lucide-react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,15 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, logoutMutation } = useAuth();
+  const [searchTerm, setSearchTerm] = React.useState("");
+  
+  const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Implement search functionality - for now just log
+      console.log('Searching for:', searchTerm);
+      // TODO: Navigate to search results page or filter current content
+    }
+  };
 
   if (!user) {
     return <>{children}</>;
@@ -34,6 +44,19 @@ export function AppLayout({ children }: AppLayoutProps) {
             
             {/* Right side controls */}
             <div className="flex items-center space-x-4">
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search projects, documents..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleSearch}
+                  className="pl-10 w-64 h-8"
+                />
+              </div>
+              
               <ThemeToggle />
               <NotificationBell />
               
