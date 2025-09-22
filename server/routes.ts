@@ -15,6 +15,7 @@ import {
   insertNotificationSchema,
   insertMessageSchema
 } from "@shared/schema";
+import { NotificationService } from "./notification-service.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -165,10 +166,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = updateProjectSchema.parse(req.body);
       
+      // Capture old status for notification purposes
+      const oldStatus = existingProject.status;
+      
       const project = await storage.updateProject(projectId, validatedData);
       
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Send status change notifications if status changed
+      if (validatedData.status && validatedData.status !== oldStatus) {
+        try {
+          await NotificationService.notifyProjectStatusChange(
+            projectId,
+            oldStatus,
+            validatedData.status,
+            user.fullName || user.username
+          );
+        } catch (notificationError) {
+          console.error('Error sending status change notifications:', notificationError);
+          // Don't fail the update if notifications fail
+        }
       }
       
       // Log activity
@@ -441,6 +460,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activityType: "document_uploaded",
         description: `Document "${document.fileName}" was uploaded for category "${document.category}"`
       });
+      
+      // Send notifications
+      try {
+        const uploader = req.user!;
+        await NotificationService.notifyDocumentUploaded(
+          projectId,
+          uploader.fullName || uploader.username,
+          document.category,
+          document.fileName
+        );
+      } catch (notificationError) {
+        console.error('Error sending document upload notifications:', notificationError);
+        // Don't fail the upload if notifications fail
+      }
       
       console.log(`Document uploaded successfully: ${document.fileName}`);
       res.status(201).json(document);
@@ -743,64 +776,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const task = await storage.createStakeholderTask(validatedData);
       
-      // Get stakeholder details for notification
+      // Send notifications using the new NotificationService
       const stakeholder = await storage.getProjectStakeholder(stakeholderId);
       if (stakeholder) {
-        const stakeholderUser = await storage.getUser(stakeholder.userId);
-        
-        if (stakeholderUser) {
-          console.log('Creating notification for user:', stakeholderUser.id);
+        try {
+          await NotificationService.notifyTaskAssigned(
+            task.id,
+            stakeholder.userId,
+            user.fullName || user.username,
+            stakeholder.projectId,
+            task.description
+          );
           
-          // Create in-app notification
-          await storage.createNotification({
-            userId: stakeholderUser.id,
-            type: 'task_assigned',
-            title: 'Task Assigned',
-            message: `You have been assigned a new task: ${task.description}`,
-            isRead: false,
-            metadata: {
-              projectId: stakeholder.projectId,
-              taskId: task.id,
-              taskType: task.taskType,
-              assignedBy: user.fullName,
-            }
-          });
-
-          // Send email notification (handle errors gracefully)
-          try {
-            const { sendEmail } = await import('./email');
-            console.log('Attempting to send email notification...');
-            
-            const project = await storage.getProject(stakeholder.projectId);
-            const emailResult = await sendEmail({
-              to: stakeholderUser.email,
-              from: user.defaultContactEmail || 'noreply@painlesspermit.com',
-              subject: `${project?.name || 'Project'}: Task Assigned`,
-              text: `${stakeholderUser.fullName},
-
-You have been assigned a new task:
-
-${task.description}
-
-Task Type: ${task.taskType}
-Assigned by: ${user.fullName}
-Project: ${project?.name || 'Unknown Project'}
-
-Please log into PainlessPermit to view more details.`,
-            });
-            
-            console.log('Email notification result:', emailResult);
-          } catch (emailError: any) {
-            console.warn('Email notification failed (expected without SENDGRID_API_KEY):', emailError?.message || 'Unknown error');
-          }
-
           // Create activity log
           await storage.createActivityLog({
             projectId: stakeholder.projectId,
             userId: user.id,
             activityType: 'task_assigned',
-            description: `Task assigned to ${stakeholderUser.fullName}: ${task.description}`,
+            description: `Task assigned to stakeholder: ${task.description}`,
           });
+        } catch (notificationError) {
+          console.error('Error sending task assignment notifications:', notificationError);
+          // Don't fail the task assignment if notifications fail
         }
       }
       
