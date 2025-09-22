@@ -62,7 +62,8 @@ export default function DocumentsPage() {
       });
       
       if (res.ok) {
-        const documents = await res.json();
+        try {
+          const documents = await res.json();
         
         // Add project name to each document
         documents.forEach((doc: any) => {
@@ -85,6 +86,9 @@ export default function DocumentsPage() {
             }
           });
         });
+        } catch (error) {
+          console.error('Error parsing documents JSON:', error);
+        }
       }
     }
     
