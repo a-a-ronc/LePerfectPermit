@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarLinkProps {
   href: string;
@@ -49,52 +50,24 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const [userData, setUserData] = useState<any>(null);
+  const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState(false);
   
-  // Fetch user data directly
+  // Redirect to auth if no user
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user', {
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUserData(data);
-        } else if (response.status === 401) {
-          // If unauthorized, redirect to login
-          navigate('/auth');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        navigate('/auth');
-      }
-    };
-    
-    fetchUser();
-  }, [navigate]);
-  
-  if (!userData) return null;
-  
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        // Clear user data and redirect to auth page
-        setUserData(null);
-        navigate('/auth');
-      }
-    } catch (error) {
-      console.error('Error logging out:', error);
+    if (!user) {
+      navigate('/auth');
     }
+  }, [user, navigate]);
+  
+  if (!user) return null;
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
+    // Navigate to auth page after logout
+    navigate('/auth');
   };
   
   const toggleSidebar = () => {
@@ -140,7 +113,7 @@ export function Sidebar({ className }: SidebarProps) {
         <SidebarLink href="/documents" icon={<FileText />} active={location === "/documents"}>
           Documents
         </SidebarLink>
-        {userData.role === "specialist" && (
+        {user.role === "specialist" && (
           <>
             <SidebarLink href="/reviews" icon={<CheckSquare />} active={location === "/reviews"}>
               Reviews
@@ -165,12 +138,12 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="flex items-center">
           <Avatar>
             <AvatarFallback className="bg-primary/10 text-primary">
-              {userData.fullName ? userData.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : userData.username?.substring(0, 2).toUpperCase()}
+              {user.fullName ? user.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : user.username?.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="ml-3">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{userData.fullName || userData.username}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{userData.role}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{user.fullName || user.username}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user.role}</p>
           </div>
           <Button 
             variant="ghost" 
