@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -44,11 +45,9 @@ interface AuthPageProps {
 export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { loginMutation, registerMutation } = useAuth();
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -71,92 +70,36 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
   });
 
   const handleLogin = async (values: LoginFormValues) => {
-    try {
-      setIsLoggingIn(true);
-      setLoginError(null);
-      
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    loginMutation.mutate(
+      {
+        username: values.username,
+        password: values.password,
+      },
+      {
+        onSuccess: () => {
+          if (onLoginSuccess) {
+            onLoginSuccess();
+          } else {
+            navigate("/dashboard");
+          }
         },
-        body: JSON.stringify({
-          username: values.username,
-          password: values.password,
-        }),
-        credentials: "include",
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Login failed. Please check your credentials.");
       }
-      
-      const userData = await response.json();
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userData.fullName || userData.username}!`,
-      });
-      
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      } else {
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Login failed. Please check your credentials.");
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoggingIn(false);
-    }
+    );
   };
 
   const handleRegister = async (values: RegisterFormValues) => {
-    try {
-      setIsRegistering(true);
-      setRegisterError(null);
-      
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-        credentials: "include",
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Registration failed. Please try again.");
-      }
-      
-      const userData = await response.json();
-      
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${userData.fullName || userData.username}!`,
-      });
-      
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      } else {
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      setRegisterError(error instanceof Error ? error.message : "Registration failed. Please try again.");
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "Please try again with different credentials",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRegistering(false);
-    }
+    registerMutation.mutate(values, {
+      onSuccess: () => {
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        } else {
+          navigate("/dashboard");
+        }
+      },
+      onError: (error) => {
+        setRegisterError(error.message);
+      },
+    });
   };
 
   return (
@@ -234,9 +177,9 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={isLoggingIn}
+                  disabled={loginMutation.isPending}
                 >
-                  {isLoggingIn ? (
+                  {loginMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
@@ -245,12 +188,6 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                     "Sign in"
                   )}
                 </Button>
-                
-                {loginError && (
-                  <p className="text-sm text-red-500 mt-2">
-                    {loginError}
-                  </p>
-                )}
                 
                 <div className="text-center mt-3">
                   <Link href="/forgot-password">
@@ -346,9 +283,9 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                 <Button 
                   type="submit" 
                   className="w-full mt-6"
-                  disabled={isRegistering}
+                  disabled={registerMutation.isPending}
                 >
-                  {isRegistering ? (
+                  {registerMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...
