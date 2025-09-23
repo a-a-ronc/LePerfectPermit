@@ -49,9 +49,31 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center justify-between">
               <div className="flex-1" />
               <div className="flex items-center space-x-4">
-                <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search projects, documents..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleSearch}
+                    className="pl-10 w-64 h-8"
+                  />
+                </div>
+                
+                <ThemeToggle />
+                <NotificationBell />
+                
+                {/* User avatar placeholder while loading */}
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+                  <div className="hidden md:block">
+                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
+                    <div className="h-3 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  </div>
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                </div>
               </div>
             </div>
           </header>
