@@ -33,6 +33,16 @@ const registerSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email address"),
   role: z.enum(["specialist", "stakeholder"]),
+  company: z.string().optional(),
+}).refine((data) => {
+  // Company is required for stakeholders
+  if (data.role === "stakeholder" && !data.company?.trim()) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Company name is required for stakeholder accounts",
+  path: ["company"],
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -66,6 +76,7 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
       fullName: "",
       email: "",
       role: "stakeholder",
+      company: "",
     },
   });
 
@@ -279,6 +290,25 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                     </FormItem>
                   )}
                 />
+                
+                {registerForm.watch("role") === "stakeholder" && (
+                  <FormField
+                    control={registerForm.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter your company name" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 
                 <Button 
                   type="submit" 
