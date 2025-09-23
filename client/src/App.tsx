@@ -1,5 +1,4 @@
 import { Switch, Route, useLocation } from "wouter";
-import { ReactNode, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
@@ -68,25 +67,7 @@ function LandingPage() {
   );
 }
 
-// We use a simple authentication state in the app itself
 function App() {
-  // Simple auth state for page routing
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [, navigate] = useLocation();
-
-  // Simplified login/logout methods
-  const handleLogin = () => {
-    setLoggedIn(true);
-    navigate("/dashboard");
-  };
-
-  const handleLogout = () => {
-    setLoggedIn(false);
-    // Clear any cached queries
-    queryClient.clear();
-    navigate("/");
-  };
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="painlesspermit-ui-theme">
@@ -98,7 +79,7 @@ function App() {
               <LandingPage />
             </Route>
             <Route path="/auth">
-              <AuthPage onLoginSuccess={handleLogin} />
+              <AuthPage />
             </Route>
             <Route path="/forgot-password">
               <ForgotPasswordPage />
@@ -109,7 +90,7 @@ function App() {
             
             {/* Use ProtectedRoute for authenticated routes */}
             <Route path="/dashboard">
-              <ProtectedRoute component={() => <DashboardPage onLogout={handleLogout} />} />
+              <ProtectedRoute component={() => <DashboardPage />} />
             </Route>
             <Route path="/projects">
               <ProtectedRoute component={() => <ProjectPage />} />

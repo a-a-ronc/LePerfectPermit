@@ -42,10 +42,9 @@ type ProjectRow = {
 };
 
 interface DashboardPageProps {
-  onLogout?: () => void;
 }
 
-export default function DashboardPage({ onLogout }: DashboardPageProps = {}) {
+export default function DashboardPage({}: DashboardPageProps) {
   const [, navigate] = useLocation();
   const [userData, setUserData] = useState<any>(null);
   const { toast } = useToast();
