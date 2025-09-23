@@ -34,18 +34,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Implement role-based access control
       if (user.role === 'stakeholder') {
-        // Stakeholders only see projects they're associated with
-        const userAccessibleProjects = [];
-        
-        for (const project of allProjects) {
-          const stakeholders = await storage.getProjectStakeholders(project.id);
-          if (stakeholders.some(stakeholder => stakeholder.userId === user.id)) {
-            userAccessibleProjects.push(project);
-          }
+        // Stakeholders only see projects where clientName matches their company
+        if (user.company) {
+          userProjects = allProjects.filter(project => 
+            project.clientName?.toLowerCase() === user.company?.toLowerCase()
+          );
+          console.log(`Stakeholder ${user.username} from company "${user.company}" has access to ${userProjects.length} out of ${allProjects.length} projects`);
+        } else {
+          // No company set, no projects visible
+          userProjects = [];
+          console.log(`Stakeholder ${user.username} has no company set, no projects visible`);
         }
-        
-        userProjects = userAccessibleProjects;
-        console.log(`Stakeholder ${user.username} has access to ${userProjects.length} out of ${allProjects.length} projects`);
       } else {
         console.log(`Specialist ${user.username} has access to all ${allProjects.length} projects`);
       }

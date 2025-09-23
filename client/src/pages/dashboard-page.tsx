@@ -95,7 +95,7 @@ export default function DashboardPage({}: DashboardPageProps) {
     fetchUser();
   }, [navigate]);
   
-  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<any[]>({
     queryKey: ["/api/projects"],
   });
   
