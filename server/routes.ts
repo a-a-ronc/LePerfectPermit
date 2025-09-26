@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { generateCoverLetterWithAI } from "./openai";
 import { generatePdfFromText } from "./pdf-generator";
+import rateLimit from "express-rate-limit";
+import type { Options } from "express-rate-limit";
 import { 
   insertProjectSchema, 
   insertDocumentSchema, 
@@ -20,6 +22,25 @@ import { NotificationService } from "./notification-service.js";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   setupAuth(app);
+
+  const createLimiter = (options: Partial<Options> = {}) =>
+    rateLimit({
+      windowMs: 60_000,
+      limit: 120,
+      standardHeaders: true,
+      legacyHeaders: false,
+      statusCode: 429,
+      message: "Too many requests, please try again later.",
+      ...options
+    });
+
+  const generalApiLimiter = createLimiter();
+  const writeOperationLimiter = createLimiter({ limit: 40 });
+  const searchLimiter = createLimiter({ limit: 20 });
+  const heavyProcessingLimiter = createLimiter({ windowMs: 15 * 60_000, limit: 5 });
+
+  // Apply a default limiter to every API route so database interactions are not left unbounded
+  app.use("/api", generalApiLimiter);
 
   // Project routes
   app.get("/api/projects", async (req, res) => {
@@ -56,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects", async (req, res) => {
+  app.post("/api/projects", writeOperationLimiter, async (req, res) => {
     console.log("POST /api/projects called");
     console.log("Session ID:", req.sessionID);
     console.log("Session data:", req.session);
@@ -128,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/projects/:id", async (req, res) => {
+  app.patch("/api/projects/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -210,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/projects/:id", async (req, res) => {
+  app.delete("/api/projects/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -262,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Search API endpoint
-  app.get("/api/search", async (req, res) => {
+  app.get("/api/search", searchLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -432,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/documents", async (req, res) => {
+  app.post("/api/projects/:projectId/documents", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -497,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/documents/:id", async (req, res) => {
+  app.patch("/api/documents/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -533,7 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete document route
-  app.delete("/api/documents/:id", async (req, res) => {
+  app.delete("/api/documents/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -567,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/projects/:projectId/documents/:id", async (req, res) => {
+  app.delete("/api/projects/:projectId/documents/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -621,7 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/commodities", async (req, res) => {
+  app.post("/api/projects/:projectId/commodities", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -678,7 +699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/stakeholders", async (req, res) => {
+  app.post("/api/projects/:projectId/stakeholders", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -711,7 +732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/stakeholders/:id", async (req, res) => {
+  app.put("/api/stakeholders/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -729,7 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/stakeholders/:id", async (req, res) => {
+  app.delete("/api/stakeholders/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -761,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/stakeholders/:stakeholderId/tasks", async (req, res) => {
+  app.post("/api/stakeholders/:stakeholderId/tasks", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -811,7 +832,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/tasks/:id", async (req, res) => {
+  app.put("/api/tasks/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -829,7 +850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tasks/:id", async (req, res) => {
+  app.delete("/api/tasks/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -861,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate cover letter download endpoint
-  app.get("/api/projects/:id/cover-letter", async (req, res) => {
+  app.get("/api/projects/:id/cover-letter", heavyProcessingLimiter, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
       const project = await storage.getProject(projectId);
@@ -889,7 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cover letter generation
-  app.post("/api/projects/:projectId/generate-cover-letter", async (req, res) => {
+  app.post("/api/projects/:projectId/generate-cover-letter", heavyProcessingLimiter, writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -1035,7 +1056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Task assignment endpoint
-  app.post("/api/tasks/assign", async (req, res) => {
+  app.post("/api/tasks/assign", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -1152,7 +1173,7 @@ Please log into PainlessPermit to view more details.`,
     }
   });
 
-  app.patch("/api/notifications/:id/read", async (req, res) => {
+  app.patch("/api/notifications/:id/read", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -1199,7 +1220,7 @@ Please log into PainlessPermit to view more details.`,
     }
   });
 
-  app.post("/api/projects/:projectId/messages", async (req, res) => {
+  app.post("/api/projects/:projectId/messages", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -1278,7 +1299,7 @@ Please log into PainlessPermit to view more details.`,
     }
   });
 
-  app.patch("/api/messages/:messageId/read", async (req, res) => {
+  app.patch("/api/messages/:messageId/read", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -1305,7 +1326,7 @@ Please log into PainlessPermit to view more details.`,
   });
 
   // User profile update endpoint
-  app.patch("/api/user/:id", async (req, res) => {
+  app.patch("/api/user/:id", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
@@ -1335,7 +1356,7 @@ Please log into PainlessPermit to view more details.`,
   });
 
   // User password change endpoint
-  app.patch("/api/user/:id/password", async (req, res) => {
+  app.patch("/api/user/:id/password", writeOperationLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
