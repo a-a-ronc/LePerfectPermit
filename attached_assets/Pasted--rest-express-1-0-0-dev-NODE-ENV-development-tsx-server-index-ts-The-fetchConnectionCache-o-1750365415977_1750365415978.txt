@@ -1,0 +1,96 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+The `fetchConnectionCache` option is deprecated (now always `true`)
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+8:30:54 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Express error: NeonDbError: cannot insert multiple commands into a prepared statement
+    at execute (/home/runner/workspace/node_modules/@neondatabase/serverless/index.js:1559:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '1480',
+  routine: 'exec_parse_message',
+  sourceError: undefined
+}
+GET /api/user called, isAuthenticated: false
+User not authenticated, sending 401
+8:30:57 PM [express] GET /api/user 401 in 2ms
+Express error: NeonDbError: cannot insert multiple commands into a prepared statement
+    at execute (/home/runner/workspace/node_modules/@neondatabase/serverless/index.js:1559:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '1480',
+  routine: 'exec_parse_message',
+  sourceError: undefined
+}
+Express error: NeonDbError: cannot insert multiple commands into a prepared statement
+    at execute (/home/runner/workspace/node_modules/@neondatabase/serverless/index.js:1559:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '1480',
+  routine: 'exec_parse_message',
+  sourceError: undefined
+}
+Express error: NeonDbError: cannot insert multiple commands into a prepared statement
+    at execute (/home/runner/workspace/node_modules/@neondatabase/serverless/index.js:1559:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '1480',
+  routine: 'exec_parse_message',
+  sourceError: undefined
+}

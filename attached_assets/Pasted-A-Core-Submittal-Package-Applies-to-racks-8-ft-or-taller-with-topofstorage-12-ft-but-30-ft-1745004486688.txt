@@ -1,0 +1,159 @@
+A. Core Submittal Package 
+
+(Applies to racks 8 ft or taller with topofstorage > 12 ft but ≤ 30 ft) 
+
+Site Plan 
+
+Streets and overall building outline 
+
+Firehydrant locations 
+
+Firedepartment access roadways 
+
+Key plan showing project area 
+
+Correct building address and suite/subaddress 
+
+Building / Floor Plan 
+
+Proposed racking layout and any existing racks 
+
+Firedepartment access doors 
+
+Firedepartment hose valves 
+
+Firepump / riser room 
+
+Valves controlling sprinkler water supply 
+
+Smokeremoval and curtainboard systems 
+
+Portable fireextinguishers 
+
+Egress Plan 
+
+Aisle layout with widths shown 
+
+Exitaccess doors, exit doors, and exit discharge points 
+
+Deadend aisles ≤ 20 ft in Group M, ≤ 50 ft in other occupancies 
+
+Exit Signage & Lighting Plan 
+
+Exitsign locations (IBC 1013) 
+
+Emergency egress lighting (avg 1 fc / min 0.1 fc at floor) 
+
+Clearly labeled “existing” if installed under a prior permit 
+
+Racking Plan 
+
+Aisle widths dimensioned 
+
+Rack types and heights identified 
+
+Maximum pile volume for each storage array 
+
+Shelf type (solid, slatted, wire grid, or open) 
+
+Transverse and longitudinal fluespace dimensions 
+
+Racking Elevation 
+
+Number of tiers 
+
+Floortotopshelf height 
+
+Floortotopofstorage (design height must be permanently marked in field) 
+
+Clearances to sprinkler deflectors, bottom of joists, and roof deck 
+
+Commodity Description 
+
+Commodity class per IFC Table 3203.8 
+
+Packaging method (loose, boxed, shrinkwrapped, bins, banded, etc.) 
+
+Existing FireProtection Data 
+
+Sprinkler system type and NFPA standard 
+
+Design density / curve 
+
+Sprinkler head type (ESFR, CMSA, etc.) 
+
+Detection system description 
+
+Smokeremoval / curtainboard specifications 
+
+Photo of hydrauliccalculation placard 
+
+Proposed FireProtection Scope 
+
+Conformance with IFC §§ 3206–3209 
+
+1½in. hose outlet at each firedepartment access door (NFPA 13 § 8.17.5) 
+
+Either a Fire DeferredSubmittal Agreement or a concurrent Fire Permit application 
+
+Structural Plans & Calculations 
+
+Signed and sealed by a licensed structural engineer 
+
+Seismic design per ASCE 7 § 15.5.3 
+
+Load combinations and anchor design included 
+
+SpecialInspection Agreement 
+
+“Storage Racks (IBC 1705.12.7)” box checked 
+
+Inspection agency named 
+
+Required signatures and stamp complete 
+
+Shape 
+
+B. Conditional / “Other” Requirements 
+
+Situation 
+
+Extra Items to Verify 
+
+Racks 5 ft9 in to < 8 ft tall 
+
+– Manufacturer’s installation specs provided  – PE stamp not required  – Special inspection not required 
+
+Top of storage ≤ 12 ft (Class I–IV, no highhazard) 
+
+– IFC Chapter 32 not applicable  – 1½in. hose outlets not required 
+
+ExtraHigh Storage  
+• Highhazard > 30 ft  
+• Class I–IV > 40 ft 
+
+– Specially engineered sprinkler design submitted  – Additional fireprotection features / FD access as required 
+
+Automated Storage (per IFC Table 3206.2) 
+
+– Building fully sprinklered throughout per NFPA 13 § 903.3.1.1 
+
+CommoditySpecific Storage (aerosols, flammable/combustible liquids, hazardous materials, combustible records/fibers) 
+
+– All added safeguards and code sections addressed 
+
+Change of Occupancy to Group H 
+
+– MAQ analysis included  – If limits exceeded, apply for regular Building Permit under Group H 
+
+Shape 
+
+C. PermitIssuance & Valuation Checks 
+
+Valuation includes rack materials (new or used) + labor 
+
+Permit applicant identified (licensed GC, owner, or equipment vendor) 
+
+Separate electrical permit listed if wiring needed; Utahlicensed electrician named 
+
+ 

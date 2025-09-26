@@ -1,0 +1,92 @@
+🔹 1. Submit to Authority Button – [✅ Works Well, Minor Refinement]
+This is great — leave as is:
+
+js
+Copy
+Edit
+Dear ${jurisdiction} Building Department,
+If jurisdiction is null or undefined, fallback to:
+
+js
+Copy
+Edit
+Dear Building Department,
+🔹 2. Download Button & Export Button – Must Mirror Upload Functionality
+Core Issue:
+Right now, all download and export buttons either:
+
+Auto-save to the default Downloads folder without user control, or
+
+Show a modal that says “Save to Downloads” with no visible file path navigation.
+
+This is frustrating for users who must cut and paste files manually into project folders.
+
+Working Reference:
+Use the same logic and UI flow as the Select File(s) button under the Upload Documents modal. That pop-up shows a native file system interface allowing:
+
+Full path navigation
+
+Selecting specific folders and files
+
+✅ We want the exact same file path browsing capability for downloading and exporting.
+
+🔹 3. Fix Export Button – Zip & Save Flow with File Picker
+Current Issue:
+Clicking Export gives error:
+
+arduino
+Copy
+Edit
+"Could not create document package. Try downloading individually."
+This means the export function is:
+
+Failing to properly collect the project files
+
+Failing to zip them correctly
+
+Not prompting a valid file path dialog
+
+Required Behavior:
+
+Collect all project files (use the same structure used in “Download Individually”)
+
+Use JSZip or similar to compress them
+
+Trigger a native file save dialog just like Upload Documents file picker
+
+Implementation Recommendation:
+
+Locate the exportDocuments() function or handler on the Export button
+
+After bundling files:
+
+js
+Copy
+Edit
+const zip = new JSZip();
+project.files.forEach(file => {
+  zip.file(file.name, file.content);
+});
+const zipBlob = await zip.generateAsync({ type: "blob" });
+
+const handle = await window.showSaveFilePicker({
+  suggestedName: `${project.name}_submission_package.zip`,
+  types: [{
+    description: 'ZIP archive',
+    accept: { 'application/zip': ['.zip'] }
+  }]
+});
+const writable = await handle.createWritable();
+await writable.write(zipBlob);
+await writable.close();
+Ensure project.files (or equivalent) contains actual Blob, File, or base64 data
+
+Include fallback behavior if showSaveFilePicker() is not supported (e.g., Electron/Tauri)
+
+🧩 TL;DR Summary for Dev:
+All download/export buttons should use the same native file browser as Upload Documents
+
+Fix the Export error — ensure files are zipped and saved using native file save dialog
+
+Email salutation for Submit to Authority should now reflect the jurisdiction name
+

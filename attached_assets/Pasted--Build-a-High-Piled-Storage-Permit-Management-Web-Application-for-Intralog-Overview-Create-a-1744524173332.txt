@@ -1,0 +1,140 @@
+# Build a High-Piled Storage Permit Management Web Application for Intralog
+
+## Overview
+Create a comprehensive web application for Intralog, a warehouse equipment design and implementation company, to streamline the high-piled storage permit acquisition process. The application should facilitate document collection, review, application preparation, and submission to municipalities.
+
+## Company Details
+- **Company Name**: Intralog
+- **Brand Colors**:
+  - Primary Blue: #0084C6 (RGB: 0, 132, 198)
+  - Secondary Black: #4B4B4E (RGB: 75, 75, 78)
+  - Light Grey: #F0F0F2 (RGB: 240, 240, 242)
+- **Logo**: Create a simple placeholder logo based on the company name and color scheme
+
+## Core Functionality
+
+### 1. User Authentication & Roles
+- Implement secure login system with email/password
+- Two user roles: Permit Specialist (internal) and Stakeholder (external)
+- Two-factor authentication for enhanced security
+- Password reset functionality
+
+### 2. Permit Specialist Dashboard
+- Overview of all assigned permit projects with status indicators
+- Color-coded status tracking (Not Started, In Progress, Ready for Submission, Under Review, Approved, Rejected)
+- Quick filters for viewing permits by status, stakeholder, or document completeness
+- Metrics panel showing completion percentages and deadlines
+- Calendar view with upcoming deadlines and reminders
+
+### 3. Permit Project Management
+- Create new permit projects with basic information:
+  - Project name
+  - Facility address
+  - Client information
+  - Jurisdiction/municipality
+  - Assigned permit specialist(s)
+- Ability to add internal team members as collaborators
+- Document requirement checklist based on standard categories
+- Assignment of stakeholders responsible for each document category
+
+### 4. Document Management System
+- Document categories to include:
+  - **Site Plan**: Dimensioned site plan showing streets, building location, fire hydrants, and fire department access roadways. Should include a key plan showing project location and the correct building address with suite number or sub-address of the space.
+  - **Facility Plan**: Dimensioned floor plan showing proposed and existing racking, fire department access doors, hose outlets, fire pump/riser room, location of valves controlling water supply of sprinklers, smoke removal and curtain board systems, and portable fire extinguishers.
+  - **Egress Plan**: Floor plan showing means of egress components (aisles, exit access doors, exit doors, and exit discharge per Chapter 10). Must indicate dead-end aisles not exceeding 20 feet in Group M occupancies and 50 feet in other occupancies.
+  - **Structural Plans & Calculations**: Includes racking plan (dimensioned plan indicating aisle widths and locations of different types/heights of racks), information on maximum pile volume for each storage array, shelf types and dimensions of flue spaces. Also requires racking elevation showing number of tiers and dimensions from floor to various points. Must include structural plans and calculations stamped by a licensed structural engineer, with seismic design in accordance with ASCE 7 Section 15.5.3.
+  - **Commodities Stored** (form-based + optional upload): Detailed description of commodities stored and their placement method (loose on pallets, in cardboard boxes, encapsulated in plastic, etc.). Classifications per Table 3203.8 in IFC Chapter 32.
+  - **Existing/Proposed Fire Protection**: Information about existing fire protection systems including type of sprinkler system (NFPA standard), density, type of sprinkler heads, fire detection system, and specifications of smoke removal systems. Should include photo of hydraulic calculation on riser placard.
+  - **Special Inspection**: Special Inspection Agreement with "Storage Racks (IBC 1705.12.7)" marked as requiring inspection. Must include the name of inspection agency and required signatures/stamp prior to permit issuance.
+  - **Cover Letter / Index Sheet** (auto-generated): Created through generative AI after reviewing submitted documents, their descriptions, and their categorization to produce a comprehensive overview for municipal submission.
+- Status tracking for each document (Not Submitted, Pending Review, Approved, Rejected)
+- Version control for document revisions
+- Document preview capability without download
+- Commenting system for feedback on specific documents
+
+### 5. Review Workflow
+- Queue system for document review
+- Approval/rejection functionality with required feedback for rejections
+- Automatic notifications to stakeholders upon status changes
+- Confirmation dialog before sending notifications
+- AI-assisted document validation checking for completeness
+
+### 6. Commodities Form
+- Interactive form for entering commodity storage information
+- Fields for commodity types, quantities, storage arrangements
+- Validation to ensure completeness
+- Option to upload supporting documentation
+
+### 7. AI-Generated Cover Letter
+- Analyze approved documents to generate a comprehensive cover letter/index
+- Include document names, descriptions, and relevant project details
+- Preview and edit capability before finalization
+- Municipal-specific templates based on jurisdiction
+
+### 8. Stakeholder Portal
+- Simplified interface for external stakeholders
+- Document upload functionality with clear instructions
+- Status tracking of submitted documents
+- Notification center for required actions
+- Project information display (Permit numbers, jurisdiction details, etc.)
+- Message center for communication with permit specialists
+
+### 9. Notification System
+- Email notifications for critical actions
+- In-app notification center
+- Smart reminders for missing documents with permit specialist approval
+- Escalation for overdue items
+
+### 10. Reporting
+- Permit processing time analytics
+- Document completion rates
+- Stakeholder response times
+- Export functionality for reports (PDF, CSV)
+- Audit trail of all activities
+
+## Technical Requirements
+
+### Frontend
+- Responsive, modern UI using React
+- Accessibility compliance
+- Mobile-friendly design
+- Document preview capabilities
+- Consistent branding using Intralog color palette
+
+### Backend
+- Secure authentication and authorization
+- Document storage with version control
+- API endpoints for all functionality
+- Database for user, permit, and document management
+- AI integration for document analysis and cover letter generation
+
+### Security
+- Encryption for sensitive data
+- Secure file storage
+- Role-based access controls
+- Activity logging
+- Regular security updates
+
+## User Experience Considerations
+- Intuitive navigation with breadcrumbs
+- Clear status indicators with consistent color coding
+- Helpful tooltips and guidance for new users
+- Progressive disclosure of complex features
+- Quick-action buttons for common tasks
+- Search functionality across all permits and documents
+- Batch actions for efficiency (approve multiple, notify multiple)
+
+## Development Guidelines
+- Focus on a clean, professional aesthetic using the Intralog color palette
+- Prioritize usability and efficiency for permit specialists
+- Ensure the stakeholder interface is straightforward and non-technical
+- Implement responsive design for all screen sizes
+- Create clear error messages and validation feedback
+- Build for scalability as the number of permits and users grows
+
+## Future Enhancement Possibilities
+- Integration with municipal permit systems via API
+- Mobile application for on-site document capture
+- Advanced analytics and business intelligence
+- Automated document classification using AI
+- Calendar integration for deadlines and meetings
